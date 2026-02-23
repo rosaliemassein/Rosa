@@ -1,0 +1,177 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-dual-reward-shaping",
+  "voice": "Winning a game is a sparse event, so we use two continuous metrics to guide the agent. First, we reward the squared number of pieces that have successfully reached the target. Second, we calculate the 'centroid'\u2014the center of mass of all our pieces\u2014and reward the agent for decreasing the distance between this centroid and the goal. This provides a constant 'gravity' pulling the entire team forward, rather than just moving one piece at a time.",
+  "goal": "Visualize the two-part reward function: piece count and centroid distance.",
+  "remarks": "Create a board with a cluster of blue pegs. Calculate their average position and mark it with a 'Dot' labeled 'Centroid'. Draw a dashed line from the Centroid to the Target Zone. Animate the pegs moving forward; as they move, update the line length and show a 'Reward' counter increasing. When a peg enters the target zone, show a 'Squared Bonus' pop-up (e.g., 1^2, 2^2, 3^2) to emphasize the non-linear reward for finishing.",
+  "formula": "R = w_1(\\text{pegs}_{in})^2 + w_2(\\text{dist}(\\text{centroid, target}))^{-1}",
+  "image_ref": "null"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+R = w_1(\text{pegs}_{in})^2 + w_2(\text{dist}(\text{centroid, target}))^{-1}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class DualRewardShaping(Scene):
+    def construct(self):
+        # 1. Environment Setup
+        board = Rectangle(width=10, height=6, color=WHITE, stroke_opacity=0.5)
+        target_zone = Rectangle(width=3, height=6, fill_color=YELLOW, fill_opacity=0.2, stroke_color=YELLOW)
+        target_zone.to_edge(RIGHT, buff=0)
+        target_label = Text("Target Zone", font_size=24, color=YELLOW).next_to(target_zone, UP)
+        
+        goal_point = target_zone.get_center()
+        
+        # 2. Agents (Pegs)
+        pegs = VGroup(*[
+            Dot(LEFT * 4 + UP * np.random.uniform(-2, 2) + RIGHT * np.random.uniform(-1, 1), color=BLUE) 
+            for _ in range(6)
+        ])
+        
+        # 3. Centroid Tracking
+        centroid_dot = Dot(color=WHITE)
+        def update_centroid_pos(obj):
+            positions = [p.get_center() for p in pegs]
+            obj.move_to(np.mean(positions, axis=0))
+        
+        centroid_dot.add_updater(update_centroid_pos)
+        
+        centroid_label = Text("Centroid", font_size=20)
+        def update_centroid_label(obj):
+            obj.next_to(centroid_dot, UP, buff=0.1)
+        
+        centroid_label.add_updater(update_centroid_label)
+        
+        line = always_redraw(lambda: DashedLine(
+            centroid_dot.get_center(), 
+            goal_point, 
+            stroke_width=2, 
+            color=GRAY_A
+        ))
+
+        # 4. Reward UI
+        reward_tracker = ValueTracker(0.0)
+        reward_label = Text("Total Reward:", font_size=28).to_corner(UL)
+        reward_counter = DecimalNumber(0, num_decimal_places=1, font_size=28).next_to(reward_label, RIGHT)
+        
+        def update_reward_counter(obj):
+            obj.set_value(reward_tracker.get_value())
+        reward_counter.add_updater(update_reward_counter)
+        
+        formula = MathTex(
+            r"R = w_1(\text{pegs}_{in})^2 + w_2(\text{dist}(\text{centroid, target}))^{-1}",
+            font_size=24
+        ).next_to(reward_label, DOWN, aligned_edge=LEFT)
+
+        self.add(board, target_zone, target_label, pegs, centroid_dot, centroid_label, line, reward_label, reward_counter, formula)
+
+        # Logic to calculate reward based on current peg positions
+        def calculate_current_reward():
+            pegs_in_zone = sum(1 for p in pegs if p.get_center()[0] > target_zone.get_left()[0])
+            dist_to_goal = np.linalg.norm(centroid_dot.get_center() - goal_point)
+            # Constant w1=5, w2=10
+            return (pegs_in_zone**2) * 5 + (10 / (dist_to_goal + 0.1))
+
+        # Scene updater to keep reward_tracker fresh
+        def track_reward_value(dt):
+            reward_tracker.set_value(calculate_current_reward())
+        self.add_updater(track_reward_value)
+
+        # 5. Animations
+        # Initial team movement (The 'gravity' pull)
+        self.play(
+            pegs.animate.shift(RIGHT * 2.5),
+            run_time=2,
+            rate_func=linear
+        )
+        
+        self.wait(0.5)
+
+        # Moving pieces into the goal one by one
+        for i in range(len(pegs)):
+            peg = pegs[i]
+            target_pos = target_zone.get_center() + UP * np.random.uniform(-2, 2) + RIGHT * np.random.uniform(-0.5, 0.5)
+            
+            self.play(
+                peg.animate.move_to(target_pos),
+                run_time=0.8
+            )
+            
+            # Check if peg entered and show visual feedback
+            if peg.get_center()[0] > target_zone.get_left()[0]:
+                current_count = sum(1 for p in pegs if p.get_center()[0] > target_zone.get_left()[0])
+                bonus_popup = Text(f"{current_count}^2 Bonus!", font_size=30, color=YELLOW).next_to(peg, UP)
+                self.play(
+                    Write(bonus_popup),
+                    peg.animate.set_color(YELLOW),
+                    run_time=0.4
+                )
+                self.play(FadeOut(bonus_popup), run_time=0.2)
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: linear

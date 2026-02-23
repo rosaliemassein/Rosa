@@ -1,0 +1,22 @@
+{
+  "baseline_3b_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_r1.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_r2.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_r3.json"
+  ],
+  "baseline_7b_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r1.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r2.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r3.json"
+  ],
+  "median_compile_rate_3b": 0.2892,
+  "median_compile_rate_7b": 0.3333,
+  "median_pass_at_1_3b": 0.3333,
+  "median_pass_at_1_7b": 0.3846,
+  "tag_undefined_symbol_3b_total": 135,
+  "tag_undefined_symbol_7b_total": 91,
+  "tag_disallowed_tier_symbol_3b_total": 57,
+  "tag_disallowed_tier_symbol_7b_total": 30,
+  "tag_syntax_error_3b_total": 1,
+  "tag_syntax_error_7b_total": 1
+}

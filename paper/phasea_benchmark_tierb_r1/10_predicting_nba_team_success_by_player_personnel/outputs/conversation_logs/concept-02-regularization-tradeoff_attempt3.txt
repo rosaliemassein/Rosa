@@ -1,0 +1,170 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-regularization-tradeoff",
+  "voice": "As we add more players and more stats, the model gets more information, but it also risks getting lost in the noise. This is the curse of dimensionality. While simple models like K-Nearest Neighbors struggle as the feature space grows, Lasso and Ridge regression excel. They apply a penalty to the size of the coefficients, effectively telling the model: 'only pay attention to the stats that actually drive wins.'",
+  "goal": "Explain why Lasso and Ridge regression outperform other models as dimensionality increases.",
+  "remarks": "Create an Axes plot where the x-axis is 'Number of Players' (1 to 10) and the y-axis is 'Mean Squared Error'. Recreate the curves from img-0. Plot the KNN line in red, showing it dipping then rising sharply as it overfits. Plot the Lasso/Ridge lines in green, showing a steady decline. To visualize the penalty, show the Lasso cost function equation. As the lambda term increases, show a bar chart of 150 coefficients shrinking, with many of them hitting zero (vanishing) in the Lasso case to highlight feature selection.",
+  "formula": "J(\\theta) = \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|_1",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+J(\theta) = \|y - X\theta\|^2 + \lambda \|\theta\|_1
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept02RegularizationTradeoff(Scene):
+    def construct(self):
+        # 1. Manual Axes Construction (since Axes is disallowed)
+        origin_point = LEFT * 3.5 + DOWN * 2
+        x_axis = Line(origin_point, origin_point + RIGHT * 6, color=WHITE)
+        y_axis = Line(origin_point, origin_point + UP * 4, color=WHITE)
+        x_label = Text("Number of Players", font_size=16).next_to(x_axis, DOWN)
+        y_label = Text("MSE", font_size=16).rotate(90 * DEGREES).next_to(y_axis, LEFT)
+        axes_group = VGroup(x_axis, y_axis, x_label, y_label)
+
+        # 2. Curves as VMobjects
+        # Map x from [0, 10] to [0, 6], y from [0, 10] to [0, 4]
+        def to_coord(x_val, y_val):
+            return origin_point + RIGHT * (x_val * 0.6) + UP * (y_val * 0.4)
+
+        # KNN Curve (U-shaped: overfitting)
+        knn_points = [to_coord(x, 0.2 * (x - 3)**2 + 2) for x in np.linspace(0.5, 9.5, 20)]
+        knn_curve = VMobject(color=RED).set_points_as_corners(knn_points)
+        knn_tag = Text("KNN", color=RED, font_size=18).move_to(to_coord(9.5, 8.5))
+
+        # Lasso Curve (Steady decline)
+        lasso_points = [to_coord(x, 8 * np.exp(-0.3 * x) + 1) for x in np.linspace(0.5, 9.5, 20)]
+        lasso_curve = VMobject(color=GREEN).set_points_as_corners(lasso_points)
+        lasso_tag = Text("Lasso/Ridge", color=GREEN, font_size=18).move_to(to_coord(9.5, 2))
+
+        # 3. Formula and Titles
+        formula = MathTex(
+            r"J(\theta) = \|y - X\theta\|^2 + \lambda \|\theta\|_1",
+            font_size=36
+        ).to_edge(UP, buff=0.5)
+
+        voiceover_1 = Text("As complexity grows, models risk noise (Curse of Dimensionality).", font_size=20).next_to(formula, DOWN)
+        
+        # 4. Bar Chart for coefficients
+        bar_origin = RIGHT * 3 + DOWN * 1
+        num_bars = 40
+        bar_heights = np.random.uniform(-1.5, 1.5, num_bars)
+        bars = VGroup(*[
+            Line(bar_origin + RIGHT * (i * 0.1), bar_origin + RIGHT * (i * 0.1) + UP * h, stroke_width=3, color=BLUE)
+            for i, h in enumerate(bar_heights)
+        ])
+        bar_title = Text("Coefficients", font_size=20).next_to(bars, UP)
+
+        # --- ANIMATION ---
+
+        # Phase 1: Curves
+        self.play(Create(axes_group))
+        self.play(Write(voiceover_1))
+        self.play(Create(knn_curve), Write(knn_tag))
+        self.play(Create(lasso_curve), Write(lasso_tag))
+        self.wait(1)
+
+        # Phase 2: Penalty and Coefficients
+        self.play(
+            FadeOut(voiceover_1),
+            VGroup(axes_group, knn_curve, knn_tag, lasso_curve, lasso_tag).animate.scale(0.7).to_edge(LEFT, buff=0.5),
+            Write(formula)
+        )
+        self.play(Create(bars), Write(bar_title))
+        self.wait(1)
+
+        # Phase 3: Manual Shrinking Animation (avoiding ValueTracker/always_redraw)
+        def shrink_bars(mobject, alpha):
+            # alpha goes 0 to 1
+            # penalty lambda increases with alpha
+            lam = alpha * 1.5 
+            for i, bar in enumerate(mobject):
+                h_orig = bar_heights[i]
+                # Lasso shrinkage formula: sign(x) * max(0, |x| - lambda)
+                h_new = np.sign(h_orig) * max(0, abs(h_orig) - lam)
+                start = bar_origin + RIGHT * (i * 0.1)
+                end = start + UP * h_new
+                bar.set_points_as_corners([start, end])
+                if abs(h_new) < 0.001:
+                    bar.set_stroke(opacity=0.2)
+                else:
+                    bar.set_stroke(opacity=1.0)
+
+        lambda_label = MathTex(r"\lambda \text{ increasing...}", font_size=24, color=YELLOW).next_to(bar_title, UP)
+        self.play(Write(lambda_label))
+        self.play(
+            UpdateFromAlphaFunc(bars, shrink_bars),
+            run_time=4,
+            rate_func=lambda t: t # Linear
+        )
+        
+        conclusion = Text("Lasso forces noise to zero.", font_size=24, color=YELLOW).next_to(bars, DOWN)
+        self.play(Write(conclusion))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: UpdateFromAlphaFunc, VMobject, t

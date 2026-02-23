@@ -23,6 +23,12 @@ class AttemptRecord:
     feedback_text: str = ""
     status: str = ""  # compile_failed, feedback_rejected, success
     conversation_log: str = ""  # relative path to the .txt conversation log
+    reward: Optional[int] = None
+    error_bucket: str = ""
+    gate_errors: str = ""
+    gate_reason_tags: str = ""
+    detected_features: str = ""
+    undefined_names: str = ""
 
 
 class ResultsTracker:
@@ -84,7 +90,9 @@ class ResultsTracker:
         fieldnames = [
             "slide_id", "attempt", "manim_file", "video_file",
             "compiled", "compile_retries", "feedback_score",
-            "feedback_text", "status", "conversation_log"
+            "feedback_text", "status", "conversation_log",
+            "reward", "error_bucket", "gate_errors",
+            "gate_reason_tags", "detected_features", "undefined_names",
         ]
         
         with open(self.csv_path, "w", newline="", encoding="utf-8") as f:
@@ -103,6 +111,12 @@ class ResultsTracker:
                     "feedback_text": record.feedback_text,
                     "status": record.status,
                     "conversation_log": record.conversation_log,
+                    "reward": record.reward if record.reward is not None else "",
+                    "error_bucket": record.error_bucket,
+                    "gate_errors": record.gate_errors,
+                    "gate_reason_tags": record.gate_reason_tags,
+                    "detected_features": record.detected_features,
+                    "undefined_names": record.undefined_names,
                 })
     
     def get_summary(self) -> dict:

@@ -1,0 +1,44 @@
+{
+  "input_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_dataset_tierb_7b_r1.jsonl",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_dataset_tierb_7b_r2.jsonl",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_dataset_tierb_7b_r3.jsonl",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_dataset_tierb_7b_refine_r4.jsonl"
+  ],
+  "min_quality": "medium",
+  "val_ratio": 0.2,
+  "records_total_kept": 70,
+  "records_train": 53,
+  "records_val": 17,
+  "success_source_kept": {
+    "assisted_or_retry": 57,
+    "qwen_only": 13
+  },
+  "quality_counts_before_filter": {
+    "high": 24,
+    "medium": 46,
+    "low": 0
+  },
+  "dropped": {
+    "not_compiled": 128,
+    "missing_fields": 0,
+    "low_quality": 0
+  },
+  "papers_kept": {
+    "01_8647_automl_agent_a_multi_agen": 14,
+    "02_baxterbartlett_cs229_termproject_report": 3,
+    "03_cs229_2024_final_project_amin_zareian_rl_optimization_tool": 14,
+    "04_cs229_fin": 12,
+    "05_cs229_final_report": 5,
+    "06_cs229_project_final_report_3": 8,
+    "07_cs229_project_final_report_dakotajp_3": 9,
+    "08_cs_229_final_report": 1,
+    "09_final_project_final": 2,
+    "10_predicting_nba_team_success_by_player_personnel": 2
+  },
+  "outputs": {
+    "all": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/lora_7b_prep/sft_all.jsonl",
+    "train": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/lora_7b_prep/sft_train.jsonl",
+    "val": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/lora_7b_prep/sft_val.jsonl"
+  }
+}

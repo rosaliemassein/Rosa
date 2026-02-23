@@ -1,0 +1,181 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-parameter-vs-data-bottleneck",
+  "voice": "Why did the simple LWR outperform a powerful Neural Network? It comes down to data. With only 27 training points, the Neural Network's 24 internal parameters were prone to 'overfitting'\u2014it was essentially memorizing the noise rather than learning the physics. LWR, being a local linear approximation, was much more robust to this small sample size.",
+  "goal": "Explain why the Neural Network struggled compared to LWR due to the high-variance/small-dataset problem.",
+  "remarks": "Show two side-by-side plots. On the left, 'Neural Network': show a complex, highly 'wiggling' curve that hits every single data point but looks erratic. Label it 'High Variance'. On the right, 'LWR': show a smoother, piecewise-linear path through the same points. Below, animate a bar chart showing MSE: the LWR bar is significantly shorter (0.85) than the Neural Network bar (1.21).",
+  "formula": "MSE = \\frac{||Y_{test} - Y_{pred}||_F^2}{3n}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+MSE = \frac{||Y_{test} - Y_{pred}||_F^2}{3n}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ParameterVsDataBottleneck(Scene):
+    def construct(self):
+        # 1. Narration Text (Title)
+        narration = Text(
+            "Why did the simple LWR outperform a powerful Neural Network?",
+            font_size=26,
+            color=BLUE
+        ).to_edge(UP, buff=0.5)
+        self.play(Write(narration))
+        self.wait(1)
+
+        # 2. Layout for Side-by-Side Plots
+        # Left side: Neural Network (Overfitting)
+        left_axes = Axes(
+            x_range=[0, 10, 2],
+            y_range=[0, 10, 2],
+            x_length=5,
+            y_length=3.5,
+            axis_config={"include_tip": False}
+        ).shift(LEFT * 3.5 + UP * 0.5)
+
+        # Right side: LWR (Local Linear/Smooth)
+        right_axes = Axes(
+            x_range=[0, 10, 2],
+            y_range=[0, 10, 2],
+            x_length=5,
+            y_length=3.5,
+            axis_config={"include_tip": False}
+        ).shift(RIGHT * 3.5 + UP * 0.5)
+
+        nn_title = Text("Neural Network", font_size=24).next_to(left_axes, UP)
+        lwr_title = Text("LWR", font_size=24).next_to(right_axes, UP)
+
+        self.play(
+            Create(left_axes), Create(right_axes),
+            Write(nn_title), Write(lwr_title)
+        )
+
+        # 3. Data Points (The same for both)
+        np.random.seed(10)
+        x_data = np.linspace(1, 9, 10)
+        y_data = 0.8 * x_data + 1 + np.random.normal(0, 0.8, 10)
+        
+        dots_left = VGroup(*[Dot(left_axes.c2p(x, y), color=YELLOW, radius=0.06) for x, y in zip(x_data, y_data)])
+        dots_right = VGroup(*[Dot(right_axes.c2p(x, y), color=YELLOW, radius=0.06) for x, y in zip(x_data, y_data)])
+
+        self.play(Create(dots_left), Create(dots_right))
+
+        # 4. Curves
+        # NN: Highly wiggling curve hitting data points
+        nn_curve = left_axes.plot(
+            lambda x: 0.8 * x + 1 + 1.2 * np.sin(3 * x), 
+            color=RED, 
+            x_range=[1, 9]
+        )
+        nn_tag = Text("High Variance", font_size=20, color=RED).next_to(left_axes, DOWN, buff=0.2)
+
+        # LWR: Smoother path (piecewise-linear/local approximation)
+        lwr_curve = right_axes.plot(
+            lambda x: 0.8 * x + 1, 
+            color=GREEN, 
+            x_range=[1, 9]
+        )
+        lwr_tag = Text("Robust / Smooth", font_size=20, color=GREEN).next_to(right_axes, DOWN, buff=0.2)
+
+        self.play(Create(nn_curve), Write(nn_tag))
+        self.play(Create(lwr_curve), Write(lwr_tag))
+        self.wait(1)
+
+        # 5. MSE Bar Chart and Formula
+        # Shrink the top section slightly to make room
+        top_elements = VGroup(left_axes, right_axes, nn_title, lwr_title, dots_left, dots_right, nn_curve, lwr_curve, nn_tag, lwr_tag)
+        self.play(top_elements.animate.scale(0.75).shift(UP * 0.5))
+
+        chart = BarChart(
+            values=[1.21, 0.85],
+            bar_names=["Neural Network", "LWR"],
+            y_range=[0, 1.5, 0.5],
+            y_length=2,
+            x_length=6,
+            bar_colors=[RED, GREEN],
+            axis_config={"font_size": 20}
+        ).to_edge(DOWN, buff=0.5).shift(LEFT * 1.5)
+
+        mse_label = Text("MSE", font_size=22).next_to(chart, UP, buff=0.2)
+        
+        formula = MathTex(
+            r"MSE = \frac{||Y_{test} - Y_{pred}||_F^2}{3n}",
+            font_size=28
+        ).next_to(chart, RIGHT, buff=0.8)
+
+        self.play(Create(chart), Write(mse_label))
+        self.play(Write(formula))
+
+        # Value labels on bars
+        val_1 = MathTex("1.21", font_size=22).next_to(chart.bars[0], UP, buff=0.1)
+        val_2 = MathTex("0.85", font_size=22).next_to(chart.bars[1], UP, buff=0.1)
+        self.play(Write(val_1), Write(val_2))
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Axes, BarChart; disallowed symbols/features in constrained subset: Axes

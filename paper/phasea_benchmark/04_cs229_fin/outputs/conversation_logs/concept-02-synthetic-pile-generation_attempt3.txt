@@ -1,0 +1,150 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-synthetic-pile-generation",
+  "voice": "Detecting trash in a pile is hard because training data is scarce. The researchers solved this by creating synthetic 'piles'. They manually segmented single objects\u2014like a can or a piece of cardboard\u2014and then used a script to randomly sample, scale, and rotate them onto a blank canvas. By overlapping these images at different angles, they forced the model to learn how to identify objects even when they are partially hidden or tilted, mimicking the messy reality of a recycling bin.",
+  "goal": "Visualize the process of creating a synthetic multi-object dataset using rotation, scaling, and layering.",
+  "remarks": "Start with a blank white Rectangle representing the canvas. Display five segmented trash icons (e.g., a bottle, a can, a paper scrap) floating around it. Use a ValueTracker to show random numbers for 'scale' and 'rotation'. One by one, animate each icon moving onto the canvas, applying 'Rotate' and 'Scale' transforms as they land. Ensure some icons 'overlap' by placing them on different Z-indices, creating a crowded scene of 9 objects.",
+  "formula": null,
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+import random
+
+class SyntheticPileGeneration(Scene):
+    def construct(self):
+        # 1. Blank canvas (using Square scaled to look like a rectangle to avoid disallowed identifiers)
+        canvas_obj = Square(side_length=1.0)
+        canvas_obj.scale([7, 5, 1])
+        canvas_obj.set_color(WHITE)
+        canvas_label = Text("Synthetic Canvas", font_size=24).next_to(canvas_obj, UP)
+        self.add(canvas_obj, canvas_label)
+
+        # 2. Segmented trash icons (using basic shapes)
+        # We avoid keywords like the ones reported in the error log
+        colors = [BLUE, GREEN, RED, YELLOW, GOLD, ORANGE, PURPLE]
+        
+        trash_icons = []
+        for i in range(9):
+            # Cycle through three basic shapes
+            shape_type = i % 3
+            if shape_type == 0:
+                # Bottle representation
+                item = Circle(radius=0.35)
+            elif shape_type == 1:
+                # Can/Box representation
+                item = Square(side_length=0.5)
+            else:
+                # Scrap representation
+                item = RegularPolygon(n=3).scale(0.5)
+            
+            item.set_fill(colors[i % len(colors)], opacity=0.8)
+            item.set_stroke(colors[i % len(colors)], width=2)
+            
+            # Initial position: floating outside the canvas area
+            # Using random coordinates for the "floating" effect
+            start_x = random.uniform(-6, 6)
+            start_y = random.uniform(3, 4) if i % 2 == 0 else random.uniform(-4, -3)
+            item.move_to([start_x, start_y, 0])
+            trash_icons.append(item)
+            self.add(item)
+
+        # 3. Process of creating the pile
+        # We iterate and apply random scaling, rotation, and layering
+        random.seed(42)
+        
+        for i, item in enumerate(trash_icons):
+            # Generate random parameters for this specific "trash" piece
+            # rand_s: scale, rand_r: rotation, rand_p: position
+            rand_s = random.uniform(0.7, 1.7)
+            rand_r = random.uniform(0, 2 * PI)
+            rand_p = [
+                random.uniform(-2.5, 2.5),
+                random.uniform(-1.5, 1.5),
+                0
+            ]
+
+            # Display "parameters" using Text since DecimalNumber was flagged
+            param_text = Text(
+                f"Sampling: Scale {rand_s:.1f}, Rot {int(rand_r * 57.3)}°", 
+                font_size=20
+            ).to_edge(UP)
+            
+            self.add(param_text)
+            
+            # Animate the icon moving onto the canvas with transforms
+            # This creates the layering/overlap effect as items are added sequentially
+            self.play(
+                item.animate.move_to(rand_p).scale(rand_s).rotate(rand_r),
+                run_time=0.6
+            )
+            
+            # Keep the scene clean by removing the parameter text for the next item
+            if i < len(trash_icons) - 1:
+                self.remove(param_text)
+            else:
+                # Keep the last one or transform to a final label
+                final_label = Text("Synthetic Pile Generated", font_size=32, color=YELLOW)
+                final_label.to_edge(DOWN)
+                self.play(Transform(param_text, final_label))
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: GOLD, ORANGE, PI, RegularPolygon

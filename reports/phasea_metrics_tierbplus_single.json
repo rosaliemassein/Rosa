@@ -1,0 +1,18 @@
+{
+  "csv_files": [],
+  "total_attempts": 0,
+  "compiled_attempts": 0,
+  "compile_rate": 0.0,
+  "slides_evaluated_for_pass1": 0,
+  "pass_at_1": 0.0,
+  "bucket_counts": {
+    "gate_fail": 0,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {},
+  "gate_reason_tag_counts": {},
+  "top_error_signatures": []
+}

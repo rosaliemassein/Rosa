@@ -1,0 +1,175 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-cosine-similarity-matrix",
+  "voice": "Now that our proposals and reviewer interests are points in space, how do we measure their alignment? We use Cosine Similarity. Rather than looking at the distance between points, we look at the angle between their vectors. If two vectors point in exactly the same direction, the cosine is one\u2014a perfect match. We calculate this for every keyword pair to build a similarity matrix, which serves as a heat map of how well a reviewer's expertise overlaps with a proposal's needs.",
+  "goal": "Visualize the geometric intuition of cosine similarity and the resulting similarity matrix.",
+  "remarks": "Create an Axes with two vectors, A and B, originating from the origin. Use a ValueTracker to rotate vector B. Show an Arc representing the angle theta between them. As the angle decreases, show a 'Similarity' value (cos theta) increasing toward 1.0. Then, transition to a grid of squares (a 5x5 Matrix). As the vectors on the left align, the corresponding cell in the matrix should glow brighter (white/yellow) and as they diverge, it should turn dark (blue/black).",
+  "formula": "\\text{similarity} = \\cos(\\theta) = \\frac{\\mathbf{A} \\cdot \\mathbf{B}}{\\|\\mathbf{A}\\| \\|\\mathbf{B}\\|}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{similarity} = \cos(\theta) = \frac{\mathbf{A} \cdot \mathbf{B}}{\|\mathbf{A}\| \|\mathbf{B}\|}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept02CosineSimilarityMatrix(Scene):
+    def construct(self):
+        # 1. Coordinate System
+        axes = Axes(
+            x_range=[-2, 2, 1], 
+            y_range=[-2, 2, 1],
+            x_length=4.5, 
+            y_length=4.5,
+            axis_config={"include_tip": True}
+        ).to_edge(LEFT, buff=0.5)
+        
+        origin = axes.get_origin()
+        
+        # Vector A (Reference)
+        vec_a_coords = np.array([1.5, 0.5, 0])
+        start_angle = np.arctan2(vec_a_coords[1], vec_a_coords[0])
+        vec_a = Arrow(origin, axes.c2p(1.5, 0.5), buff=0, color=RED)
+        label_a = MathTex(r"\mathbf{A}", color=RED).next_to(vec_a.get_end(), UR, buff=0.1)
+        
+        # Vector B (Moving)
+        theta_tracker = ValueTracker(PI / 3) # Start at 60 degrees
+        
+        def get_b_end():
+            angle = start_angle + theta_tracker.get_value()
+            return axes.c2p(1.5 * np.cos(angle), 1.5 * np.sin(angle))
+        
+        vec_b = always_redraw(lambda: Arrow(
+            origin, get_b_end(), buff=0, color=BLUE
+        ))
+        label_b = always_redraw(lambda: MathTex(r"\mathbf{B}", color=BLUE).next_to(vec_b.get_end(), UR, buff=0.1))
+        
+        # Angle Arc
+        arc = always_redraw(lambda: Arc(
+            radius=0.6,
+            start_angle=start_angle,
+            angle=theta_tracker.get_value(),
+            arc_center=origin,
+            color=YELLOW
+        ))
+        
+        # 2. Labels and Formula
+        formula = MathTex(
+            r"\text{similarity} = \cos(\theta)",
+            font_size=36
+        ).to_edge(UP, buff=0.5)
+        
+        sim_value = always_redraw(lambda: MathTex(
+            f"= {np.cos(theta_tracker.get_value()):.2f}",
+            font_size=36,
+            color=YELLOW
+        ).next_to(formula, RIGHT))
+        
+        # 3. Similarity Matrix (5x5 Grid)
+        matrix = VGroup(*[
+            Square(side_length=0.5, fill_opacity=0.1, fill_color=BLUE, stroke_width=1)
+            for _ in range(25)
+        ]).arrange_in_grid(rows=5, cols=5, buff=0.1).to_edge(RIGHT, buff=0.8)
+        
+        matrix_title = Text("Similarity Matrix", font_size=24).next_to(matrix, UP)
+        
+        # The specific cell (center) that represents our A-B pair
+        active_cell = matrix[12]
+        
+        def update_active_cell(cell):
+            cos_val = np.cos(theta_tracker.get_value())
+            # Similarity of 1.0 (aligned) -> bright yellow
+            # Similarity of 0.0 (orthogonal) -> dark blue/black
+            if cos_val > 0:
+                cell.set_fill(YELLOW, opacity=cos_val)
+            else:
+                cell.set_fill(BLUE, opacity=0.1)
+                
+        active_cell.add_updater(update_active_cell)
+        
+        # 4. Animation Sequence
+        self.add(axes, vec_a, label_a, vec_b, label_b, arc, formula, sim_value, matrix, matrix_title)
+        
+        # Move B to align perfectly with A
+        self.play(theta_tracker.animate.set_value(0), run_time=2)
+        self.play(Indicate(active_cell, scale_factor=1.2))
+        self.wait(1)
+        
+        # Move B to be perpendicular
+        self.play(theta_tracker.animate.set_value(PI / 2), run_time=2)
+        self.wait(1)
+        
+        # Move B to be opposite
+        self.play(theta_tracker.animate.set_value(PI), run_time=2)
+        self.wait(1)
+        
+        # Move B back to a strong overlap
+        self.play(theta_tracker.animate.set_value(0.2), run_time=2)
+        self.wait(2)
+        
+        active_cell.remove_updater(update_active_cell)
+
+=== ERROR ===
+undefined identifiers detected: Arc

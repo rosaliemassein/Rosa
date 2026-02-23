@@ -1,0 +1,2 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-03-pseudo-execution-handoff,1,slides/concept-03-pseudo-execution-handoff.py,concept-03-pseudo-execution-handoff.mp4,True,0,,,success,conversation_logs/concept-03-pseudo-execution-handoff_attempt1.txt,1,,,,,

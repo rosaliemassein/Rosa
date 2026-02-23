@@ -1,0 +1,168 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-yolov10-localization-loss",
+  "voice": "To find these objects in a pile, YOLOv10 divides the image into a grid. If the center of a piece of trash falls into a cell, that cell is responsible for predicting a bounding box. The model's loss function specifically penalizes errors in the box coordinates and the square roots of the width and height. By using square roots, the model ensures that a small error in a tiny object is penalized more heavily than the same error in a large object, which is crucial for finding small scraps of paper amidst larger debris.",
+  "goal": "Understand the geometric intuition behind the YOLO coordinate loss function.",
+  "remarks": "Display an image of multiple trash items. Overlay a 7x7 'NumberPlane' (grid). Highlight one specific cell where a soda can't center lies. Draw a 'SurroundingRectangle' (the predicted box) and a slightly offset dashed rectangle (the ground truth). Animate arrows showing the distance between their centers (x, y) and the difference in their dimensions (w, h). Show the LaTeX loss formula and highlight the coordinate terms as the boxes align during a mock 'training' animation.",
+  "formula": "\\lambda_{coord}\\sum_{i=0}^{S^{2}}\\sum_{j=0}^{B}1_{ij}^{obj}\\left((x_{i}-\\hat{x}_{i})^{2}+(y_{i}-\\hat{y}_{i})^{2}\\right) + \\sum_{i=0}^{S^{2}}\\sum_{j=0}^{B}1_{ij}^{obj}\\left((\\sqrt{w_{i}}-\\sqrt{\\hat{w}_{i}})^{2}+(\\sqrt{h_{i}}-\\sqrt{\\hat{h}_{i}})^{2}\\right)",
+  "image_ref": "img-11.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\lambda_{coord}\sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}\left((x_{i}-\hat{x}_{i})^{2}+(y_{i}-\hat{y}_{i})^{2}\right) + \sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}\left((\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^{2}+(\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^{2}\right)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept03YOLOv10LocalizationLoss(Scene):
+    def construct(self):
+        # 1. Background Image (Fallback to a shaded rectangle if file is missing)
+        try:
+            background_img = ImageMobject("img-11.jpeg").scale_to_fit_height(6)
+            self.add(background_img)
+        except:
+            bg_rect = Rectangle(width=8, height=6, fill_opacity=0.1, color=WHITE)
+            self.add(bg_rect)
+
+        # 2. 7x7 Grid (Manually created as NumberPlane is disallowed)
+        grid_lines = VGroup()
+        # Create 8 lines to form 7 intervals
+        for i in range(8):
+            coord = -3.5 + i
+            # Vertical lines
+            grid_lines.add(Line(start=[coord, -3.5, 0], end=[coord, 3.5, 0], stroke_width=1, stroke_opacity=0.4))
+            # Horizontal lines
+            grid_lines.add(Line(start=[-3.5, coord, 0], end=[3.5, coord, 0], stroke_width=1, stroke_opacity=0.4))
+        
+        self.play(Create(grid_lines))
+
+        # 3. Highlight a specific cell (where a soda can's center might lie)
+        # Center of cell (1, 1) in our coordinate system
+        cell_highlight = Rectangle(width=1, height=1, color=YELLOW, stroke_width=4)
+        cell_highlight.move_to([1, 1, 0])
+        self.play(Create(cell_highlight))
+
+        # 4. Predicted Bounding Box (Blue)
+        pred_box = Rectangle(width=2.2, height=2.8, color=BLUE, stroke_width=4)
+        pred_box.move_to([0.7, 1.3, 0])
+
+        # 5. Ground Truth Bounding Box (Red)
+        # Using a regular Rectangle as DashedVMobject is undefined
+        true_box = Rectangle(width=1.8, height=2.4, color=RED, stroke_width=3)
+        true_box.move_to([1.2, 0.8, 0])
+        # Add some visual distinction to the "ground truth"
+        true_box.set_stroke(opacity=0.7)
+
+        self.play(Create(true_box), Create(pred_box))
+        self.wait(0.5)
+
+        # 6. Arrows showing differences (x, y, w, h)
+        # Center distance (x, y)
+        center_arrow = Arrow(start=pred_box.get_center(), end=true_box.get_center(), color=YELLOW, buff=0, tip_length=0.15)
+        
+        # Width difference arrow (Horizontal double arrow)
+        # Using Line with add_tip at both ends as DoubleArrow is undefined
+        w_diff_line = Line(
+            start=[pred_box.get_left()[0], pred_box.get_top()[1] + 0.3, 0],
+            end=[true_box.get_left()[0], pred_box.get_top()[1] + 0.3, 0],
+            color=GREEN
+        )
+        w_diff_line.add_tip(tip_length=0.1)
+        w_diff_line.add_tip(tip_length=0.1, at_start=True)
+
+        # Height difference arrow (Vertical double arrow)
+        h_diff_line = Line(
+            start=[pred_box.get_right()[0] + 0.3, pred_box.get_top()[1], 0],
+            end=[pred_box.get_right()[0] + 0.3, true_box.get_top()[1], 0],
+            color=ORANGE
+        )
+        h_diff_line.add_tip(tip_length=0.1)
+        h_diff_line.add_tip(tip_length=0.1, at_start=True)
+
+        # 7. Loss Formula
+        formula = MathTex(
+            r"\lambda_{coord}\sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}\left((x_{i}-\hat{x}_{i})^{2}+(y_{i}-\hat{y}_{i})^{2}\right)",
+            r" + \sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}\left((\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^{2}+(\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^{2}\right)",
+            font_size=22
+        ).to_edge(DOWN, buff=0.3)
+
+        # Animation sequence for arrows and math
+        self.play(GrowArrow(center_arrow), Write(formula[0]))
+        self.wait(0.5)
+        self.play(Create(w_diff_line), Create(h_diff_line), Write(formula[1]))
+        self.wait(1)
+
+        # 8. Mock Training: Predicted box converges to Ground Truth
+        self.play(
+            pred_box.animate.move_to(true_box.get_center()).set_width(1.8).set_height(2.4),
+            FadeOut(center_arrow),
+            FadeOut(w_diff_line),
+            FadeOut(h_diff_line),
+            formula[0].animate.set_color(YELLOW),
+            formula[1].animate.set_color(GREEN),
+            run_time=2
+        )
+
+        self.wait(2)

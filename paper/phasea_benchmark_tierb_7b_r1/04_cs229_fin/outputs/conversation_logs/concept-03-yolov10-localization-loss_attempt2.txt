@@ -1,0 +1,287 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-yolov10-localization-loss",
+  "voice": "To find these objects in a pile, YOLOv10 divides the image into a grid. If the center of a piece of trash falls into a cell, that cell is responsible for predicting a bounding box. The model's loss function specifically penalizes errors in the box coordinates and the square roots of the width and height. By using square roots, the model ensures that a small error in a tiny object is penalized more heavily than the same error in a large object, which is crucial for finding small scraps of paper amidst larger debris.",
+  "goal": "Understand the geometric intuition behind the YOLO coordinate loss function.",
+  "remarks": "Display an image of multiple trash items. Overlay a 7x7 'NumberPlane' (grid). Highlight one specific cell where a soda can't center lies. Draw a 'SurroundingRectangle' (the predicted box) and a slightly offset dashed rectangle (the ground truth). Animate arrows showing the distance between their centers (x, y) and the difference in their dimensions (w, h). Show the LaTeX loss formula and highlight the coordinate terms as the boxes align during a mock 'training' animation.",
+  "formula": "\\lambda_{coord}\\sum_{i=0}^{S^{2}}\\sum_{j=0}^{B}1_{ij}^{obj}\\left((x_{i}-\\hat{x}_{i})^{2}+(y_{i}-\\hat{y}_{i})^{2}\\right) + \\sum_{i=0}^{S^{2}}\\sum_{j=0}^{B}1_{ij}^{obj}\\left((\\sqrt{w_{i}}-\\sqrt{\\hat{w}_{i}})^{2}+(\\sqrt{h_{i}}-\\sqrt{\\hat{h}_{i}})^{2}\\right)",
+  "image_ref": "img-11.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\lambda_{coord}\sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}\left((x_{i}-\hat{x}_{i})^{2}+(y_{i}-\hat{y}_{i})^{2}\right) + \sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}\left((\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^{2}+(\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^{2}\right)
+
+
+=== ASSISTANT ===
+from manim import *
+
+class YOLOv10LossFunction(Scene):
+    def construct(self):
+        # 1. Background Image
+        # Using ImageMobject to display the trash items
+        image = ImageMobject("img-11.jpeg")
+        image.scale_to_fit_height(8)
+        self.add(image)
+
+        # 2. Manual 7x7 Grid (Replacing NumberPlane)
+        grid = VGroup()
+        cell_size = 0.8
+        grid_width = cell_size * 7
+        start_point = - (grid_width / 2)
+        
+        for i in range(8):
+            # Vertical lines
+            v_line = Line(
+                start=[start_point + i * cell_size, grid_width / 2, 0],
+                end=[start_point + i * cell_size, -grid_width / 2, 0],
+                stroke_width=2, color=BLUE, stroke_opacity=0.6
+            )
+            # Horizontal lines
+            h_line = Line(
+                start=[-(grid_width / 2), start_point + i * cell_size, 0],
+                end=[grid_width / 2, start_point + i * cell_size, 0],
+                stroke_width=2, color=BLUE, stroke_opacity=0.6
+            )
+            grid.add(v_line, h_line)
+        
+        self.play(Create(grid))
+
+        # 3. Highlight a specific cell (where a soda can center lies)
+        # Choosing cell at index (4, 4) in the grid logic
+        cell_center = [start_point + 4.5 * cell_size, start_point + 4.5 * cell_size, 0]
+        highlight_cell = Rectangle(
+            width=cell_size, height=cell_size, 
+            color=YELLOW, fill_opacity=0.3, stroke_width=4
+        ).move_to(cell_center)
+        self.play(FadeIn(highlight_cell))
+
+        # 4. Predicted and Ground Truth Boxes
+        # Ground Truth (GT): Red
+        gt_box = Rectangle(
+            width=1.2, height=1.8, 
+            color=RED, stroke_width=4
+        ).move_to(cell_center + RIGHT * 0.1 + DOWN * 0.1)
+        
+        # Predicted: Green
+        pred_box = Rectangle(
+            width=2.0, height=1.0, 
+            color=GREEN, stroke_width=4
+        ).move_to(cell_center + LEFT * 0.4 + UP * 0.3)
+        
+        self.play(Create(gt_box), Create(pred_box))
+        self.wait(0.5)
+
+        # 5. Arrows for differences (x, y, w, h)
+        # Arrows for position delta
+        arrow_x = Arrow(
+            start=pred_box.get_center(),
+            end=[gt_box.get_center()[0], pred_box.get_center()[1], 0],
+            color=WHITE, buff=0, tip_length=0.15
+        )
+        arrow_y = Arrow(
+            start=[gt_box.get_center()[0], pred_box.get_center()[1], 0],
+            end=gt_box.get_center(),
+            color=WHITE, buff=0, tip_length=0.15
+        )
+        
+        # Arrows for dimension delta
+        arrow_w = Arrow(
+            start=pred_box.get_right(),
+            end=[gt_box.get_right()[0], pred_box.get_right()[1], 0],
+            color=YELLOW, buff=0, tip_length=0.15
+        )
+        arrow_h = Arrow(
+            start=pred_box.get_top(),
+            end=[pred_box.get_top()[0], gt_box.get_top()[1], 0],
+            color=YELLOW, buff=0, tip_length=0.15
+        )
+
+        self.play(Create(arrow_x), Create(arrow_y))
+        self.wait(0.5)
+        self.play(Create(arrow_w), Create(arrow_h))
+        self.wait(1)
+        self.play(FadeOut(arrow_x), FadeOut(arrow_y), FadeOut(arrow_w), FadeOut(arrow_h))
+
+        # 6. Loss Formula
+        # Using a background rect manually since BackgroundRectangle is restricted
+        formula = MathTex(
+            r"\lambda_{coord}\sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}", 
+            r"\left((x_{i}-\hat{x}_{i})^{2}+(y_{i}-\hat{y}_{i})^{2}\right)", 
+            r" + ", 
+            r"\sum_{i=0}^{S^{2}}\sum_{j=0}^{B}1_{ij}^{obj}", 
+            r"\left((\sqrt{w_{i}}-\sqrt{\hat{w}_{i}})^{2}+(\sqrt{h_{i}}-\sqrt{\hat{h}_{i}})^{2}\right)",
+            font_size=28
+        ).to_edge(DOWN, buff=0.5)
+        
+        formula_bg = Rectangle(
+            width=formula.width + 0.4, height=formula.height + 0.4,
+            fill_color=BLACK, fill_opacity=0.85, stroke_width=0
+        ).move_to(formula.get_center())
+        
+        self.play(FadeIn(formula_bg), Write(formula))
+        self.wait(1)
+
+        # 7. Mock Training Animation
+        # Part 1: Position correction (Coordinate term)
+        self.play(
+            formula[1].animate.set_color(YELLOW),
+            pred_box.animate.move_to(gt_box.get_center()),
+            run_time=2
+        )
+        self.wait(0.5)
+
+        # Part 2: Size correction (Dimensions term)
+        self.play(
+            formula[1].animate.set_color(WHITE),
+            formula[4].animate.set_color(YELLOW),
+            pred_box.animate.stretch_to_fit_width(gt_box.width).stretch_to_fit_height(gt_box.height),
+            run_time=2
+        )
+        self.wait(0.5)
+        
+        self.play(formula[4].animate.set_color(WHITE))
+        self.wait(2)
+
+        # Final Cleanup
+        self.play(FadeOut(VGroup(grid, highlight_cell, gt_box, pred_box, formula_bg, formula, image)))
+        self.wait(1)
+
+=== ERROR ===
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/cli/ren │
+│ der/commands.py:125 in render                                                │
+│                                                                              │
+│   122 │   │   │   try:                                                       │
+│   123 │   │   │   │   with tempconfig({}):                                   │
+│   124 │   │   │   │   │   scene = SceneClass()                               │
+│ ❱ 125 │   │   │   │   │   scene.render()                                     │
+│   126 │   │   │   except Exception:                                          │
+│   127 │   │   │   │   error_console.print_exception()                        │
+│   128 │   │   │   │   sys.exit(1)                                            │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/scene/s │
+│ cene.py:259 in render                                                        │
+│                                                                              │
+│    256 │   │   """                                                           │
+│    257 │   │   self.setup()                                                  │
+│    258 │   │   try:                                                          │
+│ ❱  259 │   │   │   self.construct()                                          │
+│    260 │   │   except EndSceneEarlyException:                                │
+│    261 │   │   │   pass                                                      │
+│    262 │   │   except RerunSceneException:                                   │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/04_cs229_fin/ │
+│ outputs/slides/concept-03-yolov10-localization-loss_v4.py:7 in construct     │
+│                                                                              │
+│     4 │   def construct(self):                                               │
+│     5 │   │   # 1. Background Image                                          │
+│     6 │   │   # Using ImageMobject to display the trash items                │
+│ ❱   7 │   │   image = ImageMobject("img-11.jpeg")                            │
+│     8 │   │   image.scale_to_fit_height(8)                                   │
+│     9 │   │   self.add(image)                                                │
+│    10                                                                        │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /types/image_mobject.py:196 in __init__                                      │
+│                                                                              │
+│   193 │   │   self.invert_image = invert                                     │
+│   194 │   │   self.image_mode = image_mode                                   │
+│   195 │   │   if isinstance(filename_or_array, (str, pathlib.PurePath)):     │
+│ ❱ 196 │   │   │   path = get_full_raster_image_path(filename_or_array)       │
+│   197 │   │   │   image = Image.open(path).convert(self.image_mode)          │
+│   198 │   │   │   self.pixel_array = np.array(image)                         │
+│   199 │   │   │   self.path = path                                           │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/utils/i │
+│ mages.py:28 in get_full_raster_image_path                                    │
+│                                                                              │
+│   25                                                                         │
+│   26                                                                         │
+│   27 def get_full_raster_image_path(image_file_name: str | PurePath) -> Path │
+│ ❱ 28 │   return seek_full_path_from_defaults(                                │
+│   29 │   │   image_file_name,                                                │
+│   30 │   │   default_dir=config.get_dir("assets_dir"),                       │
+│   31 │   │   extensions=[".jpg", ".jpeg", ".png", ".gif", ".ico"],           │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/utils/f │
+│ ile_ops.py:182 in seek_full_path_from_defaults                               │
+│                                                                              │
+│   179 │   │   f"From: {Path.cwd()}, could not find {file_name} at either "   │
+│   180 │   │   f"of these locations: {list(map(str, possible_paths))}"        │
+│   181 │   )                                                                  │
+│ ❱ 182 │   raise OSError(error)                                               │
+│   183                                                                        │
+│   184                                                                        │
+│   185 def modify_atime(file_path: str) -> None:                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+OSError: From: /Users/rosaliemassein/Documents/stanford/Winter 2026 
+/Reinforcement Learning/Project/code/cs234, could not find img-11.jpeg at either
+of these locations: ['img-11.jpeg', 'img-11.jpeg', 'img-11.jpeg.jpg', 
+'img-11.jpeg.jpeg', 'img-11.jpeg.png', 'img-11.jpeg.gif', 'img-11.jpeg.ico']
+

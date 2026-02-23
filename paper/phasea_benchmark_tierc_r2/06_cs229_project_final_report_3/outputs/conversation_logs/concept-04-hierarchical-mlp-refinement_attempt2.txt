@@ -1,0 +1,203 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-hierarchical-mlp-refinement",
+  "voice": "The final step is the refinement stage. Once CLIP tells us we are in a specific country, we pass the image embedding to a Multi-Layer Perceptron specifically trained for that nation. This MLP ignores all global data and focuses entirely on the local clusters we just created. It outputs a prediction for the most likely cluster, and our final coordinate guess is simply the center of that cluster. This hierarchical approach\u2014from global country to local region\u2014is what allows the model to find specific coordinates from visual clues.",
+  "goal": "Understand the two-stage inference pipeline that moves from coarse country classification to fine-grained cluster prediction.",
+  "remarks": "Create a flow chart starting with an image. Show it passing through the 'CLIP' block which points to a specific 'Country MLP'. Beneath this, show a 3-layer neural network (MLP) with ReLU activations. Animate signals flowing through the MLP layers. The output of the MLP should point to one of the K-means centroids on a map. Show the final coordinate result as a GPS 'pin' dropping onto the map at the centroid location. Use TransformMatchingTex to show the transition from the image vector to the final coordinate (lat, lon).",
+  "formula": "c^{(i)}:=\\arg\\min_{j}\\|x^{(i)}-\\mu_{j}\\|^{2}",
+  "image_ref": "img-8.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+c^{(i)}:=\arg\min_{j}\|x^{(i)}-\mu_{j}\|^{2}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class HierarchicalMLPRefinement(Scene):
+    def construct(self):
+        # 1. Setup - Initial Image and Voiceover
+        # Using placeholders to ensure compilation even if external files are missing
+        try:
+            img = ImageMobject("img-8.jpeg").scale(1.5).to_edge(UP)
+        except:
+            img = Rectangle(height=2, width=3, color=BLUE).to_edge(UP)
+            img_text = Text("Image (img-8.jpeg)", font_size=20).move_to(img)
+            img = Group(img, img_text)
+
+        voiceover_text = Text(
+            "The final step is the refinement stage.",
+            font_size=24
+        ).to_edge(DOWN)
+        
+        self.add(img)
+        self.play(Write(voiceover_text))
+        self.wait(1)
+
+        # 2. CLIP Block
+        clip_box = Rectangle(width=3, height=1.2, color=WHITE)
+        clip_label = Text("CLIP Classifier", font_size=28).move_to(clip_box)
+        clip_block = VGroup(clip_box, clip_label).next_to(img, DOWN, buff=0.5)
+
+        self.play(
+            FadeOut(voiceover_text),
+            Create(clip_block),
+            img.animate.scale(0.5).to_edge(LEFT)
+        )
+
+        # 3. Specific MLP Block (3 layers with ReLU)
+        layers = [3, 4, 2]
+        mlp_group = VGroup()
+        for i, num_nodes in enumerate(layers):
+            layer = VGroup(*[Circle(radius=0.15, color=BLUE, fill_opacity=0.7) for _ in range(num_nodes)])
+            layer.arrange(DOWN, buff=0.2)
+            layer.shift(RIGHT * i * 1.5)
+            mlp_group.add(layer)
+        
+        connections = VGroup()
+        for i in range(len(layers) - 1):
+            for node_a in mlp_group[i]:
+                for node_b in mlp_group[i+1]:
+                    line = Line(node_a.get_center(), node_b.get_center(), stroke_width=1, stroke_opacity=0.5)
+                    connections.add(line)
+        
+        mlp_viz = VGroup(connections, mlp_group).center().shift(RIGHT * 2)
+        mlp_label = Text("Country-Specific MLP\n(ReLU activations)", font_size=20).next_to(mlp_viz, UP)
+        
+        arrow_to_mlp = Arrow(clip_block.get_right(), mlp_viz.get_left(), buff=0.1)
+        
+        self.play(
+            Create(arrow_to_mlp),
+            Create(mlp_viz),
+            Write(mlp_label)
+        )
+
+        # 4. Animate signals flowing through MLP
+        for i in range(len(layers) - 1):
+            spark_lines = VGroup(*[
+                Line(node_a.get_center(), node_b.get_center(), color=YELLOW, stroke_width=3)
+                for node_a in mlp_group[i]
+                for node_b in mlp_group[i+1]
+            ])
+            self.play(Create(spark_lines), run_time=0.4)
+            self.play(FadeOut(spark_lines), run_time=0.2)
+
+        # 5. Formula and Map Transition
+        formula = MathTex(r"c^{(i)}:=\arg\min_{j}\|x^{(i)}-\mu_{j}\|^{2}", font_size=36).to_edge(UP)
+        
+        try:
+            map_obj = ImageMobject("map.png").scale(2).shift(DOWN)
+        except:
+            map_obj = Rectangle(height=4, width=6, color=GREEN, fill_opacity=0.2).shift(DOWN)
+            map_label = Text("Regional Map", font_size=20).move_to(map_obj)
+            map_obj = Group(map_obj, map_label)
+
+        self.play(
+            FadeOut(clip_block),
+            FadeOut(arrow_to_mlp),
+            FadeOut(mlp_viz),
+            FadeOut(mlp_label),
+            FadeOut(img),
+            Write(formula)
+        )
+        self.play(FadeIn(map_obj))
+
+        # Centroids (K-means)
+        centroid_points = [(1, 0.5, 0), (-1, -0.8, 0), (0.5, -1.2, 0), (-2, 0.3, 0)]
+        centroids = VGroup(*[Dot(point=map_obj.get_center() + np.array(p), color=WHITE) 
+                           for p in centroid_points])
+        self.play(Create(centroids))
+
+        # 6. Final Coordinate and Pin Dropping
+        target_pos = centroids[0].get_center()
+        pin = VGroup(
+            Line(target_pos + UP*0.5, target_pos, color=RED, stroke_width=6),
+            Dot(target_pos + UP*0.5, color=RED, radius=0.15)
+        )
+        
+        # Prepare vector and coordinate for TransformMatchingTex
+        # Note: TransformMatchingTex works best with matching substrings in TeX
+        image_vector = MathTex(r"\text{Image Vector: } [v_1, v_2, \dots, v_n]", font_size=34).to_edge(LEFT).shift(UP*0.5)
+        final_coords = MathTex(r"\text{Result: } (49.85, 10.60)", font_size=34).to_edge(LEFT).shift(UP*0.5)
+
+        self.play(Write(image_vector))
+        self.wait(0.5)
+
+        # Drop pin and transform text
+        self.play(
+            FadeIn(pin, shift=DOWN),
+            TransformMatchingTex(image_vector, final_coords),
+            target_pos = target_pos # dummy to keep structure
+        )
+        self.play(Indicate(pin, color=YELLOW), Indicate(centroids[0], color=YELLOW))
+        
+        self.wait(2)
+
+        # Final Summary text
+        summary = Text("Hierarchical Approach: Global Country -> Local Region", font_size=24).to_edge(DOWN)
+        self.play(Write(summary))
+        self.wait(3)
+
+=== ERROR ===
+undefined identifiers detected: TransformMatchingTex

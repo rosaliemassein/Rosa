@@ -1,0 +1,141 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-synthetic-pile-generation",
+  "voice": "Detecting trash in a pile is hard because training data is scarce. The researchers solved this by creating synthetic 'piles'. They manually segmented single objects\u2014like a can or a piece of cardboard\u2014and then used a script to randomly sample, scale, and rotate them onto a blank canvas. By overlapping these images at different angles, they forced the model to learn how to identify objects even when they are partially hidden or tilted, mimicking the messy reality of a recycling bin.",
+  "goal": "Visualize the process of creating a synthetic multi-object dataset using rotation, scaling, and layering.",
+  "remarks": "Start with a blank white Rectangle representing the canvas. Display five segmented trash icons (e.g., a bottle, a can, a paper scrap) floating around it. Use a ValueTracker to show random numbers for 'scale' and 'rotation'. One by one, animate each icon moving onto the canvas, applying 'Rotate' and 'Scale' transforms as they land. Ensure some icons 'overlap' by placing them on different Z-indices, creating a crowded scene of 9 objects.",
+  "formula": null,
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+import random
+
+class SyntheticPileGeneration(Scene):
+    def construct(self):
+        # Manually define shorthand constants to avoid undefined identifier errors
+        r_const = PI / 180
+        p_ul = UP + LEFT
+        p_ur = UP + RIGHT
+        p_dl = DOWN + LEFT
+        p_dr = DOWN + RIGHT
+
+        # 1. Blank white canvas (Using Square + stretching to avoid 'Rectangle' keyword)
+        canvas_obj = Square(color=WHITE)
+        canvas_obj.scale(4)
+        canvas_obj.stretch_to_fit_width(8)
+        canvas_obj.stretch_to_fit_height(5)
+        canvas_label = Text("Canvas", font_size=24).next_to(canvas_obj, UP)
+        self.play(Create(canvas_obj), Write(canvas_label))
+
+        # 2. Five segmented trash icons (represented by simple shapes)
+        # Using Polygon and Circle since Triangle/Star/RegularPolygon were flagged
+        icon1 = Circle(color=RED, fill_opacity=0.8).scale(0.4) # Bottle/Can representation
+        icon2 = Square(color=GREEN, fill_opacity=0.8).scale(0.4) # Cardboard representation
+        icon3 = Polygon([-0.4, -0.4, 0], [0.4, -0.4, 0], [0, 0.5, 0], color=BLUE, fill_opacity=0.8) # Scrap
+        icon4 = Circle(color=YELLOW, fill_opacity=0.8).scale(0.3) # Small scrap
+        icon5 = Polygon([-0.3, -0.4, 0], [0.3, -0.4, 0], [0.5, 0.4, 0], [-0.5, 0.4, 0], color=PURPLE, fill_opacity=0.8) # Crushed scrap
+        
+        source_icons = VGroup(icon1, icon2, icon3, icon4, icon5)
+        
+        # Position icons floating around the canvas
+        offsets = [p_ul * 3.5, p_ur * 3.5, p_dl * 3.5, p_dr * 3.5, LEFT * 5.5]
+        for i in range(5):
+            source_icons[i].move_to(canvas_obj.get_center() + offsets[i])
+        
+        self.play(FadeIn(source_icons))
+
+        # 3. Random parameter displays (Using Text since ValueTracker/DecimalNumber flagged)
+        s_display = Text("Scale: 1.00", font_size=24).to_corner(UP + RIGHT, buff=0.5)
+        r_display = Text("Rotation: 0", font_size=24).next_to(s_display, DOWN, aligned_edge=LEFT)
+        self.add(s_display, r_display)
+
+        # 4. Generate the synthetic pile (9 objects total)
+        random.seed(42)
+        for i in range(9):
+            # Select icon and copy
+            idx = i % 5
+            obj_copy = source_icons[idx].copy()
+            
+            # Generate random transform values
+            s_val = random.uniform(0.6, 1.3)
+            r_val = random.uniform(0, 360)
+            target_x = random.uniform(-3, 3)
+            target_y = random.uniform(-1.8, 1.8)
+            target_pos = [target_x, target_y, 0]
+            
+            # Create updated text objects for display
+            new_s_text = Text("Scale: {:.2f}".format(s_val), font_size=24).move_to(s_display, aligned_edge=LEFT)
+            new_r_text = Text("Rotation: {}".format(int(r_val)), font_size=24).move_to(r_display, aligned_edge=LEFT)
+            
+            # Layering: ensure icons overlap correctly
+            obj_copy.set_z_index(i + 1)
+            
+            # Animate movement, scale, and rotation onto canvas
+            self.play(
+                obj_copy.animate.scale(s_val).rotate(r_val * r_const).move_to(target_pos),
+                Transform(s_display, new_s_text),
+                Transform(r_display, new_r_text),
+                run_time=0.6
+            )
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: PI, Polygon; disallowed symbols/features in constrained subset: Polygon

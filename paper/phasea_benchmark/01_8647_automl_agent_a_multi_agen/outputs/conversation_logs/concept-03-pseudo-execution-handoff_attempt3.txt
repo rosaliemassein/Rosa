@@ -1,0 +1,132 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-pseudo-execution-handoff",
+  "voice": "The real magic happens during plan execution. We decompose each plan into sub-tasks for specialized agents. The Data Agent performs a 'pseudo-analysis'\u2014it acts as if it's processing the data to identify key characteristics. It then hands off these insights to the Model Agent. Notice how the Model Agent\u2019s sub-tasks depend directly on the Data Agent's output. This allows for a training-free search, where agents use in-context learning to estimate performance before a single line of training code is ever run.",
+  "goal": "Visualize the information hand-off between specialized agents and the concept of training-free search.",
+  "remarks": "Create a split-screen animation. On the top, the 'Data Agent' (A_d) processes a Data block to output 'O_d' (Data Insights). Animate an arrow carrying 'O_d' down to the 'Model Agent' (A_m). Show the Model Agent's task block (s_m) expanding as it receives this input. Use a ValueTracker to show a 'Search Efficiency' bar increasing as the agents communicate without actual GPU training execution.",
+  "formula": "s_i^m = \\mathrm{PD}(R, \\mathcal{A}_m, \\mathbf{p}_i, O_i^d)",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+s_i^m = \mathrm{PD}(R, \mathcal{A}_m, \mathbf{p}_i, O_i^d)
+
+
+=== ASSISTANT ===
+from manim import *
+
+class PseudoExecutionHandoff(Scene):
+    def construct(self):
+        # 1. Setup Titles and Text
+        # Using Text instead of MathTex and basic colors to ensure compatibility
+        text_title = Text("Pseudo-Execution Handoff", font_size=36).to_edge(UP)
+        text_goal = Text("Visualizing Information Handoff", font_size=20, color=BLUE).next_to(text_title, DOWN)
+        
+        # Formula using Text to avoid MathTex restrictions
+        formula = Text("s_i^m = PD(R, Am, pi, Od)", font_size=24).to_corner(DOWN + LEFT)
+
+        # 2. Agents
+        # Use YELLOW instead of GOLD, GREY instead of GRAY
+        data_agent_circ = Circle(radius=0.7, color=YELLOW).shift(UP * 1.5 + LEFT * 3.5)
+        data_label = Text("Data Agent", font_size=24).next_to(data_agent_circ, UP)
+        data_agent = VGroup(data_agent_circ, data_label)
+        
+        model_agent_circ = Circle(radius=0.7, color=BLUE).shift(DOWN * 1.5 + LEFT * 3.5)
+        model_label = Text("Model Agent", font_size=24).next_to(model_agent_circ, DOWN)
+        model_agent = VGroup(model_agent_circ, model_label)
+
+        # 3. Data Insights and Task Blocks
+        data_insight = Text("Od", color=YELLOW).move_to(data_agent_circ.get_center())
+        model_task = Text("sm", color=BLUE).move_to(model_agent_circ.get_center())
+        
+        # 4. Search Efficiency Bar
+        # Replacing Rectangle with a thick Line for background and a growing Line for fill
+        bar_bg = Line(LEFT * 2, RIGHT * 2, color=WHITE, stroke_width=2).shift(RIGHT * 3 + UP * 0.5)
+        efficiency_label = Text("Search Efficiency", font_size=24).next_to(bar_bg, UP)
+        
+        # The fill is a line created from left to right
+        bar_fill = Line(
+            bar_bg.get_start(), 
+            bar_bg.get_end(), 
+            color=GREEN, 
+            stroke_width=15
+        )
+
+        # 5. Animation Sequence
+        self.play(Write(text_title), FadeIn(text_goal))
+        self.play(FadeIn(data_agent), FadeIn(model_agent))
+        self.wait(0.5)
+
+        # Data Agent Processing
+        self.play(Write(data_insight))
+        self.play(data_agent_circ.animate.set_fill(YELLOW, opacity=0.3))
+        
+        # The Handoff
+        handoff_arrow = Arrow(data_agent_circ.get_bottom(), model_agent_circ.get_top(), buff=0.1)
+        self.play(Create(handoff_arrow))
+        self.play(data_insight.animate.move_to(model_agent_circ.get_top() + UP * 0.4))
+        
+        # Model Agent receives and expands
+        self.play(
+            FadeOut(data_insight),
+            model_agent_circ.animate.scale(1.3).set_fill(BLUE, opacity=0.3),
+            Write(model_task)
+        )
+        self.play(model_task.animate.scale(1.5))
+
+        # Training-free search efficiency bar increase
+        self.add(bar_bg, efficiency_label)
+        self.play(Write(formula))
+        
+        # Create animates the line from start point to end point
+        self.play(
+            Create(bar_fill),
+            run_time=3
+        )
+
+        self.wait(2)

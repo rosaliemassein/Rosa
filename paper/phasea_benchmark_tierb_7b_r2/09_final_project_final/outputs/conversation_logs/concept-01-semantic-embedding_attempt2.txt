@@ -1,0 +1,147 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-semantic-embedding",
+  "voice": "To match proposals with reviewers, we first have to turn human language into something a computer can measure. Instead of just looking for exact word matches, we use Word2Vec to map keywords into a high-dimensional vector space. Think of it like a map where concepts that mean similar things, like 'Deep Learning' and 'Neural Networks', are physically placed close to each other. When we encounter a multi-word phrase, we simply take the average of the individual word vectors to find the phrase's center of gravity in this conceptual space.",
+  "goal": "Understand how keywords are transformed into mathematical vectors and averaged for multi-word phrases.",
+  "remarks": "Create a 3D NumberPlane. Pop up floating text labels for 'Deep Learning', 'Neural Networks', and 'Robotics'. Animate the text labels transforming into Dot objects at specific coordinates. Use a dashed line to show the distance between 'Deep Learning' and 'Neural Networks' being small, while 'Robotics' is further away. To show the formula, display the word 'Machine' and its vector, the word 'Learning' and its vector, and then use Transform to merge them into a single central vector representing the average position.",
+  "formula": "v_{phrase} = \\frac{1}{n} \\sum_{i=1}^{n} v_{i}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+v_{phrase} = \frac{1}{n} \sum_{i=1}^{n} v_{i}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class SemanticEmbeddingScene(Scene):
+    def construct(self):
+        # 1. Setup - Using basic Line objects instead of NumberPlane or ThreeDAxes
+        # to adhere to constrained subset restrictions.
+        x_axis = Line(LEFT * 5, RIGHT * 5, color=GREY_B)
+        y_axis = Line(DOWN * 3.5, UP * 3.5, color=GREY_B)
+        self.add(x_axis, y_axis)
+
+        # 2. Key Concepts and Coordinates (2D space)
+        loc_dl = [2, 1.5, 0]
+        loc_nn = [2.5, 0.5, 0]
+        loc_rb = [-2.5, -1.5, 0]
+
+        label_dl = Text("Deep Learning", font_size=24).move_to(loc_dl).shift(UP * 0.4)
+        label_nn = Text("Neural Networks", font_size=24).move_to(loc_nn).shift(UP * 0.4)
+        label_rb = Text("Robotics", font_size=24).move_to(loc_rb).shift(UP * 0.4)
+
+        # Animation: Floating text labels pop up
+        self.play(Write(label_dl), Write(label_nn), Write(label_rb))
+        self.wait(0.5)
+
+        # 3. Transform labels into Dot objects
+        dot_dl = Dot(loc_dl, color=BLUE)
+        dot_nn = Dot(loc_nn, color=BLUE)
+        dot_rb = Dot(loc_rb, color=RED)
+
+        self.play(
+            ReplacementTransform(label_dl, dot_dl),
+            ReplacementTransform(label_nn, dot_nn),
+            ReplacementTransform(label_rb, dot_rb)
+        )
+        self.wait(0.5)
+
+        # 4. Show distance/similarity (Using Line as DashedLine is disallowed)
+        similarity_line = Line(loc_dl, loc_nn, color=YELLOW)
+        self.play(Create(similarity_line))
+        self.wait(1)
+
+        # 5. Display the formula
+        formula = MathTex(r"v_{\text{phrase}} = \frac{1}{n} \sum_{i=1}^{n} v_{i}").scale(0.8)
+        formula.to_corner(UL)
+        self.play(Write(formula))
+        self.wait(1)
+
+        # 6. Multi-word phrase averaging demo: "Machine" and "Learning"
+        # Positioning them in the upper-left quadrant
+        loc_machine = [-1.5, 2.5, 0]
+        loc_learning = [-3.5, 2.5, 0]
+        loc_average = [-2.5, 2.5, 0]
+
+        word_machine = Text("Machine", font_size=22).move_to(loc_machine).shift(UP * 0.4)
+        dot_machine = Dot(loc_machine, color=GREEN)
+        word_learning = Text("Learning", font_size=22).move_to(loc_learning).shift(UP * 0.4)
+        dot_learning = Dot(loc_learning, color=GREEN)
+
+        self.play(FadeIn(word_machine), Create(dot_machine))
+        self.play(FadeIn(word_learning), Create(dot_learning))
+        self.wait(1)
+
+        # 7. Merge individual word vectors into the phrase vector (average)
+        dot_phrase = Dot(loc_average, color=YELLOW)
+        label_phrase = Text("Machine Learning", font_size=22).move_to(loc_average).shift(UP * 0.4)
+
+        self.play(
+            ReplacementTransform(dot_machine, dot_phrase),
+            ReplacementTransform(dot_learning, dot_phrase),
+            ReplacementTransform(word_machine, label_phrase),
+            ReplacementTransform(word_learning, label_phrase)
+        )
+        self.wait(2)

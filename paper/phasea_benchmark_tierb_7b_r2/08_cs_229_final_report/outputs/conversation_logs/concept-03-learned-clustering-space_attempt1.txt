@@ -1,0 +1,166 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-learned-clustering-space",
+  "voice": "The real power of this model is that it doesn't cluster hits in the physical x-y-z space of the detector. Instead, it maps every hit into a completely new, multi-dimensional 'learned coordinate' space. In this space, the complex, overlapping energy deposits from two different electrons are unwarped and pulled apart into distinct, easily separable blobs. This transformation is what allows us to tell the difference between one high-energy electron and two lower-energy ones that are physically close together.",
+  "goal": "Demonstrate the transformation from physical detector coordinates to the learned clustering space.",
+  "remarks": "Create a split-screen view. On the left, show a 'Physical Space' NumberPlane with two overlapping clusters of hits. On the right, show a 'Learned Space' NumberPlane. Use a Transform animation to move the dots from the left plane to the right plane. In the physical space, the clusters should overlap heavily. In the learned space, the dots should magically rearrange into two distinct, separated circular distributions. Draw a dashed circle around each cluster in the learned space to indicate successful classification.",
+  "formula": "L_V = \\frac{1}{N} \\sum q_j \\sum (\\mathbb{1} \\check{V}_k + (1-\\mathbb{1}) \\hat{V}_k)",
+  "image_ref": "img-14.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+L_V = \frac{1}{N} \sum q_j \sum (\mathbb{1} \check{V}_k + (1-\mathbb{1}) \hat{V}_k)
+
+
+=== ASSISTANT ===
+from manim import *
+
+class Concept03LearningClusteringSpace(Scene):
+    def construct(self):
+        # 1. Setup Physical Space (Left)
+        # Using Line instead of Axes/NumberPlane to comply with constraints
+        p_center = LEFT * 3.5
+        p_x_axis = Line(p_center + LEFT * 2, p_center + RIGHT * 2, color=WHITE)
+        p_y_axis = Line(p_center + DOWN * 2, p_center + UP * 2, color=WHITE)
+        p_label = Text("Physical Space", font_size=24).next_to(p_x_axis, UP, buff=1.8)
+        p_group = VGroup(p_x_axis, p_y_axis, p_label)
+
+        # 2. Setup Learned Space (Right)
+        l_center = RIGHT * 3.5
+        l_x_axis = Line(l_center + LEFT * 2, l_center + RIGHT * 2, color=WHITE)
+        l_y_axis = Line(l_center + DOWN * 2, l_center + UP * 2, color=WHITE)
+        l_label = Text("Learned Space", font_size=24).next_to(l_x_axis, UP, buff=1.8)
+        l_group = VGroup(l_x_axis, l_y_axis, l_label)
+
+        # 3. Reference Formula
+        formula = MathTex(
+            r"L_V = \frac{1}{N} \sum q_j \sum (\mathbb{1} \check{V}_k + (1-\mathbb{1}) \hat{V}_k)",
+            font_size=24
+        ).to_edge(DOWN, buff=0.5)
+
+        # 4. Create Overlapping Hits in Physical Space
+        # Cluster 1 (Red)
+        red_p = VGroup(
+            Dot(p_center + 0.2*RIGHT + 0.3*UP, color=RED, radius=0.08),
+            Dot(p_center + 0.4*RIGHT + 0.1*UP, color=RED, radius=0.08),
+            Dot(p_center - 0.1*RIGHT + 0.4*UP, color=RED, radius=0.08),
+            Dot(p_center + 0.3*RIGHT - 0.2*UP, color=RED, radius=0.08),
+            Dot(p_center - 0.2*RIGHT - 0.1*UP, color=RED, radius=0.08)
+        )
+        # Cluster 2 (Blue) - Heavily overlapping
+        blue_p = VGroup(
+            Dot(p_center + 0.1*RIGHT + 0.2*UP, color=BLUE, radius=0.08),
+            Dot(p_center + 0.3*RIGHT + 0.3*UP, color=BLUE, radius=0.08),
+            Dot(p_center - 0.2*RIGHT + 0.2*UP, color=BLUE, radius=0.08),
+            Dot(p_center + 0.1*RIGHT - 0.3*UP, color=BLUE, radius=0.08),
+            Dot(p_center - 0.3*RIGHT - 0.2*UP, color=BLUE, radius=0.08)
+        )
+        physical_dots = VGroup(red_p, blue_p)
+
+        # 5. Define Targets in Learned Space (Separated)
+        # Red moves left, Blue moves right
+        red_l = VGroup(
+            Dot(l_center + LEFT + 0.2*RIGHT + 0.3*UP, color=RED, radius=0.08),
+            Dot(l_center + LEFT + 0.4*RIGHT + 0.1*UP, color=RED, radius=0.08),
+            Dot(l_center + LEFT - 0.1*RIGHT + 0.4*UP, color=RED, radius=0.08),
+            Dot(l_center + LEFT + 0.3*RIGHT - 0.2*UP, color=RED, radius=0.08),
+            Dot(l_center + LEFT - 0.2*RIGHT - 0.1*UP, color=RED, radius=0.08)
+        )
+        blue_l = VGroup(
+            Dot(l_center + RIGHT + 0.1*RIGHT + 0.2*UP, color=BLUE, radius=0.08),
+            Dot(l_center + RIGHT + 0.3*RIGHT + 0.3*UP, color=BLUE, radius=0.08),
+            Dot(l_center + RIGHT - 0.2*RIGHT + 0.2*UP, color=BLUE, radius=0.08),
+            Dot(l_center + RIGHT + 0.1*RIGHT - 0.3*UP, color=BLUE, radius=0.08),
+            Dot(l_center + RIGHT - 0.3*RIGHT - 0.2*UP, color=BLUE, radius=0.08)
+        )
+        learned_dots = VGroup(red_l, blue_l)
+
+        # 6. Animation sequence
+        self.add(p_group)
+        self.play(FadeIn(physical_dots, lag_ratio=0.1))
+        self.wait(1)
+
+        self.play(
+            Create(l_group),
+            Write(formula)
+        )
+        self.wait(1)
+
+        # Transformation to Learned Space
+        self.play(
+            Transform(physical_dots, learned_dots),
+            run_time=3,
+            path_arc=0.3
+        )
+        self.wait(0.5)
+
+        # Classification circles
+        c1 = Circle(radius=0.9, color=YELLOW).move_to(l_center + LEFT)
+        c2 = Circle(radius=0.9, color=YELLOW).move_to(l_center + RIGHT)
+        
+        # Simulating dashed effect with stroke settings if supported, or just solid circles
+        c1.set_stroke(width=2)
+        c2.set_stroke(width=2)
+
+        self.play(Create(c1), Create(c2))
+        self.wait(2)

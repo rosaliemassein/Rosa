@@ -1,0 +1,188 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-locally-weighted-regression",
+  "voice": "The most successful method was Locally Weighted Regression. Instead of trying to fit one rigid line to all the data, it looks at your desired behavior and gives more 'weight' to training examples that look similar. It's like a local expert that ignores irrelevant data points far from your target.",
+  "goal": "Visualize the intuition behind Locally Weighted Regression (LWR) as a non-linear mapping technique.",
+  "remarks": "Create an Axes with a scatter plot of random points representing previous motor trials. A 'query point' (a white dot) appears. Animate a circular 'weight' field (a radial gradient) expanding from this point. Points close to the query point glow brightly (high weight), while distant points fade out. Draw a short, local regression line that only fits the 'glowing' points. As the query point moves, show the line recalculating and tilting to follow the local density.",
+  "formula": "w^{(i)} = \\exp\\left(-\\frac{||x^{(i)} - x||^2}{2\\tau^2}\\right)",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+w^{(i)} = \exp\left(-\frac{||x^{(i)} - x||^2}{2\tau^2}\right)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept03LocallyWeightedRegression(Scene):
+    def construct(self):
+        # 1. Setup Axes and Data
+        ax = Axes(
+            x_range=[-5, 5, 1],
+            y_range=[-3, 3, 1],
+            x_length=10,
+            y_length=6,
+            axis_config={"include_tip": False}
+        ).add_coordinates()
+        
+        # Generate data following a sine curve with noise
+        tau = 0.6
+        np.random.seed(42)  # For consistent results
+        x_data = np.linspace(-4.5, 4.5, 60)
+        y_data = np.sin(x_data) + np.random.normal(0, 0.15, 60)
+        
+        # Create scatter points
+        dots = VGroup(*[
+            Dot(ax.c2p(x, y), radius=0.06, color=BLUE_E) 
+            for x, y in zip(x_data, y_data)
+        ])
+
+        # 2. Query Point and Weight Field
+        x_tracker = ValueTracker(-4)
+        
+        query_point = Dot(color=WHITE, z_index=10)
+        query_point.add_updater(lambda m: m.move_to(ax.c2p(x_tracker.get_value(), np.sin(x_tracker.get_value()))))
+        
+        # A circular "weight field" representation
+        weight_field = Circle(radius=1.5, color=WHITE, fill_opacity=0.1, stroke_opacity=0.4)
+        weight_field.add_updater(lambda m: m.move_to(query_point.get_center()))
+
+        # 3. Dynamic Updaters for Dot weights (Glow/Fade)
+        def update_dots(dots_group):
+            xq = x_tracker.get_value()
+            for i, dot in enumerate(dots_group):
+                dist_sq = (x_data[i] - xq)**2
+                weight = np.exp(-dist_sq / (2 * tau**2))
+                # High weight = Yellow, Low weight = Dark Blue/Faded
+                dot.set_color(interpolate_color(BLUE_E, YELLOW, weight))
+                dot.set_opacity(interpolate(0.2, 1.0, weight))
+
+        dots.add_updater(update_dots)
+
+        # 4. Local Regression Line Updater
+        def get_lwr_line():
+            xq = x_tracker.get_value()
+            # Calculate weights for all points based on the current query xq
+            weights = np.exp(-(x_data - xq)**2 / (2 * tau**2))
+            W = np.diag(weights)
+            X = np.column_stack([np.ones_like(x_data), x_data])
+            
+            # Solve (X.T * W * X) theta = X.T * W * y
+            try:
+                # Normal Equation for LWR: theta = (X^T W X)^-1 X^T W y
+                xtwx = X.T @ W @ X + 1e-6 * np.eye(2) # Ridge for stability
+                xtwy = X.T @ W @ y_data
+                theta = np.linalg.solve(xtwx, xtwy)
+                
+                # Define a short segment around the query point
+                x_start, x_end = xq - 1.0, xq + 1.0
+                p1 = ax.c2p(x_start, theta[0] + theta[1] * x_start)
+                p2 = ax.c2p(x_end, theta[0] + theta[1] * x_end)
+                return Line(p1, p2, color=RED, stroke_width=6)
+            except:
+                return Line(ax.c2p(-1, 0), ax.c2p(1, 0), stroke_opacity=0)
+
+        reg_line = always_redraw(get_lwr_line)
+
+        # 5. UI Elements
+        formula = MathTex(r"w^{(i)} = \exp\left(-\frac{||x^{(i)} - x||^2}{2\tau^2}\right)")
+        formula.to_corner(UL).scale(0.8).shift(DOWN * 0.5)
+        
+        voice_text = Text(
+            "Locally Weighted Regression gives more 'weight' to similar examples.",
+            font_size=24, color=WHITE
+        ).to_edge(UP)
+
+        # 6. Animation Execution
+        self.add(ax, dots)
+        self.play(Write(voice_text))
+        self.wait(1)
+        
+        self.play(FadeIn(query_point), GrowFromCenter(weight_field))
+        self.add(reg_line)
+        self.play(Write(formula))
+        self.wait(1)
+
+        # Move query point across the domain
+        self.play(x_tracker.animate.set_value(4), run_time=10, rate_func=linear)
+        self.wait(1)
+        
+        goal_text = Text(
+            "The local expert ignores irrelevant data points far from the target.",
+            font_size=24, color=YELLOW
+        ).to_edge(UP)
+        
+        self.play(Transform(voice_text, goal_text))
+        self.play(x_tracker.animate.set_value(-2), run_time=4)
+        self.wait(2)
+
+        # Fade out everything
+        self.play(
+            FadeOut(ax), FadeOut(dots), FadeOut(query_point), 
+            FadeOut(weight_field), FadeOut(reg_line), 
+            FadeOut(formula), FadeOut(voice_text)
+        )
+
+=== ERROR ===
+undefined identifiers detected: BLUE_E, GrowFromCenter, interpolate, interpolate_color, linear, m

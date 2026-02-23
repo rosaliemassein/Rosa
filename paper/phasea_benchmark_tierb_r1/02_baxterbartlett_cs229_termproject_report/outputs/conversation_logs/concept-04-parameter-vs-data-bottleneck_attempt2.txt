@@ -1,0 +1,163 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-parameter-vs-data-bottleneck",
+  "voice": "Why did the simple LWR outperform a powerful Neural Network? It comes down to data. With only 27 training points, the Neural Network's 24 internal parameters were prone to 'overfitting'\u2014it was essentially memorizing the noise rather than learning the physics. LWR, being a local linear approximation, was much more robust to this small sample size.",
+  "goal": "Explain why the Neural Network struggled compared to LWR due to the high-variance/small-dataset problem.",
+  "remarks": "Show two side-by-side plots. On the left, 'Neural Network': show a complex, highly 'wiggling' curve that hits every single data point but looks erratic. Label it 'High Variance'. On the right, 'LWR': show a smoother, piecewise-linear path through the same points. Below, animate a bar chart showing MSE: the LWR bar is significantly shorter (0.85) than the Neural Network bar (1.21).",
+  "formula": "MSE = \\frac{||Y_{test} - Y_{pred}||_F^2}{3n}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+MSE = \frac{||Y_{test} - Y_{pred}||_F^2}{3n}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ParameterVsDataBottleneck(Scene):
+    def construct(self):
+        # 1. SETUP PLOT FRAMES (Avoiding the 'Axes' class due to environment restrictions)
+        left_origin = 3.75 * LEFT + 0.5 * UP
+        right_origin = 0.75 * RIGHT + 0.5 * UP
+        
+        frame_l_x = Line(left_origin, left_origin + 3 * RIGHT, color=WHITE)
+        frame_l_y = Line(left_origin, left_origin + 2.5 * UP, color=WHITE)
+        frame_r_x = Line(right_origin, right_origin + 3 * RIGHT, color=WHITE)
+        frame_r_y = Line(right_origin, right_origin + 2.5 * UP, color=WHITE)
+        
+        # Labels
+        nn_title = Text("Neural Network", font_size=24, color=YELLOW).move_to(left_origin + 1.5 * RIGHT + 3 * UP)
+        lwr_title = Text("LWR", font_size=24, color=BLUE).move_to(right_origin + 1.5 * RIGHT + 3 * UP)
+        hv_label = Text("High Variance", font_size=20, color=RED).next_to(nn_title, DOWN, buff=0.1)
+
+        # 2. DATA POINTS
+        # Local coordinates relative to origins
+        pts_rel_x = [0.4, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8]
+        pts_rel_y = [0.5, 1.4, 0.7, 1.9, 1.2, 2.2, 1.8]
+        
+        dots_l = VGroup(*[Dot(left_origin + x * RIGHT + y * UP, radius=0.06) for x, y in zip(pts_rel_x, pts_rel_y)])
+        dots_r = VGroup(*[Dot(right_origin + x * RIGHT + y * UP, radius=0.06) for x, y in zip(pts_rel_x, pts_rel_y)])
+
+        # 3. CURVES
+        # NN Curve: Wiggly path hitting every point
+        nn_path = VMobject(color=YELLOW)
+        nn_curve_pts = []
+        for i in range(len(pts_rel_x) - 1):
+            x0, x1 = pts_rel_x[i], pts_rel_x[i+1]
+            y0, y1 = pts_rel_y[i], pts_rel_y[i+1]
+            for t in np.linspace(0, 1, 15):
+                curr_x = x0 + t * (x1 - x0)
+                # Overfitting wiggle
+                wiggle = 0.3 * np.sin(t * PI * 2) if i % 2 == 0 else -0.3 * np.sin(t * PI * 2)
+                curr_y = y0 + t * (y1 - y0) + wiggle
+                nn_curve_pts.append(left_origin + curr_x * RIGHT + curr_y * UP)
+        nn_path.set_points_as_corners(nn_curve_pts)
+
+        # LWR Curve: Smooth piecewise linear path
+        lwr_path = VMobject(color=BLUE)
+        lwr_curve_pts = [right_origin + x * RIGHT + y * UP for x, y in zip(pts_rel_x, pts_rel_y)]
+        lwr_path.set_points_as_corners(lwr_curve_pts)
+
+        # 4. MSE FORMULA & BAR CHART
+        formula = MathTex(r"MSE = \frac{||Y_{test} - Y_{pred}||_F^2}{3n}", font_size=32).to_edge(DOWN, buff=1.8)
+        
+        base_line = Line(3*LEFT + 3*DOWN, 3*RIGHT + 3*DOWN, color=GREY)
+        
+        # NN Bar (Height 1.21)
+        bar_nn = Rectangle(height=1.21, width=0.8, fill_opacity=0.8, fill_color=YELLOW, stroke_width=1)
+        bar_nn.move_to(1.5*LEFT + 3*DOWN, aligned_edge=DOWN)
+        
+        # LWR Bar (Height 0.85)
+        bar_lwr = Rectangle(height=0.85, width=0.8, fill_opacity=0.8, fill_color=BLUE, stroke_width=1)
+        bar_lwr.move_to(1.5*RIGHT + 3*DOWN, aligned_edge=DOWN)
+        
+        val_nn = Text("NN: 1.21", font_size=20).next_to(bar_nn, UP, buff=0.1)
+        val_lwr = Text("LWR: 0.85", font_size=20).next_to(bar_lwr, UP, buff=0.1)
+
+        # 5. ANIMATION SEQUENCE
+        self.play(
+            Create(frame_l_x), Create(frame_l_y), 
+            Create(frame_r_x), Create(frame_r_y),
+            Write(nn_title), Write(lwr_title)
+        )
+        self.play(FadeIn(dots_l), FadeIn(dots_r))
+        self.wait(0.5)
+        
+        self.play(Create(nn_path), Write(hv_label), run_time=2.5)
+        self.play(Create(lwr_path), run_time=2.5)
+        self.wait(1)
+        
+        self.play(Write(formula))
+        self.play(
+            Create(base_line),
+            FadeIn(bar_nn, shift=UP),
+            FadeIn(bar_lwr, shift=UP),
+            Write(val_nn),
+            Write(val_lwr)
+        )
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: VMobject

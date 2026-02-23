@@ -1,0 +1,251 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+
+STYLE:
+- Use Axes, NumberPlane, ValueTracker, MathTex, arrows, shapes.
+- Animate dynamically: plots, moving dots, equation steps, diagrams.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-multi-agent-orchestration",
+  "voice": "Imagine an AI project as a construction site. Instead of one person trying to build the whole house, AutoML-Agent uses a team of specialized workers. We have an Agent Manager acting as the conductor, delegating tasks to experts in data parsing, preprocessing, model design, and final code generation. This modular approach allows the system to handle the massive complexity of an end-to-end machine learning pipeline without getting overwhelmed.",
+  "goal": "Understand the roles and hierarchy of the specialized agents within the AutoML-Agent framework.",
+  "remarks": "Create a central node labeled 'Agent Manager'. Draw four arrows pointing outwards to sub-nodes: 'Prompt Agent', 'Data Agent', 'Model Agent', and 'Operation Agent'. Color code each node differently. Animate a 'User Instruction' pulse traveling from the user to the Manager, then small 'Task' pulses flowing from the Manager to each specialized agent. Use Manim's Create and GrowFromCenter methods to build this hierarchy.",
+  "formula": "\\mathcal{A}_{mgr} \\to \\{\\mathcal{A}_p, \\mathcal{A}_d, \\mathcal{A}_m, \\mathcal{A}_o\\}",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathcal{A}_{mgr} \to \{\mathcal{A}_p, \mathcal{A}_d, \mathcal{A}_m, \mathcal{A}_o\}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptAnimation(Scene):
+    def construct(self):
+        # 1. Create the central node for the Agent Manager
+        mgr_circle = Circle(radius=0.7, color=RED)
+        mgr_symbol = MathTex(r"\mathcal{A}_{mgr}", color=RED)
+        manager = VGroup(mgr_circle, mgr_symbol)
+        mgr_label = Text("Agent Manager", font_size=24).next_to(manager, UP)
+
+        # 2. Define data for the four specialized agents
+        # Format: (Label, Math Symbol, Color, Position)
+        agent_data = [
+            ("Prompt Agent", r"\mathcal{A}_p", GREEN, UP * 2 + LEFT * 4),
+            ("Data Agent", r"\mathcal{A}_d", BLUE, UP * 2 + RIGHT * 4),
+            ("Model Agent", r"\mathcal{A}_m", YELLOW, DOWN * 2 + LEFT * 4),
+            ("Operation Agent", r"\mathcal{A}_o", ORANGE, DOWN * 2 + RIGHT * 4),
+        ]
+
+        agents = VGroup()
+        arrows = VGroup()
+
+        for name, symbol, color, pos in agent_data:
+            # Create sub-node (Circle + Math Symbol)
+            a_circ = Circle(radius=0.6, color=color)
+            a_sym = MathTex(symbol, color=color)
+            a_node = VGroup(a_circ, a_sym).move_to(pos)
+            
+            # Create text label for the sub-node
+            a_label = Text(name, font_size=20).next_to(a_node, DOWN)
+            
+            # Group them and add to the main collection
+            full_agent = VGroup(a_node, a_label)
+            agents.add(full_agent)
+            
+            # Create arrow from the Manager to the specialized agent
+            # buff=0.7 ensures the arrow doesn't overlap the circles
+            arr = Arrow(manager.get_center(), a_node.get_center(), buff=0.7, color=GRAY_A)
+            arrows.add(arr)
+
+        # 3. Reference Formula at the bottom
+        formula = MathTex(
+            r"\mathcal{A}_{mgr} \to \{\mathcal{A}_p, \mathcal{A}_d, \mathcal{A}_m, \mathcal{A}_o\}",
+            font_size=36
+        ).to_edge(DOWN, buff=0.7)
+
+        # 4. User Instruction pulse elements
+        user_dot = Dot(LEFT * 6, color=WHITE)
+        user_text = Text("User", font_size=20).next_to(user_dot, LEFT)
+        user_to_mgr = Arrow(user_dot.get_center(), manager.get_center(), buff=0.1, color=WHITE)
+
+        # --- ANIMATION SEQUENCE ---
+
+        # Phase 1: Build the hierarchy
+        self.play(Create(manager), Write(mgr_label))
+        self.wait(0.5)
+
+        self.play(
+            AnimationGroup(
+                *[GrowFromCenter(a) for a in agents],
+                *[Create(arr) for arr in arrows],
+                lag_ratio=0.2
+            )
+        )
+        self.play(Write(formula))
+        self.wait(1)
+
+        # Phase 2: User Instruction Pulse
+        self.play(FadeIn(user_dot), Write(user_text))
+        self.play(Create(user_to_mgr))
+        
+        pulse_u = Dot(user_dot.get_center(), color=YELLOW).scale(1.5)
+        self.play(pulse_u.animate.move_to(manager.get_center()), run_time=1)
+        self.play(FadeOut(pulse_u, scale=2))
+
+        # Phase 3: Task Pulses from Manager to Agents
+        # Create dots at the center of the manager
+        task_pulses = VGroup(*[
+            Dot(manager.get_center(), color=WHITE).scale(0.8) 
+            for _ in range(len(agents))
+        ])
+        
+        # Animate each pulse to its respective specialized agent circle
+        self.play(
+            *[
+                task_pulses[i].animate.move_to(agents[i][0].get_center())
+                for i in range(len(agents))
+            ],
+            run_time=1.5
+        )
+        self.play(FadeOut(task_pulses))
+
+        # Phase 4: Narration and Conclusion
+        narration = Text(
+            "Imagine an AI project as a construction site.", 
+            font_size=24,
+            slant=ITALIC
+        ).to_edge(UP, buff=0.3)
+        
+        self.play(FadeIn(narration))
+        self.wait(3)
+
+=== ERROR ===
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/cli/ren │
+│ der/commands.py:125 in render                                                │
+│                                                                              │
+│   122 │   │   │   try:                                                       │
+│   123 │   │   │   │   with tempconfig({}):                                   │
+│   124 │   │   │   │   │   scene = SceneClass()                               │
+│ ❱ 125 │   │   │   │   │   scene.render()                                     │
+│   126 │   │   │   except Exception:                                          │
+│   127 │   │   │   │   error_console.print_exception()                        │
+│   128 │   │   │   │   sys.exit(1)                                            │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/scene/s │
+│ cene.py:259 in render                                                        │
+│                                                                              │
+│    256 │   │   """                                                           │
+│    257 │   │   self.setup()                                                  │
+│    258 │   │   try:                                                          │
+│ ❱  259 │   │   │   self.construct()                                          │
+│    260 │   │   except EndSceneEarlyException:                                │
+│    261 │   │   │   pass                                                      │
+│    262 │   │   except RerunSceneException:                                   │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/paper/outputs/slides/concept-01-multi-agent-orch │
+│ estration_v3.py:7 in construct                                               │
+│                                                                              │
+│     4 │   def construct(self):                                               │
+│     5 │   │   # 1. Create the central node for the Agent Manager             │
+│     6 │   │   mgr_circle = Circle(radius=0.7, color=RED)                     │
+│ ❱   7 │   │   mgr_symbol = MathTex(r"\mathcal{A}_{mgr}", color=RED)          │
+│     8 │   │   manager = VGroup(mgr_circle, mgr_symbol)                       │
+│     9 │   │   mgr_label = Text("Agent Manager", font_size=24).next_to(manage │
+│    10                                                                        │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /text/tex_mobject.py:298 in __init__                                         │
+│                                                                              │
+│   295 │   │   │   │   │   │   """,                                           │
+│   296 │   │   │   │   │   ),                                                 │
+│   297 │   │   │   │   )                                                      │
+│ ❱ 298 │   │   │   raise compilation_error                                    │
+│   299 │   │   self.set_color_by_tex_to_color_map(self.tex_to_color_map)      │
+│   300 │   │                                                                  │
+│   301 │   │   if self.organize_left_to_right:                                │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /text/tex_mobject.py:277 in __init__                                         │
+│                                                                              │
+│   274 │   │   self.brace_notation_split_occurred = False                     │
+│   275 │   │   self.tex_strings = self._break_up_tex_strings(tex_strings)     │
+│   276 │   │   try:                                                           │
+│ ❱ 277 │   │   │   super().__init__(                                          │
+│   278 │   │   │   │   self.arg_separator.join(self.tex_strings),             │
+│   279 │   │   │   │   tex_environment=self.tex_environment,                  │
+│   280 │   │   │   │   tex_template=self.tex_template,                        │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /text/tex_mobject.py:78 in __init__                                          │
+│                                                                              │
+│    75 │   │   self.tex_template: TexTemplate = tex_template                  │
+│    76 │   │                                                                  │
+│    77 │   │   self.tex_string = tex_string                                   │
+│ ❱  78 │   │   file_name = tex_to_svg_file(                                   │
+│    79 │   │   │   self._get_modified_expression(tex_string),                 │
+│    80 │   │   │   environment=self.tex_environment,                          │
+│    81 │   │   │   tex_template=self.tex_template,                            │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/utils/t │
+│ ex_file_writing.py:65 in tex_to_svg_file                                     │
+│                                                                              │
+│    62 │   if svg_file.exists():                                              │
+│    63 │   │   return svg_file                                                │
+│    64 │                                                                      │
+│ ❱  65 │   dvi_file = compile_tex(                                            │
+│    66 │   │   tex_file,                                                      │
+│    67 │   │   tex_template.tex_compiler,                                     │
+│    68 │   │   tex_template.output_format,                                    │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/utils/t │
+│ ex_file_writing.py:212 in compile_tex                                        │
+│                                                                              │
+│   209 │   │   if cp.returncode != 0:                                         │
+│   210 │   │   │   log_file = tex_file.with_suffix(".log")                    │
+│   211 │   │   │   print_all_tex_errors(log_file, tex_compiler, tex_file)     │
+│ ❱ 212 │   │   │   raise ValueError(                                          │
+│   213 │   │   │   │   f"{tex_compiler} error converting to"                  │
+│   214 │   │   │   │   f" {output_format[1:]}. See log output above or"       │
+│   215 │   │   │   │   f" the log file: {log_file}",                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ValueError: latex error converting to dvi. See log output above or the log file:
+/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement 
+Learning/Project/code/cs234/paper/outputs/media/Tex/cd68b8e7b5ad09f8.log
+

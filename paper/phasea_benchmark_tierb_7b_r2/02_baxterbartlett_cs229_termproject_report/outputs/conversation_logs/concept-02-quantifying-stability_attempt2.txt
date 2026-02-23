@@ -1,0 +1,173 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-quantifying-stability",
+  "voice": "To train a model, we need to turn qualitative behavior into hard numbers. The author defines 'Stability' as a ratio: how often the motor stays at its most common speed versus how often it deviates. Meanwhile, 'Steady State Error' is calculated specifically from the final twenty percent of the run to ensure the motor has actually settled.",
+  "goal": "Explain the specific mathematical definitions of the input features used for the regression models.",
+  "remarks": "Show a velocity plot where the motor is fluctuating around 30 RPM. Highlight the last 20% of the x-axis with a different background color (e.g., light blue). Show a 'Histogram' appearing on the side, where the 'bin' at 30 RPM is significantly taller than the others. Animate a fraction bar where the numerator is the 'count of most common speed' and the denominator is 'other counts' to define the Stability feature.",
+  "formula": "Stability = \\frac{\\text{counts at mode}}{\\text{counts not at mode}}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+Stability = \frac{\text{counts at mode}}{\text{counts not at mode}}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class StabilityConcept(Scene):
+    def construct(self):
+        # 1. Coordinate System for Velocity (Manual construction using Line)
+        # origin point for the plot
+        v_origin = 3.5 * LEFT + 1 * DOWN
+        v_x_axis = Line(v_origin, v_origin + 5 * RIGHT, color=WHITE)
+        v_y_axis = Line(v_origin, v_origin + 3.5 * UP, color=WHITE)
+        
+        v_label_x = Tex("Time", font_size=24).next_to(v_x_axis, DOWN)
+        v_label_y = Tex("RPM", font_size=24).rotate(90 * DEGREES).next_to(v_y_axis, LEFT)
+        
+        # 2. Velocity Plot (Fluctuating around 30 RPM)
+        # We manually build the points for the curve to avoid Axes.plot or lambda scoping issues
+        pts = []
+        num_points = 60
+        for i in range(num_points + 1):
+            alpha = i / num_points
+            # x goes from 0 to 5
+            pos_x = alpha * 5
+            # y fluctuates around 2.0 units up from origin (representing 30 RPM)
+            fluctuation = 0.4 * np.sin(alpha * 12) + 0.2 * np.cos(alpha * 25)
+            pos_y = 2.0 + fluctuation
+            pts.append(v_origin + pos_x * RIGHT + pos_y * UP)
+        
+        velocity_curve = VMobject(color=BLUE)
+        velocity_curve.set_points_as_corners(pts)
+        
+        # 3. Highlight Last 20%
+        # 20% of 5 units is 1 unit.
+        highlight_box = Rectangle(
+            width=1.0, 
+            height=3.5, 
+            fill_color=BLUE, 
+            fill_opacity=0.2, 
+            stroke_width=0
+        ).move_to(v_origin + 4.5 * RIGHT + 1.75 * UP)
+        
+        steady_state_label = Tex("Final 20\%", font_size=20, color=BLUE).next_to(highlight_box, UP)
+
+        # 4. Histogram (Manual construction on the right side)
+        h_origin = 2 * RIGHT + 1 * DOWN
+        h_x_axis = Line(h_origin, h_origin + 4 * RIGHT, color=WHITE)
+        h_y_axis = Line(h_origin, h_origin + 3 * UP, color=WHITE)
+        h_title = Tex("Histogram", font_size=28).next_to(h_y_axis, UP)
+        
+        # Create bars: one tall bar at "30 RPM" (the mode)
+        bar_heights = [0.5, 0.8, 2.5, 1.0, 0.4]
+        bars = VGroup()
+        for idx, h in enumerate(bar_heights):
+            # The middle bar (idx=2) is the tall mode
+            bar_color = YELLOW if idx == 2 else GREY
+            b = Rectangle(
+                width=0.5, 
+                height=h, 
+                fill_color=bar_color, 
+                fill_opacity=0.8,
+                stroke_color=WHITE,
+                stroke_width=1
+            )
+            # Position bars along the h_x_axis
+            b.move_to(h_origin + (idx * 0.7 + 0.5) * RIGHT, aligned_edge=DOWN)
+            bars.add(b)
+            
+        mode_text = Tex("30 RPM (Mode)", font_size=18, color=YELLOW).next_to(bars[2], UP, buff=0.1)
+
+        # 5. Stability Formula
+        stability_formula = MathTex(
+            r"\text{Stability} = \frac{\text{counts at mode}}{\text{counts not at mode}}",
+            font_size=34
+        ).to_edge(DOWN, buff=0.5)
+
+        # 6. Animation sequence
+        # Draw the plot
+        self.play(Create(v_x_axis), Create(v_y_axis), Write(v_label_x), Write(v_label_y))
+        self.play(Create(velocity_curve), run_time=2)
+        self.wait(0.5)
+        
+        # Highlight last 20%
+        self.play(FadeIn(highlight_box), Write(steady_state_label))
+        self.wait(0.5)
+        
+        # Create Histogram
+        self.play(Create(h_x_axis), Create(h_y_axis), Write(h_title))
+        self.play(LaggedStart(*[FadeIn(b) for b in bars], lag_ratio=0.2))
+        self.play(Write(mode_text))
+        self.wait(0.5)
+        
+        # Show formula
+        self.play(Write(stability_formula))
+        self.play(Indicate(bars[2]), Indicate(stability_formula))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: VMobject

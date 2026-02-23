@@ -1,0 +1,161 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-inverse-mapping",
+  "voice": "In traditional robotics, we choose PID constants and observe the resulting motor behavior. This paper flips the script. It treats the desired behavior\u2014like how fast the motor reaches its target or how much it wobbles\u2014as the input, and asks a machine learning model to output the perfect PID constants to achieve it.",
+  "goal": "Understand the inverse relationship between motor performance metrics and PID constants.",
+  "remarks": "Create a split screen. On the left, show an 'Input' box labeled 'Desired Behavior' (Rise Time, Steady State Error, Stability). On the right, an 'Output' box labeled 'PID Constants'. Draw a large arrow between them. As the voice mentions 'flips the script', rotate the entire diagram 180 degrees. Below this, animate a motor velocity plot (RPM vs Time) where a curve oscillates toward a dashed horizontal setpoint. Use a Braced label to indicate 'Rise Time' on the x-axis and 'Steady State Error' at the tail end.",
+  "formula": "U = K_p e + K_i \\int e dt + K_d \\frac{de}{dt}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+U = K_p e + K_i \int e dt + K_d \frac{de}{dt}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept01InverseMapping(Scene):
+    def construct(self):
+        # 1. Create Input Box (Desired Behavior)
+        input_rect = Rectangle(width=4.5, height=2.5, color=RED)
+        input_title = Text("Desired Behavior", color=RED).scale(0.6).shift(UP * 0.7)
+        input_list = VGroup(
+            Text("- Rise Time", color=WHITE).scale(0.4),
+            Text("- Steady State Error", color=WHITE).scale(0.4),
+            Text("- Stability", color=WHITE).scale(0.4)
+        ).arrange(DOWN, aligned_edge=LEFT).next_to(input_title, DOWN, buff=0.2)
+        input_group = VGroup(input_rect, input_title, input_list)
+
+        # 2. Create Output Box (PID Constants)
+        output_rect = Rectangle(width=3, height=2.5, color=BLUE)
+        output_title = Text("PID Constants", color=BLUE).scale(0.6)
+        output_group = VGroup(output_rect, output_title)
+
+        # 3. Layout and Arrow
+        diagram_layout = VGroup(input_group, output_group).arrange(RIGHT, buff=1.5).to_edge(UP, buff=0.5)
+        connecting_arrow = Arrow(input_group.get_right(), output_group.get_left(), color=WHITE)
+        
+        # Whole group for rotation
+        flip_group = VGroup(input_group, output_group, connecting_arrow)
+
+        # 4. Initial Animation
+        self.play(Create(input_group), Create(output_group))
+        self.play(Create(connecting_arrow))
+        self.wait(1)
+
+        # 5. Flip the Script (Rotate 180 degrees)
+        self.play(flip_group.animate.rotate(PI))
+        self.wait(1)
+
+        # 6. Manual Plot Construction (Avoiding 'Axes' and 'DashedLine' as per constraints)
+        origin_point = DOWN * 2.5 + LEFT * 3.5
+        x_axis_line = Line(origin_point, origin_point + RIGHT * 7)
+        y_axis_line = Line(origin_point, origin_point + UP * 2.5)
+        x_axis_label = Text("Time", color=WHITE).scale(0.4).next_to(x_axis_line, RIGHT)
+        y_axis_label = Text("RPM", color=WHITE).scale(0.4).next_to(y_axis_line, UP)
+        
+        # Setpoint Reference (thin line instead of DashedLine)
+        setpoint_ref = Line(origin_point + UP * 1.5, origin_point + RIGHT * 7 + UP * 1.5, color=YELLOW)
+        setpoint_ref.set_stroke(width=2, opacity=0.5)
+
+        # Curve Points Generation
+        curve_points = []
+        for i in range(101):
+            coord_x = (i / 100) * 6
+            # Damped oscillation formula: 1 - exp(-0.7x) * cos(5x)
+            coord_y = 1 - np.exp(-0.7 * coord_x) * np.cos(5 * coord_x)
+            curve_points.append(origin_point + RIGHT * coord_x + UP * coord_y * 1.5)
+        
+        oscillation_curve = VMobject(color=GREEN)
+        oscillation_curve.set_points_as_corners(curve_points)
+
+        self.play(Create(x_axis_line), Create(y_axis_line), Write(x_axis_label), Write(y_axis_label))
+        self.play(Create(setpoint_ref))
+        self.play(Create(oscillation_curve), run_time=3)
+
+        # 7. Labels using Brace
+        # Rise Time segment (x = 0 to roughly x = 0.5)
+        rt_segment = Line(origin_point, origin_point + RIGHT * 0.5)
+        rt_brace = Brace(rt_segment, DOWN)
+        rt_text = rt_brace.get_text("Rise Time").scale(0.4)
+
+        # Steady State Error segment (at the end of the curve)
+        sse_segment = Line(origin_point + RIGHT * 6 + UP * 1.5, origin_point + RIGHT * 6 + UP * 1.7)
+        sse_brace = Brace(sse_segment, RIGHT)
+        sse_text = sse_brace.get_text("Steady State Error").scale(0.4)
+
+        self.play(Create(rt_brace), Write(rt_text))
+        self.play(Create(sse_brace), Write(sse_text))
+
+        # 8. PID Formula and Goal Text
+        formula_tex = MathTex(r"U = K_p e + K_i \int e dt + K_d \frac{de}{dt}").scale(0.6).to_corner(DR, buff=0.5)
+        goal_note = Text("Objective: Inverse relationship between metrics and constants", color=GREY_A).scale(0.35).to_corner(DL, buff=0.5)
+        
+        self.play(Write(formula_tex))
+        self.play(FadeIn(goal_note))
+        self.wait(3)
+
+=== ERROR ===
+undefined identifiers detected: Brace, VMobject; disallowed symbols/features in constrained subset: Brace

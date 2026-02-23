@@ -1,0 +1,194 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-regularization-tradeoff",
+  "voice": "As we add more players and more stats, the model gets more information, but it also risks getting lost in the noise. This is the curse of dimensionality. While simple models like K-Nearest Neighbors struggle as the feature space grows, Lasso and Ridge regression excel. They apply a penalty to the size of the coefficients, effectively telling the model: 'only pay attention to the stats that actually drive wins.'",
+  "goal": "Explain why Lasso and Ridge regression outperform other models as dimensionality increases.",
+  "remarks": "Create an Axes plot where the x-axis is 'Number of Players' (1 to 10) and the y-axis is 'Mean Squared Error'. Recreate the curves from img-0. Plot the KNN line in red, showing it dipping then rising sharply as it overfits. Plot the Lasso/Ridge lines in green, showing a steady decline. To visualize the penalty, show the Lasso cost function equation. As the lambda term increases, show a bar chart of 150 coefficients shrinking, with many of them hitting zero (vanishing) in the Lasso case to highlight feature selection.",
+  "formula": "J(\\theta) = \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|_1",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+J(\theta) = \|y - X\theta\|^2 + \lambda \|\theta\|_1
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ConceptAnimation(Scene):
+    def construct(self):
+        # Define a linear rate function locally to avoid "undefined" errors
+        def linear_rate(t):
+            return t
+
+        # 1. Setup Axes and Title
+        title = Text("Regularization Tradeoff", font_size=36).to_corner(UL)
+        
+        ax = Axes(
+            x_range=[0, 11, 1],
+            y_range=[0, 30, 5],
+            x_length=7,
+            y_length=4,
+            axis_config={"include_tip": True}
+        ).shift(UP * 0.5)
+        
+        x_lbl = Text("Number of Players", font_size=20)
+        y_lbl = Text("Mean Squared Error", font_size=20)
+        labels = ax.get_axis_labels(x_label=x_lbl, y_label=y_lbl)
+
+        self.play(Write(title))
+        self.play(Create(ax), Write(labels))
+        self.wait(0.5)
+
+        # 2. Plotting Curves using named functions instead of lambdas with 'x'
+        def knn_model(p):
+            # Dips then rises (overfitting)
+            return 0.8 * (p - 3)**2 + 8
+
+        def regression_model(p):
+            # Steady decline
+            return 22 * np.exp(-0.2 * p) + 3
+
+        knn_curve = ax.plot(knn_model, x_range=[1, 10], color=RED)
+        knn_label = Text("KNN", color=RED, font_size=20).next_to(knn_curve.get_end(), UR, buff=0.1)
+
+        reg_curve = ax.plot(regression_model, x_range=[1, 10], color=GREEN)
+        reg_label = Text("Lasso/Ridge", color=GREEN, font_size=20).next_to(reg_curve.get_end(), RIGHT, buff=0.1)
+
+        self.play(Create(knn_curve), Write(knn_label), run_time=2)
+        self.play(Create(reg_curve), Write(reg_label), run_time=2)
+        self.wait(1)
+
+        # 3. Formula Visualization
+        # Using raw strings for LaTeX to prevent escape sequence issues
+        formula_tex = r"J(\theta) = \|y - X\theta\|^2 + \lambda \|\theta\|_1"
+        formula = MathTex(formula_tex, font_size=34).to_edge(RIGHT, buff=0.5).shift(UP * 0.5)
+        
+        formula_box = SurroundingRectangle(formula, color=YELLOW, buff=0.2)
+        formula_group = VGroup(formula_box, formula)
+        
+        self.play(Write(formula))
+        self.play(Create(formula_box))
+        self.wait(1)
+
+        # 4. Coefficients Bar Chart Animation
+        lambda_tracker = ValueTracker(0)
+        
+        # Generate 150 random initial coefficients
+        np.random.seed(42)
+        initial_coeffs = np.random.uniform(-1.5, 1.5, 150)
+        
+        def get_bar_chart():
+            curr_l = lambda_tracker.get_value()
+            bars = VGroup()
+            for i in range(150):
+                val = initial_coeffs[i]
+                # Lasso penalty: soft-thresholding
+                shrunk_val = np.sign(val) * max(0, np.abs(val) - curr_l)
+                
+                line = Line(
+                    start=ORIGIN, 
+                    end=UP * shrunk_val * 0.8, 
+                    stroke_width=2,
+                    color=BLUE if abs(shrunk_val) > 0 else GRAY
+                )
+                bars.add(line)
+            
+            bars.arrange(RIGHT, buff=0.01)
+            bars.to_edge(DOWN, buff=1)
+            return bars
+
+        coefficient_bars = always_redraw(get_bar_chart)
+        coeff_title = Text("Coefficients (Lasso Penalty)", font_size=24).next_to(coefficient_bars, UP, buff=0.2)
+        
+        # Avoid 'lambda' keyword for the Mobject variable name
+        l_val_display = always_redraw(lambda: 
+            MathTex(rf"\lambda = {lambda_tracker.get_value():.2f}", font_size=30)
+            .next_to(coeff_title, RIGHT, buff=1)
+        )
+
+        # Transition to Coefficient view
+        self.play(
+            FadeOut(ax), FadeOut(knn_curve), FadeOut(reg_curve), 
+            FadeOut(knn_label), FadeOut(reg_label), FadeOut(labels),
+            formula_group.animate.to_edge(UP).scale(0.8),
+            run_time=1.5
+        )
+        
+        self.play(Write(coeff_title), Create(coefficient_bars), Write(l_val_display))
+        self.wait(1)
+
+        # Animate Lambda increasing and coefficients hitting zero
+        # Use our local linear_rate function
+        self.play(
+            lambda_tracker.animate.set_value(1.5), 
+            run_time=5, 
+            rate_func=linear_rate
+        )
+        self.wait(1)
+
+        # Highlight feature selection
+        selection_text = Text("Many coefficients hit zero (Feature Selection)", color=YELLOW, font_size=22)
+        selection_text.next_to(coefficient_bars, DOWN, buff=0.3)
+        self.play(Write(selection_text))
+        self.wait(2)

@@ -1,0 +1,2 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-01-gravnet-message-passing,1,slides/concept-01-gravnet-message-passing.py,,False,3,,,compile_failed,conversation_logs/concept-01-gravnet-message-passing_attempt1.txt,-1,gate_fail,undefined identifiers detected: t,undefined_symbol,uses_mathtex,t

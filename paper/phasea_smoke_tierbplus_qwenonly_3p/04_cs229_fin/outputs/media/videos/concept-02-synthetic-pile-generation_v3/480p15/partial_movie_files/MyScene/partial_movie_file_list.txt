@@ -1,0 +1,3 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tierbplus_qwenonly_3p/04_cs229_fin/outputs/media/videos/concept-02-synthetic-pile-generation_v3/480p15/partial_movie_files/MyScene/1584795214_3484772030_223132457.mp4'
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tierbplus_qwenonly_3p/04_cs229_fin/outputs/media/videos/concept-02-synthetic-pile-generation_v3/480p15/partial_movie_files/MyScene/4072820271_2834709167_598181557.mp4'

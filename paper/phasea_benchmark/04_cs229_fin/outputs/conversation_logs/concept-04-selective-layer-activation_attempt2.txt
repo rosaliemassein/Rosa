@@ -1,0 +1,143 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-selective-layer-activation",
+  "voice": "The breakthrough in efficiency came from 'targeted' fine-tuning. Instead of retraining the whole YOLO model, the team found that the early layers\u2014the backbone\u2014already knew how to see basic shapes. By freezing most of the model and only 'activating' the high-level semantic layers, specifically layers 7 through 10 and the final classification head at layer 23, they achieved 86 percent accuracy. It\u2019s like keeping a person\u2019s general vision intact but specifically training their brain to recognize the nuances of 20 types of garbage.",
+  "goal": "Visualize the strategy of freezing specific model layers to optimize training performance.",
+  "remarks": "Create a horizontal chain of 24 'Square' objects representing layers 0 to 23. Color layers 0-6 gray (labeled 'Frozen Backbone'). Color layers 7-10 bright blue with a 'Glow' effect (labeled 'Active Semantics'). Color layers 11-22 gray. Color layer 23 bright orange (labeled 'Active Head'). Animate a 'Succession' of pulses moving through the blue and orange squares while the gray ones remain static, representing gradients updating only in selected regions.",
+  "formula": null,
+  "image_ref": "img-10.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+
+class Concept04SelectiveLayerActivation(Scene):
+    def construct(self):
+        # Create a horizontal chain of 24 Square objects representing layers 0 to 23
+        layers = VGroup(*[Square(side_length=0.3) for _ in range(24)])
+        layers.arrange(RIGHT, buff=0.1)
+        layers.center()
+
+        # Apply specific coloring based on the regions described
+        # Layers 0-6: Frozen Backbone (Gray)
+        # Layers 7-10: Active Semantics (Blue)
+        # Layers 11-22: Frozen (Gray)
+        # Layer 23: Active Head (Orange)
+        for i in range(24):
+            if 7 <= i <= 10:
+                # Active Semantics
+                layers[i].set_stroke(BLUE, width=4)
+                layers[i].set_fill(BLUE, opacity=0.5)
+            elif i == 23:
+                # Active Head
+                layers[i].set_stroke(ORANGE, width=4)
+                layers[i].set_fill(ORANGE, opacity=0.5)
+            else:
+                # Frozen layers
+                layers[i].set_stroke(GRAY, width=2)
+                layers[i].set_fill(GRAY, opacity=0.2)
+
+        # Labels for specific sections
+        frozen_backbone_label = Text("Frozen Backbone", font_size=16).next_to(layers[0:7], DOWN, buff=0.5)
+        active_semantics_label = Text("Active Semantics", font_size=16, color=BLUE).next_to(layers[7:11], UP, buff=0.5)
+        active_head_label = Text("Active Head", font_size=16, color=ORANGE).next_to(layers[23], UP, buff=0.5)
+
+        # Display the setup
+        self.add(layers)
+        self.play(
+            FadeIn(frozen_backbone_label),
+            FadeIn(active_semantics_label),
+            FadeIn(active_head_label)
+        )
+        self.wait(0.5)
+
+        # Active layers for the gradient pulse animation
+        active_indices = [7, 8, 9, 10, 23]
+        
+        # Create a list of pulse animations
+        # We use a loop to create the sequence of pulses
+        pulses = [
+            Indicate(layers[i], color=layers[i].get_stroke_color(), scale_factor=1.4)
+            for i in active_indices
+        ]
+
+        # Animate the succession of pulses moving through the selected layers
+        # Using a lambda function for rate_func to ensure linear progression without the 'linear' keyword
+        self.play(
+            Succession(*pulses),
+            run_time=3,
+            rate_func=lambda t: t
+        )
+
+        # Repeat once to represent continuous training gradients
+        self.play(
+            Succession(*pulses),
+            run_time=3,
+            rate_func=lambda t: t
+        )
+
+        self.wait(1)
+
+=== ERROR ===
+undefined identifiers detected: t

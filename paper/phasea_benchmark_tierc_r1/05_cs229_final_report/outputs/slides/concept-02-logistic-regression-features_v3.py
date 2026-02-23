@@ -1,0 +1,122 @@
+from manim import *
+import numpy as np
+
+class LogisticRegressionFeatures(Scene):
+    def construct(self):
+        # 1. Background and Setup
+        # Using Axes to represent the coordinate space for the sigmoid mapping
+        axes = Axes(
+            x_range=[-6, 6, 2],
+            y_range=[0, 1.1, 0.5],
+            x_length=6,
+            y_length=4,
+            axis_config={"include_tip": True, "include_numbers": True}
+        ).to_edge(RIGHT, buff=0.5).shift(DOWN * 0.5)
+        
+        # Explicit function definition to avoid 'x' or 't' linter issues
+        def get_sigmoid_value(input_value):
+            return 1.0 / (1.0 + np.exp(-input_value))
+        
+        sigmoid_curve = axes.plot(get_sigmoid_value, color=BLUE)
+        curve_label = MathTex(r"P(y=1)").next_to(axes, UP, buff=0.2).set_color(BLUE)
+        
+        # 2. Formula Display
+        # Using the specific formula from the prompt
+        main_formula = MathTex(
+            "P(y=1) = \\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 X_{1d} + \\beta_{30} X_{30d})}}",
+            font_size=34
+        ).to_edge(UP, buff=0.5)
+        
+        # 3. Trackers for Feature Values
+        # These represent the 'memory' features (1-day and 30-day gaps)
+        x1_tracker = ValueTracker(0)
+        x30_tracker = ValueTracker(0)
+        
+        # 4. Sliders (The "Sliding Bars" on the left)
+        def create_ui_slider(label_str, tracker_obj, horizontal_offset):
+            # The track
+            track = Line(DOWN, UP).scale(1.5).move_to(LEFT * horizontal_offset + DOWN * 0.5)
+            label = Text(label_str, font_size=20).next_to(track, DOWN)
+            
+            # The knob (moving dot)
+            knob = Dot(color=YELLOW)
+            
+            # Named updater function to avoid undefined identifier issues
+            def knob_update_logic(mob_item):
+                # Map value from [-3, 3] to a 0-1 proportion on the line
+                val = tracker_obj.get_value()
+                proportion = np.clip((val + 3) / 6.0, 0, 1)
+                mob_item.move_to(track.point_from_proportion(proportion))
+            
+            knob.add_updater(knob_update_logic)
+            return VGroup(track, label, knob)
+
+        slider_1day = create_ui_slider("1-Day T-CSP", x1_tracker, 5.0)
+        slider_30day = create_ui_slider("30-Day T-CSP", x30_tracker, 3.0)
+        
+        # 5. The Moving Dot on the Curve
+        # This dot represents the model's prediction result
+        prediction_dot = Dot(color=RED)
+        
+        def prediction_dot_logic(mob_item):
+            # Calculate linear combination (assuming beta weights = 1 for visualization)
+            z = x1_tracker.get_value() + x30_tracker.get_value()
+            y = get_sigmoid_value(z)
+            mob_item.move_to(axes.c2p(z, y))
+            
+        prediction_dot.add_updater(prediction_dot_logic)
+        
+        # Probability numerical label
+        prob_val = DecimalNumber(0.5, num_decimal_places=2, color=RED).scale(0.8)
+        
+        def prob_label_logic(mob_item):
+            z = x1_tracker.get_value() + x30_tracker.get_value()
+            mob_item.set_value(get_sigmoid_value(z))
+            mob_item.next_to(prediction_dot, UR, buff=0.1)
+            
+        prob_val.add_updater(prob_label_logic)
+
+        # 6. Animation Execution
+        self.add(axes, sigmoid_curve, curve_label)
+        self.play(Write(main_formula))
+        self.play(
+            FadeIn(slider_1day),
+            FadeIn(slider_30day)
+        )
+        self.add(prediction_dot, prob_val)
+        self.wait(1)
+        
+        # Transform the formula to show the simplified vector form
+        simplified_formula = MathTex(
+            "P(y=1) = \\frac{1}{1 + e^{-z}}",
+            font_size=34
+        ).move_to(main_formula.get_center())
+        
+        self.play(ReplacementTransform(main_formula, simplified_formula))
+        self.wait(0.5)
+        
+        # Animate feature changes
+        # Case 1: Increasing 1-day T-CSP (temporary spike)
+        self.play(x1_tracker.animate.set_value(2.5), run_time=2)
+        self.wait(0.5)
+        
+        # Case 2: Increasing 30-day T-CSP (long term struggle) -> High probability
+        self.play(x30_tracker.animate.set_value(2.5), run_time=2)
+        self.wait(1)
+        
+        # Case 3: Both features very low -> Low probability
+        self.play(
+            x1_tracker.animate.set_value(-2.5),
+            x30_tracker.animate.set_value(-2.5),
+            run_time=3
+        )
+        self.wait(1)
+        
+        # Final descriptive text
+        footer = Text(
+            "Mapping features to probability", 
+            font_size=24, 
+            color=BLUE
+        ).to_edge(DOWN)
+        self.play(FadeIn(footer))
+        self.wait(2)

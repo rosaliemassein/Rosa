@@ -1,0 +1,252 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-contrastive-alignment",
+  "voice": "To figure out where a photo was taken, we first need to align visual features with geographic concepts. We use a CLIP model to create a shared mathematical space for images and text. During training, we feed the model a street view image alongside a synthetic caption like 'A Street View photo in France.' The goal is to maximize the cosine similarity between the image embedding and its correct country label while pushing it away from all others. This contrastive approach teaches the model that architectural styles, vegetation, and road signs are all linked to specific country names.",
+  "goal": "Understand how contrastive learning aligns images with country-specific text descriptions in a shared embedding space.",
+  "remarks": "Create two neural network blocks labeled 'Image Encoder' and 'Text Encoder'. Show a Street View image entering the Image Encoder and the text 'A Street View photo in France' entering the Text Encoder. Represent the output as two vectors (arrows) in a 2D coordinate system. Animate the two vectors rotating to point in the same direction. Then, show a 'wrong' text label like 'A Street View photo in Japan' and show its vector being pushed away from the image vector. Use a ValueTracker to show the similarity score increasing as they align.",
+  "formula": "\\mathcal{L}_{CLIP} = 0.5 \\cdot (\\mathcal{L}_{Text} + \\mathcal{L}_{Images})",
+  "image_ref": "img-7.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathcal{L}_{CLIP} = 0.5 \cdot (\mathcal{L}_{Text} + \mathcal{L}_{Images})
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ContrastiveAlignmentScene(Scene):
+    def construct(self):
+        # 1. Setup layout elements
+        title = Text("Contrastive Learning Alignment", font_size=32).to_edge(UP)
+        
+        # Encoders as simple geometric groups
+        img_enc_rect = Rectangle(width=2.5, height=1.5, color=BLUE)
+        img_enc_text = Text("Image Encoder", font_size=20)
+        img_encoder = VGroup(img_enc_rect, img_enc_text).shift(LEFT * 4 + UP * 1)
+        
+        txt_enc_rect = Rectangle(width=2.5, height=1.5, color=GREEN)
+        txt_enc_text = Text("Text Encoder", font_size=20)
+        txt_encoder = VGroup(txt_enc_rect, txt_enc_text).shift(RIGHT * 4 + UP * 1)
+        
+        # Inputs to the encoders
+        img_in = Square(side_length=0.8, color=YELLOW).next_to(img_encoder, LEFT, buff=0.5)
+        txt_in = Text("'A photo in France'", font_size=18).next_to(txt_encoder, RIGHT, buff=0.5)
+        
+        # 2. Embedding Space (Manual creation to avoid Axes identifier issues)
+        # Using simple Lines and Arrows
+        x_axis_line = Line(LEFT * 2.5, RIGHT * 2.5, color=GRAY)
+        y_axis_line = Line(DOWN * 2, UP * 1, color=GRAY)
+        space_origin = [0, -1.5, 0] # Define a center for the coordinate system
+        
+        coordinate_system = VGroup(x_axis_line, y_axis_line).move_to(space_origin)
+        space_label = Text("Shared Embedding Space", font_size=20).next_to(coordinate_system, UP, buff=0.3)
+        
+        # Initial Vectors (Image and Text)
+        # Starting points at space_origin
+        vec_img = Arrow(space_origin, space_origin + [1.5, 0.7, 0], color=BLUE, buff=0)
+        vec_txt = Arrow(space_origin, space_origin + [-0.5, 1.2, 0], color=GREEN, buff=0)
+        
+        img_label = MathTex("v_{img}", color=BLUE, font_size=24).next_to(vec_img.get_end(), RIGHT, buff=0.1)
+        txt_label = MathTex("v_{text}", color=GREEN, font_size=24).next_to(vec_txt.get_end(), LEFT, buff=0.1)
+        
+        # 3. Text-based Similarity Score
+        sim_score = Text("Cosine Similarity: 0.12", font_size=26, color=YELLOW).to_edge(DOWN, buff=1.2)
+
+        # --- ANIMATION SEQUENCE ---
+        
+        # Introduction
+        self.play(Write(title))
+        self.play(Create(img_encoder), Create(txt_encoder))
+        self.play(FadeIn(img_in), FadeIn(txt_in))
+        self.wait(0.5)
+        
+        # Showing the shared space and initial embeddings
+        self.play(Create(coordinate_system), Write(space_label))
+        self.play(
+            GrowArrow(vec_img), 
+            GrowArrow(vec_txt), 
+            Write(img_label), 
+            Write(txt_label)
+        )
+        self.play(Write(sim_score))
+        self.wait(1)
+        
+        # Step 1: Maximize similarity (France image + France text)
+        # Transform the text vector to point in the same direction as the image vector
+        vec_txt_aligned = Arrow(space_origin, space_origin + [1.6, 0.75, 0], color=GREEN, buff=0)
+        txt_label_aligned = MathTex("v_{text}", color=GREEN, font_size=24).next_to(vec_txt_aligned.get_end(), UP, buff=0.1)
+        sim_score_high = Text("Cosine Similarity: 0.98", font_size=26, color=YELLOW).to_edge(DOWN, buff=1.2)
+        
+        self.play(
+            Transform(vec_txt, vec_txt_aligned),
+            Transform(txt_label, txt_label_aligned),
+            Transform(sim_score, sim_score_high),
+            run_time=2
+        )
+        self.wait(1)
+        
+        # Step 2: Contrast with "wrong" label (Japan)
+        txt_in_wrong = Text("'A photo in Japan'", font_size=18, color=RED).move_to(txt_in)
+        self.play(Transform(txt_in, txt_in_wrong))
+        
+        # Pushing away (Contrastive step)
+        vec_txt_away = Arrow(space_origin, space_origin + [-1.5, -0.8, 0], color=RED, buff=0)
+        txt_label_away = MathTex("v_{text}", color=RED, font_size=24).next_to(vec_txt_away.get_end(), LEFT, buff=0.1)
+        sim_score_low = Text("Cosine Similarity: -0.34", font_size=26, color=YELLOW).to_edge(DOWN, buff=1.2)
+        
+        self.play(
+            Transform(vec_txt, vec_txt_away),
+            Transform(txt_label, txt_label_away),
+            Transform(sim_score, sim_score_low),
+            run_time=2
+        )
+        self.wait(1)
+        
+        # Final: Display the CLIP Loss formula
+        formula = MathTex(r"\mathcal{L}_{CLIP} = 0.5 \cdot (\mathcal{L}_{Text} + \mathcal{L}_{Images})", font_size=34)
+        formula.to_edge(DOWN, buff=0.5)
+        
+        self.play(FadeOut(sim_score))
+        self.play(Write(formula))
+        self.play(Indicate(formula, color=YELLOW))
+        
+        self.wait(2)
+
+=== ERROR ===
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/cli/ren │
+│ der/commands.py:125 in render                                                │
+│                                                                              │
+│   122 │   │   │   try:                                                       │
+│   123 │   │   │   │   with tempconfig({}):                                   │
+│   124 │   │   │   │   │   scene = SceneClass()                               │
+│ ❱ 125 │   │   │   │   │   scene.render()                                     │
+│   126 │   │   │   except Exception:                                          │
+│   127 │   │   │   │   error_console.print_exception()                        │
+│   128 │   │   │   │   sys.exit(1)                                            │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/scene/s │
+│ cene.py:259 in render                                                        │
+│                                                                              │
+│    256 │   │   """                                                           │
+│    257 │   │   self.setup()                                                  │
+│    258 │   │   try:                                                          │
+│ ❱  259 │   │   │   self.construct()                                          │
+│    260 │   │   except EndSceneEarlyException:                                │
+│    261 │   │   │   pass                                                      │
+│    262 │   │   except RerunSceneException:                                   │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r3/06_cs229_proj │
+│ ect_final_report_3/outputs/slides/concept-01-contrastive-alignment_v4.py:32  │
+│ in construct                                                                 │
+│                                                                              │
+│    29 │   │                                                                  │
+│    30 │   │   # Initial Vectors (Image and Text)                             │
+│    31 │   │   # Starting points at space_origin                              │
+│ ❱  32 │   │   vec_img = Arrow(space_origin, space_origin + [1.5, 0.7, 0], co │
+│    33 │   │   vec_txt = Arrow(space_origin, space_origin + [-0.5, 1.2, 0], c │
+│    34 │   │                                                                  │
+│    35 │   │   img_label = MathTex("v_{img}", color=BLUE, font_size=24).next_ │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /geometry/line.py:599 in __init__                                            │
+│                                                                              │
+│    596 │   │   self.max_tip_length_to_length_ratio = max_tip_length_to_lengt │
+│    597 │   │   self.max_stroke_width_to_length_ratio = max_stroke_width_to_l │
+│    598 │   │   tip_shape = kwargs.pop("tip_shape", ArrowTriangleFilledTip)   │
+│ ❱  599 │   │   super().__init__(*args, buff=buff, stroke_width=stroke_width, │
+│    600 │   │   # TODO, should this be affected when                          │
+│    601 │   │   # Arrow.set_stroke is called?                                 │
+│    602 │   │   self.initial_stroke_width = self.stroke_width                 │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /geometry/line.py:106 in __init__                                            │
+│                                                                              │
+│    103 │   │   self.dim = 3                                                  │
+│    104 │   │   self.buff = buff                                              │
+│    105 │   │   self.path_arc = path_arc                                      │
+│ ❱  106 │   │   self._set_start_and_end_attrs(start, end)                     │
+│    107 │   │   super().__init__(**kwargs)                                    │
+│    108 │                                                                     │
+│    109 │   def generate_points(self) -> None:                                │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/mobject │
+│ /geometry/line.py:167 in _set_start_and_end_attrs                            │
+│                                                                              │
+│    164 │   │   # gives their centers                                         │
+│    165 │   │   rough_start = self._pointify(start)                           │
+│    166 │   │   rough_end = self._pointify(end)                               │
+│ ❱  167 │   │   vect = normalize(rough_end - rough_start)                     │
+│    168 │   │   # Now that we know the direction between them,                │
+│    169 │   │   # we can find the appropriate boundary point from             │
+│    170 │   │   # start and end, if they're mobjects                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ValueError: operands could not be broadcast together with shapes (6,) (3,) 
+

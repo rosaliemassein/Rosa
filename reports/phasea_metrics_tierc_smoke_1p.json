@@ -1,0 +1,29 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tierc_smoke_1p/04_cs229_fin/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 1,
+  "compiled_attempts": 0,
+  "compile_rate": 0.0,
+  "slides_evaluated_for_pass1": 1,
+  "pass_at_1": 0.0,
+  "bucket_counts": {
+    "gate_fail": 1,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 1
+  },
+  "gate_reason_tag_counts": {
+    "undefined_symbol": 1
+  },
+  "top_error_signatures": [
+    [
+      "undefined identifiers detected: BLUE_D",
+      1
+    ]
+  ]
+}

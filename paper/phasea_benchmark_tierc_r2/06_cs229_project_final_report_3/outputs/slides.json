@@ -1,0 +1,37 @@
+{
+  "title": "\"From Clues to Coordinates\": Predicting Locations from Google Street View Images",
+  "slides": [
+    {
+      "id": "concept-01-contrastive-alignment",
+      "voice": "To figure out where a photo was taken, we first need to align visual features with geographic concepts. We use a CLIP model to create a shared mathematical space for images and text. During training, we feed the model a street view image alongside a synthetic caption like 'A Street View photo in France.' The goal is to maximize the cosine similarity between the image embedding and its correct country label while pushing it away from all others. This contrastive approach teaches the model that architectural styles, vegetation, and road signs are all linked to specific country names.",
+      "goal": "Understand how contrastive learning aligns images with country-specific text descriptions in a shared embedding space.",
+      "remarks": "Create two neural network blocks labeled 'Image Encoder' and 'Text Encoder'. Show a Street View image entering the Image Encoder and the text 'A Street View photo in France' entering the Text Encoder. Represent the output as two vectors (arrows) in a 2D coordinate system. Animate the two vectors rotating to point in the same direction. Then, show a 'wrong' text label like 'A Street View photo in Japan' and show its vector being pushed away from the image vector. Use a ValueTracker to show the similarity score increasing as they align.",
+      "formula": "\\mathcal{L}_{CLIP} = 0.5 \\cdot (\\mathcal{L}_{Text} + \\mathcal{L}_{Images})",
+      "image_ref": "img-7.jpeg"
+    },
+    {
+      "id": "concept-02-zero-shot-classification",
+      "voice": "Once the model is trained, we can use it as a zero-shot classifier. For a new image, we generate its vector representation, v. We then compare this against a pre-computed matrix, X, which contains the text embeddings for every possible country. By taking the dot product and applying a softmax function, we get a probability distribution. The country with the highest score is our first-stage prediction. It's like asking the model, 'Which of these 140 country descriptions does this visual scene look like most?'",
+      "goal": "Understand the mathematical mechanism of using CLIP as a linear classifier for country prediction.",
+      "remarks": "Show a vector 'v' representing the image. Next to it, show a large matrix 'X' where each row is a country name. Use a pulsing highlight to show the dot product operation between 'v' and each row of 'X'. Create a bar chart that updates in real-time to show the results of the Softmax function, with one bar (e.g., France) shooting up while others drop. Use MathTex to transform the dot product expression into the final probability vector.",
+      "formula": "h(\\mathbf{v};\\mathbf{X})=\\frac{\\exp(\\mathbf{X}\\mathbf{v})}{\\sum_{j=1}^{N}\\exp(\\mathbf{X}_{j}^{T}\\mathbf{v})}",
+      "image_ref": "img-8.jpeg"
+    },
+    {
+      "id": "concept-03-kmeans-spatial-quantization",
+      "voice": "Predicting exact latitude and longitude is incredibly difficult because coordinates are continuous and high-variance. To solve this, we simplify the problem using spatial clustering. Within each country, we group our training coordinates into K clusters. Instead of asking the model to guess any point on the map, we ask it to classify which 'region' or cluster the image belongs to. This turns a complex regression problem into a more manageable classification task.",
+      "goal": "Understand how K-means clustering discretizes a continuous geographic space into predictable regions.",
+      "remarks": "Draw an outline of a country (e.g., Australia) on a NumberPlane. Populate it with many small gray dots representing data points. Animate several 'Centroid' crosses (mu_j) appearing at random locations. Use an animation to show points changing color based on the nearest centroid (Voronoi-like behavior). Then, show the centroids moving to the center of their respective colored groups as the K-means algorithm converges. Highlight the final cluster centers as the discrete 'targets' for the next stage.",
+      "formula": "\\mu_{j}:=\\frac{\\sum_{i=1}^{n}\\mathbf{1}\\{c^{(i)}=j\\}x^{(i)}}{\\sum_{i=1}^{n}\\mathbf{1}\\{c^{(i)}=j\\}}",
+      "image_ref": "img-1.jpeg"
+    },
+    {
+      "id": "concept-04-hierarchical-mlp-refinement",
+      "voice": "The final step is the refinement stage. Once CLIP tells us we are in a specific country, we pass the image embedding to a Multi-Layer Perceptron specifically trained for that nation. This MLP ignores all global data and focuses entirely on the local clusters we just created. It outputs a prediction for the most likely cluster, and our final coordinate guess is simply the center of that cluster. This hierarchical approach\u2014from global country to local region\u2014is what allows the model to find specific coordinates from visual clues.",
+      "goal": "Understand the two-stage inference pipeline that moves from coarse country classification to fine-grained cluster prediction.",
+      "remarks": "Create a flow chart starting with an image. Show it passing through the 'CLIP' block which points to a specific 'Country MLP'. Beneath this, show a 3-layer neural network (MLP) with ReLU activations. Animate signals flowing through the MLP layers. The output of the MLP should point to one of the K-means centroids on a map. Show the final coordinate result as a GPS 'pin' dropping onto the map at the centroid location. Use TransformMatchingTex to show the transition from the image vector to the final coordinate (lat, lon).",
+      "formula": "c^{(i)}:=\\arg\\min_{j}\\|x^{(i)}-\\mu_{j}\\|^{2}",
+      "image_ref": "img-8.jpeg"
+    }
+  ]
+}

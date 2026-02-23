@@ -1,0 +1,3 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tier3dlite_qwenonly_3p/07_cs229_project_final_report_dakotajp_3/outputs/media/videos/concept-03-dual-reward-shaping_v2/480p15/partial_movie_files/AverageCalculation/1584795214_3177292485_223132457.mp4'
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tier3dlite_qwenonly_3p/07_cs229_project_final_report_dakotajp_3/outputs/media/videos/concept-03-dual-reward-shaping_v2/480p15/partial_movie_files/AverageCalculation/4072820271_2844360058_3456893809.mp4'

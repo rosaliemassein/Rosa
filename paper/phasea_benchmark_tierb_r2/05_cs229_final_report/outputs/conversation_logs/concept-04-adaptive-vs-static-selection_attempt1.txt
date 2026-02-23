@@ -1,0 +1,183 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-adaptive-vs-static-selection",
+  "voice": "Traditional industry standards use static 'rules of thumb' that never change. But dominance is dynamic. Our machine learning approach is adaptive; it can recognize when a zone stops being a problem due to cooler weather or shifts in occupancy. While the static benchmark stays stuck, the logistic model constantly updates its list, flagging more zones during heatwaves and fewer when the building is under less stress, ensuring high performance without wasting energy.",
+  "goal": "Demonstrate the superiority of adaptive ML over static ASHRAE guidelines.",
+  "remarks": "Create a split-screen animation. On the left, 'Static Benchmark'; on the right, 'Logistic Model'. Show a timeline moving across the bottom (May to September). On the left, the highlighted zones in a floorplan remain frozen. On the right, animate the highlighted zones flickering on and off and changing in count as the timeline progresses. Overlay a line graph showing 'Missed Requests' (Recall error) where the ML line stays significantly lower than the Static line.",
+  "formula": null,
+  "image_ref": "img-9.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept04AdaptiveVsStaticSelection(Scene):
+    def construct(self):
+        # 1. Setup Titles and Layout
+        title_static = Text("Static Benchmark", color=YELLOW).scale(0.7)
+        title_ml = Text("Logistic Model (ML)", color=BLUE).scale(0.7)
+        
+        titles = VGroup(title_static, title_ml).arrange(RIGHT, buff=4).to_edge(UP)
+        self.add(titles)
+
+        # 2. Floorplans (Simple Grids)
+        def create_floorplan():
+            grid = VGroup(*[
+                Square(side_length=0.6).set_stroke(WHITE, 2)
+                for _ in range(9)
+            ]).arrange_in_grid(3, 3, buff=0.1)
+            return grid
+
+        floor_left = create_floorplan().next_to(title_static, DOWN, buff=0.5)
+        floor_right = create_floorplan().next_to(title_ml, DOWN, buff=0.5)
+
+        # Static Highlights (Frozen)
+        static_highlights = [0, 4, 8]
+        for idx in static_highlights:
+            floor_left[idx].set_fill(RED, opacity=0.6)
+
+        self.add(floor_left, floor_right)
+
+        # 3. Timeline (Bottom)
+        months = ["May", "Jun", "Jul", "Aug", "Sep"]
+        timeline_line = Line(LEFT * 5, RIGHT * 5).shift(DOWN * 1.5)
+        month_labels = VGroup(*[
+            Text(m).scale(0.5).move_to(timeline_line.point_from_proportion(i/4) + DOWN * 0.3)
+            for i, m in enumerate(months)
+        ])
+        
+        timeline_cursor = Dot(color=YELLOW).move_to(timeline_line.get_start())
+        self.add(timeline_line, month_labels, timeline_cursor)
+
+        # 4. Graph (Missed Requests / Recall Error)
+        axes = Axes(
+            x_range=[0, 10, 1],
+            y_range=[0, 10, 1],
+            x_length=10,
+            y_length=1.5,
+            axis_config={"include_tip": False}
+        ).to_edge(DOWN, buff=0.2)
+        
+        graph_label = Text("Missed Requests (Recall Error)", color=WHITE).scale(0.4).next_to(axes, UP, buff=0.1)
+        
+        # Curves
+        static_curve = axes.plot(lambda x: 8, color=RED, x_range=[0, 10])
+        ml_curve = axes.plot(lambda x: 3 + 1.5 * np.sin(x), color=BLUE, x_range=[0, 10])
+        
+        static_label = Text("Static", color=RED).scale(0.3).next_to(static_curve, RIGHT, buff=0.1)
+        ml_label = Text("ML", color=BLUE).scale(0.3).next_to(ml_curve, RIGHT, buff=0.1)
+
+        # 5. Dynamic Logic using Updaters
+        time_tracker = ValueTracker(0)
+
+        # Timeline cursor updater
+        timeline_cursor.add_updater(
+            lambda d: d.move_to(timeline_line.point_from_proportion(time_tracker.get_value() / 10))
+        )
+
+        # Adaptive Floorplan Updater (Right side changing)
+        def update_adaptive_floor(mob):
+            t = time_tracker.get_value()
+            for i, sq in enumerate(mob):
+                # Deterministic pattern based on tracker value
+                intensity = np.sin(t * 1.5 + i * 0.5)
+                if intensity > 0.3:
+                    sq.set_fill(BLUE, opacity=0.7)
+                else:
+                    sq.set_fill(BLACK, opacity=0)
+
+        floor_right.add_updater(update_adaptive_floor)
+
+        # 6. Animation Sequence
+        self.play(
+            Create(axes),
+            Write(graph_label),
+            run_time=1
+        )
+        
+        # Animate curves and timeline simultaneously
+        self.play(
+            Create(static_curve),
+            Create(ml_curve),
+            Write(static_label),
+            Write(ml_label),
+            time_tracker.animate.set_value(10),
+            run_time=8,
+            rate_func=linear
+        )
+        
+        self.wait(1)
+        
+        # Final Summary Text
+        summary = Text(
+            "Adaptive ML recognizes dynamic patterns while static benchmarks stay frozen.",
+            color=YELLOW
+        ).scale(0.5).to_edge(UP, buff=0.1).set_background_stroke(BLACK, width=4, opacity=1)
+        
+        self.play(FadeIn(summary))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Axes, ValueTracker, d, linear, x; disallowed symbols/features in constrained subset: Axes, ValueTracker

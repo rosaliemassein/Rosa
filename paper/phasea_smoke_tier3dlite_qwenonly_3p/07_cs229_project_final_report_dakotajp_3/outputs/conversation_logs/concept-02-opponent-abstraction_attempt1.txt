@@ -1,0 +1,88 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, B+, C, or 3D-LITE) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+- BarChart/complex chart helpers -> Axes + Rectangle bars + Text labels
+- BLUE_A/BLUE_B/BLUE_C (or other *_A..*_E variants) -> BLUE (or RED/GREEN/YELLOW/WHITE/BLACK)
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: 3D-LITE (narrow 3D subset)
+- Allowed additions: ThreeDScene, ThreeDAxes, set_camera_orientation
+- Keep disallowed: move_camera, begin_ambient_camera_rotation, stop_ambient_camera_rotation, Surface
+- Prefer one static 3D viewpoint and short, deterministic animations.
+- For colors, stick to base constants (BLUE, RED, GREEN, YELLOW, WHITE, BLACK).
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-opponent-abstraction",
+  "voice": "The real secret to generalization lies in how we treat the competition. Instead of giving every opponent their own channel, we lump them all into a single 'opponent layer'. This makes the 6-player game look structurally identical to the 2-player game. Because the network only sees 'me' versus 'the field', a strategy learned against one opponent naturally scales to five without changing the model's architecture.",
+  "goal": "Explain the encoding trick that allows a model trained on 2 players to function in 3, 4, or 6 player games.",
+  "remarks": "Show a 2-player board representation with two distinct colors (Blue vs Red). Then, show a 6-player board with 5 different opponent colors. Animate the 5 opponent colors merging into a single 'Red' intensity in the third layer of the grid from the previous slide. Use a Cross-out animation over the individual identities of the opponents and a 'Check' mark over the unified 'Opponent Layer'.",
+  "formula": "S \\in \\mathbb{B}^{n \\times n \\times 3}",
+  "image_ref": "null"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+S \in \mathbb{B}^{n \times n \times 3}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class SimpleScene(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!", color=BLUE)
+        self.play(Create(text))
+        self.wait(2)

@@ -1,0 +1,166 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-hashed-q-learning",
+  "voice": "To solve the memory problem, we use a Hashed Q-table. Instead of reserving a unique slot for every possible grid, we pass the grid state through a hash function to map it into a smaller, fixed-size table. This allows us to handle larger designs, though it can lead to collisions where different patterns share the same table entry, resulting in sub-optimal 'almost-checkered' designs.",
+  "goal": "Understand the trade-off between memory efficiency and optimization accuracy in hashed RL.",
+  "remarks": "On the left, show three different 4x4 grid patterns. Draw arrows from these grids into a central 'Hash Function' box. From the box, draw arrows pointing to specific rows in a compact 'Q-Table'. Show two different grids pointing to the same row (a collision) using a flashing red highlight to indicate that the agent might get confused between these two states.",
+  "formula": "\\text{Index} = \\text{Hash}(\\text{MatrixState}) \\pmod L",
+  "image_ref": "img-6.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{Index} = \text{Hash}(\text{MatrixState}) \pmod L
+
+
+=== ASSISTANT ===
+import random
+from manim import *
+
+class HashedQTableScene(Scene):
+    def construct(self):
+        # 1. Create three different 4x4 grid patterns
+        def create_mini_grid(seed_val):
+            grid = VGroup(*[Square(side_length=0.2, stroke_width=1) for _ in range(16)]).arrange_in_grid(4, 4, buff=0)
+            for i, sq in enumerate(grid):
+                # Simple pattern logic to create variation
+                if (i + seed_val + (i // 4)) % 2 == 0:
+                    sq.set_fill(WHITE, opacity=1)
+                else:
+                    sq.set_fill(BLACK, opacity=1)
+            return grid
+
+        grid_a = create_mini_grid(1).shift(LEFT * 5 + UP * 2)
+        grid_b = create_mini_grid(2).shift(LEFT * 5)
+        grid_c = create_mini_grid(3).shift(LEFT * 5 + DOWN * 2)
+        grids = VGroup(grid_a, grid_b, grid_c)
+
+        # 2. Central Hash Function Box
+        hash_box = VGroup(
+            Rectangle(height=1.5, width=3, color=BLUE),
+            Text("Hash Function", font_size=24)
+        ).move_to(LEFT * 1)
+
+        # 3. Compact Q-Table (Manual construction to avoid Table class constraints)
+        table_label = Text("Q-Table", font_size=24).shift(RIGHT * 4 + UP * 2.5)
+        rows = VGroup(*[
+            VGroup(
+                Rectangle(height=0.6, width=2.5),
+                Text(f"Entry {i}", font_size=18).move_to(LEFT * 0.6)
+            ) for i in range(5)
+        ]).arrange(DOWN, buff=0).shift(RIGHT * 4)
+        
+        # Values inside table using Text instead of DecimalNumber
+        values = VGroup(*[
+            Text(str(round(random.uniform(-1, 1), 2)), font_size=16).move_to(rows[i].get_right() + LEFT * 0.5)
+            for i in range(5)
+        ])
+        q_table = VGroup(table_label, rows, values)
+
+        # 4. Formula
+        formula = MathTex(r"\text{Index} = \text{Hash}(\text{MatrixState}) \pmod L", font_size=32).to_edge(UP)
+
+        # 5. Animation Sequences
+        self.play(Write(formula))
+        self.play(FadeIn(grids))
+        self.play(Create(hash_box))
+        
+        # Arrows from grids to hash box
+        arrows_in = VGroup(*[Arrow(g.get_right(), hash_box.get_left(), buff=0.1) for g in grids])
+        self.play(Create(arrows_in))
+        self.wait(0.5)
+
+        self.play(FadeIn(q_table))
+        self.wait(0.5)
+
+        # 6. Arrows from Hash Box to Q-Table (Illustrating a Collision)
+        # We'll map Grid B and Grid C to the same table entry (Index 2)
+        arrow_out_a = Arrow(hash_box.get_right(), rows[0].get_left(), buff=0.1, color=WHITE)
+        arrow_out_b = Arrow(hash_box.get_right(), rows[2].get_left(), buff=0.1, color=YELLOW)
+        arrow_out_c = Arrow(hash_box.get_right(), rows[2].get_left(), buff=0.1, color=ORANGE)
+
+        self.play(Create(arrow_out_a))
+        self.play(Create(arrow_out_b))
+        self.play(Create(arrow_out_c))
+        
+        # Collision Visual Cue
+        collision_rect = SurroundingRectangle(rows[2], color=RED, buff=0.1)
+        collision_text = Text("COLLISION", color=RED, font_size=20).next_to(collision_rect, RIGHT)
+        
+        self.play(
+            Create(collision_rect),
+            Write(collision_text),
+            Indicate(VGroup(grid_b, grid_c), color=RED)
+        )
+        # Flashing effect
+        self.play(Flash(collision_rect, color=RED, flash_radius=0.5, num_lines=12))
+        self.wait(1)
+
+        # 7. Conclusion text
+        explanation = Text(
+            "Trade-off: Memory efficiency vs. Optimization accuracy", 
+            font_size=24, 
+            color=BLUE
+        ).to_edge(DOWN)
+        
+        self.play(Write(explanation))
+        self.wait(2)

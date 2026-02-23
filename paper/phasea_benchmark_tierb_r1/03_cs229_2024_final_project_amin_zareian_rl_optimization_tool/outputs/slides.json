@@ -1,0 +1,45 @@
+{
+  "title": "Reinforcement Learning Optimization Tool for Pixel Design",
+  "slides": [
+    {
+      "id": "concept-01-border-optimization",
+      "voice": "The core objective of this pixel design problem is to maximize the border length between two colors. Think of the border as the contact line where a red pixel touches a blue one. If we have large blocks of color, the border is short. But if we interleave the colors, like a checkerboard, we maximize the surface area where these regions interact.",
+      "goal": "Understand how border length is calculated and why the checkerboard is the optimal state.",
+      "remarks": "Create a 4x4 VGroup of Square objects. Initially, color the left half red and the right half blue. Draw thick green lines between adjacent pixels of different colors. Animate the squares flipping colors one by one to a checkerboard pattern. As each pixel flips, show the green border lines updating dynamically. Use a counter in the corner that increments as the number of red-blue adjacencies increases.",
+      "formula": "B = \\sum_{i,j \\in \\text{Neighbors}} [P_i \\neq P_j]",
+      "image_ref": "img-0.jpeg"
+    },
+    {
+      "id": "concept-02-reward-dynamics",
+      "voice": "In reinforcement learning, the agent learns by flipping pixels and observing the immediate change in border length. If a flip creates more red-blue boundaries, the agent receives a positive reward proportional to that increase. If it reduces the boundary, it's penalized. This turns a spatial arrangement problem into a sequence of value-driven decisions.",
+      "goal": "Visualize the incremental reward system used to train the RL agent.",
+      "remarks": "Show a 3x3 grid. Focus on the center pixel. Highlight its 4 neighbors. Animate the center pixel flipping from Red to Blue. Use green highlights for new borders created and red 'X' marks for borders lost. Display a floating '+2' or '-2' text next to the pixel based on the net change in border length. Link this to a BarChart showing the cumulative reward growing over time.",
+      "formula": "R_t = Border_{t} - Border_{t-1}",
+      "image_ref": "img-3.jpeg"
+    },
+    {
+      "id": "concept-03-state-space-explosion",
+      "voice": "The main challenge for standard Q-learning is the state space explosion. Since each pixel can be red or blue, a small five-by-five grid has over thirty-three million possible configurations. As the matrix size grows linearly, the number of states we need to track in our Q-table grows exponentially, making the training time skyrocket.",
+      "goal": "Explain why standard Q-tables fail as matrix dimensions increase.",
+      "remarks": "Create an Axes where the x-axis is 'Matrix Size' (2 to 6) and the y-axis is 'Possible States' (log scale). Plot the function 2^(x^2). Start with a small table graphic for a 2x2 grid (16 rows). As the grid size increases to 5x5, animate the table rows multiplying and scrolling at high speed, eventually turning into a solid blur of color to represent the 2^25 states, while the graph curve shoots off the top of the screen.",
+      "formula": "\\text{Total States} = 2^{(N \\times N)}",
+      "image_ref": "img-4.jpeg"
+    },
+    {
+      "id": "concept-04-hashed-q-learning",
+      "voice": "To solve the memory problem, we use a Hashed Q-table. Instead of reserving a unique slot for every possible grid, we pass the grid state through a hash function to map it into a smaller, fixed-size table. This allows us to handle larger designs, though it can lead to collisions where different patterns share the same table entry, resulting in sub-optimal 'almost-checkered' designs.",
+      "goal": "Understand the trade-off between memory efficiency and optimization accuracy in hashed RL.",
+      "remarks": "On the left, show three different 4x4 grid patterns. Draw arrows from these grids into a central 'Hash Function' box. From the box, draw arrows pointing to specific rows in a compact 'Q-Table'. Show two different grids pointing to the same row (a collision) using a flashing red highlight to indicate that the agent might get confused between these two states.",
+      "formula": "\\text{Index} = \\text{Hash}(\\text{MatrixState}) \\pmod L",
+      "image_ref": "img-6.jpeg"
+    },
+    {
+      "id": "concept-05-dqn-approximation",
+      "voice": "Alternatively, we can replace the table entirely with a Deep Q-Network. Instead of looking up a specific state, we feed the pixel grid into a neural network that approximates the expected rewards. While this should theoretically handle massive grids, the training is often slower and less stable for these specific geometric patterns compared to simple table-based methods.",
+      "goal": "Visualize the transition from tabular RL to Deep RL for pixel optimization.",
+      "remarks": "Show a 5x5 pixel grid. Animate it 'flattening' into a 1D vector of 25 values (0s and 1s). Show these values flowing into an input layer of a Neural Network (circles and lines). The output layer should have nodes representing 'Flip Pixel 1', 'Flip Pixel 2', etc. Highlight the output node with the highest value, then show that corresponding pixel in the original grid flipping.",
+      "formula": "Q(s, a; \\theta) \\approx Q^*(s, a)",
+      "image_ref": "img-8.jpeg"
+    }
+  ]
+}

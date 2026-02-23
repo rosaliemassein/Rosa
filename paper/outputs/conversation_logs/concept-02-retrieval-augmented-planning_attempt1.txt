@@ -1,0 +1,196 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+
+STYLE:
+- Use Axes, NumberPlane, ValueTracker, MathTex, arrows, shapes.
+- Animate dynamically: plots, moving dots, equation steps, diagrams.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-retrieval-augmented-planning",
+  "voice": "Standard AI planning often relies on a single, fixed path. But here, we use Retrieval-Augmented Planning, or RAP. The system queries external knowledge like arXiv papers or technical documentation to broaden its horizons. Instead of one plan, it generates multiple parallel scenarios. This ensures that even if one path fails, or a newer architecture is available in the literature, the agent can find the most optimal route for your specific dataset.",
+  "goal": "Explain how external knowledge retrieval enables the exploration of diverse, optimal planning paths.",
+  "remarks": "Animate a search bar at the top of the screen. A keyword like 'Image Classification' is typed, and documents (rectangles with text lines) fly in from the 'cloud'. These documents transform into multiple diverging paths labeled 'Plan A', 'Plan B', and 'Plan C'. Use a Tree structure where the root is the 'Parsed Requirement' and branches represent different plans. Highlight the most 'successful' looking branch with a glowing animation.",
+  "formula": "\\mathbf{P} = \\mathcal{A}_{mgr}(\\mathrm{RAP}(R))",
+  "image_ref": "img-2.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathbf{P} = \mathcal{A}_{mgr}(\mathrm{RAP}(R))
+
+
+=== ASSISTANT ===
+from manim import *
+import random
+
+class RetrievalAugmentedPlanningConcept(Scene):
+    def construct(self):
+        # --- Data Strings (from JSON) ---
+        voice_text = "Standard AI planning often relies on a single, fixed path. But here, we use Retrieval-Augmented Planning, or RAP."
+        goal_text = "Explain how external knowledge retrieval enables the exploration of diverse, optimal planning paths."
+        formula_str = r"\mathbf{P} = \mathcal{A}_{mgr}(\mathrm{RAP}(R))"
+        
+        # --- 1. Search Bar Phase ---
+        search_bar = RoundedRectangle(corner_radius=0.1, width=6, height=0.7, color=WHITE)
+        search_bar.to_edge(TOP, buff=0.5)
+        
+        # Create a simple magnifying glass icon using shapes (avoids LaTeX dependency)
+        glass_circle = Circle(radius=0.15, color=WHITE).move_to(search_bar.get_left() + RIGHT * 0.4)
+        glass_handle = Line(
+            glass_circle.get_bottom() + LEFT*0.05, 
+            glass_circle.get_bottom() + RIGHT*0.15 + DOWN*0.15, 
+            color=WHITE
+        )
+        search_icon = VGroup(glass_circle, glass_handle)
+        
+        search_label = Text("Image Classification", font_size=24, color=GRAY)
+        search_label.next_to(search_icon, RIGHT, buff=0.3)
+        
+        search_group = VGroup(search_bar, search_icon, search_label)
+        
+        self.play(Create(search_bar))
+        self.play(Write(search_label), Create(search_icon))
+        self.wait(0.5)
+
+        # --- 2. External Documents Phase ---
+        # Represent "the cloud" as a region in the top right
+        docs = VGroup()
+        for i in range(3):
+            doc_rect = Rectangle(width=0.9, height=1.2, fill_opacity=0.8, fill_color=BLUE_D, stroke_color=WHITE)
+            # Add small lines to look like text on a document
+            lines = VGroup(*[Line(LEFT*0.3, RIGHT*0.3, stroke_width=1).shift(UP*(0.3 - 0.2*j)) for j in range(4)])
+            doc = VGroup(doc_rect, lines)
+            doc.move_to(RIGHT*5 + UP*2) # Start from cloud
+            docs.add(doc)
+
+        # Fly documents in to center-left
+        self.play(
+            LaggedStart(*[
+                d.animate.move_to(LEFT*2 + UP*(1 - i)) 
+                for i, d in enumerate(docs)
+            ], lag_ratio=0.3)
+        )
+        self.wait(0.5)
+
+        # --- 3. Tree Structure Transformation ---
+        # Root node
+        root = VGroup(
+            Dot(color=RED, radius=0.15),
+            Text("Parsed Requirement", font_size=20).next_to(ORIGIN, DOWN * 0.5)
+        ).move_to(LEFT * 4)
+
+        # Plan nodes
+        plans = VGroup()
+        plan_names = ["Plan A", "Plan B", "Plan C"]
+        y_positions = [1.5, 0, -1.5]
+        
+        for name, y in zip(plan_names, y_positions):
+            p_node = VGroup(
+                Dot(color=GREEN),
+                Text(name, font_size=22).next_to(ORIGIN, RIGHT * 0.5)
+            ).move_to(RIGHT * 2 + UP * y)
+            plans.add(p_node)
+
+        # Tree Connections
+        branches = VGroup(*[
+            Line(root[0].get_center(), p[0].get_center(), color=GRAY_A, stroke_width=2)
+            for p in plans
+        ])
+
+        # Morph documents into the diverse plans
+        self.play(
+            FadeOut(search_group),
+            FadeIn(root),
+            ReplacementTransform(docs, plans),
+            Create(branches)
+        )
+        self.wait(0.5)
+
+        # --- 4. Successful Path Highlight ---
+        # Let's say Plan B is the most optimal
+        successful_path = branches[1]
+        successful_node = plans[1]
+        
+        self.play(
+            successful_path.animate.set_stroke(color=YELLOW, width=6),
+            successful_node.animate.scale(1.2).set_color(YELLOW),
+        )
+        self.play(Indicate(successful_node, color=YELLOW, scale_factor=1.4))
+        
+        # --- 5. Formula & Conclusion ---
+        formula = MathTex(formula_str, font_size=42)
+        formula.to_edge(BOTTOM, buff=1.2)
+        
+        goal_display = Text(goal_text, font_size=18, slant=ITALIC, color=LIGHT_GRAY)
+        goal_display.to_edge(BOTTOM, buff=0.5)
+
+        self.play(Write(formula))
+        self.play(FadeIn(goal_display))
+        
+        self.wait(3)
+
+=== ERROR ===
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/cli/ren │
+│ der/commands.py:125 in render                                                │
+│                                                                              │
+│   122 │   │   │   try:                                                       │
+│   123 │   │   │   │   with tempconfig({}):                                   │
+│   124 │   │   │   │   │   scene = SceneClass()                               │
+│ ❱ 125 │   │   │   │   │   scene.render()                                     │
+│   126 │   │   │   except Exception:                                          │
+│   127 │   │   │   │   error_console.print_exception()                        │
+│   128 │   │   │   │   sys.exit(1)                                            │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/.venv/lib/python3.12/site-packages/manim/scene/s │
+│ cene.py:259 in render                                                        │
+│                                                                              │
+│    256 │   │   """                                                           │
+│    257 │   │   self.setup()                                                  │
+│    258 │   │   try:                                                          │
+│ ❱  259 │   │   │   self.construct()                                          │
+│    260 │   │   except EndSceneEarlyException:                                │
+│    261 │   │   │   pass                                                      │
+│    262 │   │   except RerunSceneException:                                   │
+│                                                                              │
+│ /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement          │
+│ Learning/Project/code/cs234/paper/outputs/slides/concept-02-retrieval-augmen │
+│ ted-planning_v3.py:13 in construct                                           │
+│                                                                              │
+│    10 │   │                                                                  │
+│    11 │   │   # --- 1. Search Bar Phase ---                                  │
+│    12 │   │   search_bar = RoundedRectangle(corner_radius=0.1, width=6, heig │
+│ ❱  13 │   │   search_bar.to_edge(TOP, buff=0.5)                              │
+│    14 │   │                                                                  │
+│    15 │   │   # Create a simple magnifying glass icon using shapes (avoids L │
+│    16 │   │   glass_circle = Circle(radius=0.15, color=WHITE).move_to(search │
+╰──────────────────────────────────────────────────────────────────────────────╯
+NameError: name 'TOP' is not defined
+

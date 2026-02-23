@@ -1,0 +1,173 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+- Do NOT use: VMobject, UpdateFromAlphaFunc, custom rate functions (`smooth`, `there_and_back`, `linear`) unless explicitly defined/imported.
+- Do NOT emit undeclared identifiers; common failure is using `t` without definition.
+- Prefer deterministic primitives: VGroup, Circle/Square/Line/Arrow, and Transform/FadeIn/FadeOut.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-spatial-grid-encoding",
+  "voice": "To teach a neural network Chinese Checkers, we have to transform the hexagonal board into a language it understands: grids. We encode the game state into a three-layered stack. The first layer marks the current player's pieces, the second marks the target destination, and the third marks all opponent pieces. By embedding this hex-geometry into a square coordinate system, a standard convolutional network can 'see' the spatial relationships between pegs and their goals.",
+  "goal": "Understand how the hexagonal board is represented as a multi-layered square grid for CNN processing.",
+  "remarks": "Create a hexagonal grid of circles representing a Chinese Checkers board. Animate it tilting into a 3D perspective and then morphing into a square grid of cells. Split this square grid into three separate, semi-transparent layers floating vertically. Layer 1: Highlight 'Self' pieces in blue. Layer 2: Highlight 'Target' zone in green. Layer 3: Highlight 'Opponent' pieces in red. Use TransformMatchingShapes to show the transition from the board to the grid layers. Label the dimensions with MathTex 'n \\times n \\times 3'.",
+  "formula": "n = 4 \\times \\text{board radius} + 1",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+n = 4 \times \text{board radius} + 1
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class SpatialGridEncoding(Scene):
+    def construct(self):
+        # Configuration: n = 4 * board_radius + 1
+        # For a compact visualization, we'll use a board radius of 1, so n = 5
+        n_val = 5
+        board_radius = 1
+        
+        # 1. Create Hexagonal Grid
+        # Using axial coordinates (q, r) to represent the hexagonal layout
+        hex_grid = VGroup()
+        for q in range(-board_radius, board_radius + 1):
+            r1 = max(-board_radius, -q - board_radius)
+            r2 = min(board_radius, -q + board_radius)
+            for r in range(r1, r2 + 1):
+                # Convert axial coordinates to 2D pixel coordinates
+                # x = size * 3/2 * q
+                # y = size * sqrt(3)/2 * q + sqrt(3) * r
+                x_pos = 0.7 * (1.5 * q)
+                y_pos = 0.7 * (np.sqrt(3)/2 * q + np.sqrt(3) * r)
+                circle = Circle(radius=0.2, color=BLUE, fill_opacity=0.8, fill_color=BLUE)
+                circle.move_to([x_pos, y_pos, 0])
+                hex_grid.add(circle)
+        
+        hex_grid.move_to(ORIGIN)
+        
+        # Display initial hexagonal board
+        self.play(Create(hex_grid))
+        self.wait(1)
+        
+        # 2. Simulate tilting into 3D perspective using 2D transformations
+        # Shear the grid and squash it vertically to mimic a 3D plane
+        tilt_matrix = [[1, 0.5, 0], [0, 0.5, 0], [0, 0, 1]]
+        self.play(hex_grid.animate.apply_matrix(tilt_matrix), run_time=1.5)
+        self.wait(0.5)
+        
+        # 3. Create Square Grid Layers
+        def create_square_layer(color):
+            layer = VGroup()
+            cell_size = 0.4
+            for i in range(n_val):
+                for j in range(n_val):
+                    square = Square(side_length=cell_size, color=color, fill_opacity=0.3, fill_color=color)
+                    # Center the grid
+                    square.move_to([(i - n_val/2 + 0.5) * cell_size, (j - n_val/2 + 0.5) * cell_size, 0])
+                    layer.add(square)
+            # Apply same perspective tilt to the square layers
+            layer.apply_matrix(tilt_matrix)
+            return layer
+
+        layer_self = create_square_layer(BLUE)
+        layer_target = create_square_layer(GREEN)
+        layer_opp = create_square_layer(RED)
+        
+        # 4. Morph the hexagonal board into the first square grid layer
+        self.play(ReplacementTransform(hex_grid, layer_self))
+        self.wait(0.5)
+        
+        # 5. Stack the layers vertically (simulated with 2D offsets)
+        # Shift Layer 1 up-right and Layer 3 down-left to create a floating stack effect
+        stack_offset = np.array([0.5, 1.5, 0])
+        
+        self.play(
+            layer_self.animate.shift(stack_offset),
+            FadeIn(layer_target), # Layer 2 stays centered
+            layer_opp.animate.shift(-stack_offset),
+            run_time=2
+        )
+        self.wait(1)
+        
+        # 6. Annotations and Labels
+        # Dimension Label
+        dim_label = MathTex(r"n \times n \times 3").scale(1.2).to_corner(UL, buff=0.5)
+        formula_label = MathTex(r"n = 4 \times \text{board radius} + 1").scale(0.7).next_to(dim_label, DOWN, aligned_edge=LEFT)
+        
+        # Layer specific labels
+        label_1 = Text("Layer 1: Self Pieces", color=BLUE).scale(0.4).next_to(layer_self, RIGHT, buff=0.5)
+        label_2 = Text("Layer 2: Target Zone", color=GREEN).scale(0.4).next_to(layer_target, RIGHT, buff=0.5)
+        label_3 = Text("Layer 3: Opponent Pieces", color=RED).scale(0.4).next_to(layer_opp, RIGHT, buff=0.5)
+        
+        self.play(
+            Write(dim_label),
+            Write(formula_label),
+            FadeIn(label_1),
+            FadeIn(label_2),
+            FadeIn(label_3)
+        )
+        
+        self.wait(2)

@@ -1,0 +1,3 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r2/10_predicting_nba_team_success_by_player_personnel/outputs/media/videos/concept-02-regularization-tradeoff_v5/480p15/partial_movie_files/ConceptSlide02RegularityTradeoff/1584795214_4237833828_4224543041.mp4'
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r2/10_predicting_nba_team_success_by_player_personnel/outputs/media/videos/concept-02-regularization-tradeoff_v5/480p15/partial_movie_files/ConceptSlide02RegularityTradeoff/4072820271_2844360058_2352712321.mp4'

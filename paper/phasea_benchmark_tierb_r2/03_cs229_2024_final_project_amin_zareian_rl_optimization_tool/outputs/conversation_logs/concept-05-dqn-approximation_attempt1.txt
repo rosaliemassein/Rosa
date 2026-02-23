@@ -1,0 +1,197 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-05-dqn-approximation",
+  "voice": "Alternatively, we can replace the table entirely with a Deep Q-Network. Instead of looking up a specific state, we feed the pixel grid into a neural network that approximates the expected rewards. While this should theoretically handle massive grids, the training is often slower and less stable for these specific geometric patterns compared to simple table-based methods.",
+  "goal": "Visualize the transition from tabular RL to Deep RL for pixel optimization.",
+  "remarks": "Show a 5x5 pixel grid. Animate it 'flattening' into a 1D vector of 25 values (0s and 1s). Show these values flowing into an input layer of a Neural Network (circles and lines). The output layer should have nodes representing 'Flip Pixel 1', 'Flip Pixel 2', etc. Highlight the output node with the highest value, then show that corresponding pixel in the original grid flipping.",
+  "formula": "Q(s, a; \\theta) \\approx Q^*(s, a)",
+  "image_ref": "img-8.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+Q(s, a; \theta) \approx Q^*(s, a)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept05DQNAppearance(Scene):
+    def construct(self):
+        # Title/Formula
+        formula = MathTex(r"Q(s, a; \theta) \approx Q^*(s, a)").to_edge(UP)
+        self.play(Write(formula))
+
+        # 1. Create a 5x5 pixel grid
+        grid_size = 5
+        pixel_grid = VGroup(*[
+            Square(side_length=0.5, stroke_width=1, fill_opacity=0.5, fill_color=BLUE)
+            for _ in range(grid_size * grid_size)
+        ]).arrange_in_grid(rows=grid_size, cols=grid_size, buff=0.1)
+        pixel_grid.to_edge(LEFT, buff=1)
+        
+        grid_label = Text("5x5 State Grid", font_size=24).next_to(pixel_grid, UP)
+        
+        self.play(Create(pixel_grid), Write(grid_label))
+        self.wait(1)
+
+        # 2. Flattening into a 1D vector
+        flattened_vector = VGroup(*[
+            Square(side_length=0.2, stroke_width=1, fill_opacity=1, fill_color=BLUE)
+            for _ in range(grid_size * grid_size)
+        ]).arrange(DOWN, buff=0.05).scale(0.8)
+        flattened_vector.move_to(ORIGIN).shift(LEFT * 1.5)
+
+        # Add some 0s and 1s labels to some squares for visualization
+        labels = VGroup()
+        for i in [0, 5, 12, 18, 24]:
+            val = "1" if i % 3 == 0 else "0"
+            label = Text(val, font_size=12).move_to(flattened_vector[i].get_center())
+            labels.add(label)
+
+        vector_text = Text("Flattened Vector", font_size=20).next_to(flattened_vector, UP)
+
+        self.play(
+            ReplacementTransform(pixel_grid.copy(), flattened_vector),
+            Write(vector_text),
+            Write(labels),
+            pixel_grid.animate.set_opacity(0.3)
+        )
+        self.wait(1)
+
+        # 3. Neural Network Construction
+        def create_layer(n, color, position):
+            layer = VGroup(*[Circle(radius=0.12, color=color, fill_opacity=0.7) for _ in range(n)])
+            layer.arrange(DOWN, buff=0.15).move_to(position)
+            return layer
+
+        input_layer = create_layer(10, WHITE, RIGHT * 0.5) 
+        hidden_layer = create_layer(8, WHITE, RIGHT * 2.5)
+        output_layer = create_layer(5, GREEN, RIGHT * 4.5)
+        
+        nn_group = VGroup(input_layer, hidden_layer, output_layer)
+        
+        # Connections
+        connections = VGroup()
+        for i in input_layer:
+            for j in hidden_layer:
+                connections.add(Line(i.get_right(), j.get_left(), stroke_width=0.5, stroke_opacity=0.2))
+        for i in hidden_layer:
+            for j in output_layer:
+                connections.add(Line(i.get_right(), j.get_left(), stroke_width=0.5, stroke_opacity=0.2))
+
+        nn_label = Text("Deep Q-Network", font_size=24).next_to(nn_group, UP)
+        
+        # Labels for output
+        output_labels = VGroup(*[
+            Text(f"Flip {i+1}", font_size=14).next_to(output_layer[i], RIGHT)
+            for i in range(len(output_layer))
+        ])
+
+        self.play(
+            Create(input_layer),
+            Create(hidden_layer),
+            Create(output_layer),
+            Create(connections),
+            Write(nn_label),
+            Write(output_labels),
+            FadeOut(vector_text),
+            FadeOut(labels),
+            flattened_vector.animate.next_to(input_layer, LEFT, buff=0.3)
+        )
+        self.wait(1)
+
+        # 4. Highlight highest value and flip pixel
+        target_index = 2 
+        highlight_rect = SurroundingRectangle(output_layer[target_index], color=YELLOW)
+        
+        # Animate signal flow
+        flash_lines = connections.copy().set_color(YELLOW).set_stroke(opacity=1, width=1.5)
+        
+        # Using a simple successional animation to represent flow since PassingFlash can be version-dependent
+        self.play(
+            Create(flash_lines, run_time=1.5, rate_func=linear),
+        )
+        self.play(FadeOut(flash_lines, run_time=0.5))
+
+        self.play(
+            Create(highlight_rect),
+            output_layer[target_index].animate.set_color(YELLOW).scale(1.3),
+            output_labels[target_index].animate.set_color(YELLOW)
+        )
+        self.wait(0.5)
+
+        # Show the corresponding pixel flipping in original grid
+        # Pixel index 12 is roughly the center
+        grid_target_index = 12 
+        
+        self.play(
+            pixel_grid[grid_target_index].animate.set_fill(YELLOW, opacity=1).scale(1.2),
+            pixel_grid.animate.set_opacity(1)
+        )
+        self.play(pixel_grid[grid_target_index].animate.scale(1/1.2))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: linear

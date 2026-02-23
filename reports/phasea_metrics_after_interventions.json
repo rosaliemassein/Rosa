@@ -1,0 +1,28 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 5,
+  "compiled_attempts": 1,
+  "compile_rate": 0.2,
+  "slides_evaluated_for_pass1": 2,
+  "pass_at_1": 0.0,
+  "bucket_counts": {
+    "gate_fail": 0,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 3,
+    "timeout": 0
+  },
+  "feature_counts": {},
+  "top_error_signatures": [
+    [
+      "compile_failed",
+      3
+    ],
+    [
+      "error: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.",
+      1
+    ]
+  ]
+}

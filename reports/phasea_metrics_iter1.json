@@ -1,0 +1,77 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/03_cs229_2024_final_project_amin_zareian_rl_optimization_tool/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/05_cs229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 57,
+  "compiled_attempts": 6,
+  "compile_rate": 0.1053,
+  "slides_evaluated_for_pass1": 23,
+  "pass_at_1": 0.1304,
+  "bucket_counts": {
+    "gate_fail": 51,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_axes_or_numberplane": 11,
+    "uses_mathtex": 8
+  },
+  "gate_reason_tag_counts": {
+    "disallowed_tier_symbol": 40,
+    "undefined_symbol": 50,
+    "syntax_error": 1
+  },
+  "top_error_signatures": [
+    [
+      "undefined identifiers detected: Rectangle | disallowed symbols/features in constrained subset: Rectangle",
+      5
+    ],
+    [
+      "undefined identifiers detected: GREY",
+      3
+    ],
+    [
+      "undefined identifiers detected: Polygon | disallowed symbols/features in constrained subset: Polygon",
+      2
+    ],
+    [
+      "undefined identifiers detected: Tex | disallowed symbols/features in constrained subset: Tex",
+      2
+    ],
+    [
+      "undefined identifiers detected: Rectangle, t | disallowed symbols/features in constrained subset: Rectangle",
+      1
+    ],
+    [
+      "undefined identifiers detected: Brace, Rectangle, VMobject | disallowed symbols/features in constrained subset: Brace, Rectangle",
+      1
+    ],
+    [
+      "undefined identifiers detected: Rectangle, VMobject | disallowed symbols/features in constrained subset: Rectangle",
+      1
+    ],
+    [
+      "undefined identifiers detected: VMobject",
+      1
+    ],
+    [
+      "undefined identifiers detected: GREY, Polygon, VMobject | disallowed symbols/features in constrained subset: Polygon",
+      1
+    ],
+    [
+      "undefined identifiers detected: DEGREES, Polygon, VMobject | disallowed symbols/features in constrained subset: Polygon",
+      1
+    ]
+  ]
+}

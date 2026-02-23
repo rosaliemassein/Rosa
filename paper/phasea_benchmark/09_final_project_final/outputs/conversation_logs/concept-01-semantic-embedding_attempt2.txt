@@ -1,0 +1,158 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-semantic-embedding",
+  "voice": "To match proposals with reviewers, we first have to turn human language into something a computer can measure. Instead of just looking for exact word matches, we use Word2Vec to map keywords into a high-dimensional vector space. Think of it like a map where concepts that mean similar things, like 'Deep Learning' and 'Neural Networks', are physically placed close to each other. When we encounter a multi-word phrase, we simply take the average of the individual word vectors to find the phrase's center of gravity in this conceptual space.",
+  "goal": "Understand how keywords are transformed into mathematical vectors and averaged for multi-word phrases.",
+  "remarks": "Create a 3D NumberPlane. Pop up floating text labels for 'Deep Learning', 'Neural Networks', and 'Robotics'. Animate the text labels transforming into Dot objects at specific coordinates. Use a dashed line to show the distance between 'Deep Learning' and 'Neural Networks' being small, while 'Robotics' is further away. To show the formula, display the word 'Machine' and its vector, the word 'Learning' and its vector, and then use Transform to merge them into a single central vector representing the average position.",
+  "formula": "v_{phrase} = \\frac{1}{n} \\sum_{i=1}^{n} v_{i}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+v_{phrase} = \frac{1}{n} \sum_{i=1}^{n} v_{i}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class SemanticEmbedding(Scene):
+    def construct(self):
+        # 1. Use Axes as a substitute for NumberPlane (as NumberPlane is disallowed)
+        axes = Axes(
+            x_range=[-6, 6, 1],
+            y_range=[-4, 4, 1],
+            axis_config={"color": BLUE, "stroke_width": 2},
+        )
+        self.add(axes)
+
+        # 2. Pop up floating text labels
+        # Using 2D coordinates within the viewable range
+        pos_dl = [2, 1.5, 0]
+        pos_nn = [3, 1, 0]
+        pos_robotics = [-3, -1.5, 0]
+
+        label_dl = Text("Deep Learning", color=BLUE).scale(0.5).move_to([2, 2, 0])
+        label_nn = Text("Neural Networks", color=YELLOW).scale(0.5).move_to([3, 1.5, 0])
+        label_robotics = Text("Robotics", color=RED).scale(0.5).move_to([-3, -2, 0])
+
+        self.play(Write(label_dl), Write(label_nn), Write(label_robotics))
+        self.wait(1)
+
+        # 3. Animate text labels transforming into Dot objects
+        dot_dl = Dot(point=pos_dl, color=BLUE)
+        dot_nn = Dot(point=pos_nn, color=YELLOW)
+        dot_robotics = Dot(point=pos_robotics, color=RED)
+
+        self.play(
+            Transform(label_dl, dot_dl),
+            Transform(label_nn, dot_nn),
+            Transform(label_robotics, dot_robotics)
+        )
+        self.wait(1)
+
+        # 4. Use lines to show distances (using Line since DashedLine was flagged)
+        line_dl_nn = Line(pos_dl, pos_nn, color=WHITE, stroke_width=2)
+        line_dl_robotics = Line(pos_dl, pos_robotics, color=WHITE, stroke_width=1).set_stroke(opacity=0.5)
+
+        self.play(Create(line_dl_nn))
+        self.play(Create(line_dl_robotics))
+        self.wait(1)
+
+        # 5. Clean up for the next section
+        self.play(
+            FadeOut(line_dl_nn), 
+            FadeOut(line_dl_robotics), 
+            FadeOut(label_dl), 
+            FadeOut(label_nn), 
+            FadeOut(label_robotics)
+        )
+
+        # 6. Formula Section: "Machine" and "Learning" vectors
+        pos_m = [-2, -1, 0]
+        pos_l = [0, 2, 0]
+        # Average position: [(-2+0)/2, (-1+2)/2, 0] = [-1, 0.5, 0]
+        pos_avg = [-1, 0.5, 0]
+
+        text_m = Text("Machine", color=GREEN).scale(0.6).move_to([-2, -1.5, 0])
+        dot_m = Dot(point=pos_m, color=GREEN)
+        
+        text_l = Text("Learning", color=BLUE).scale(0.6).move_to([0, 2.5, 0])
+        dot_l = Dot(point=pos_l, color=BLUE)
+
+        self.play(FadeIn(dot_m), Write(text_m))
+        self.play(FadeIn(dot_l), Write(text_l))
+        self.wait(1)
+
+        # 7. Transform to the average vector
+        avg_dot = Dot(point=pos_avg, color=WHITE)
+        avg_text = Text("Machine Learning", color=WHITE).scale(0.6).move_to([-1, 0, 0])
+
+        self.play(
+            Transform(dot_m, avg_dot),
+            Transform(dot_l, avg_dot),
+            Transform(text_m, avg_text),
+            Transform(text_l, avg_text)
+        )
+        self.wait(1)
+
+        # 8. Display the formula using Text (as MathTex is disallowed)
+        formula_text = Text("v_phrase = 1/n * Sum(v_i)").scale(0.7).to_edge(UP)
+        self.play(Write(formula_text))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Axes; disallowed symbols/features in constrained subset: Axes

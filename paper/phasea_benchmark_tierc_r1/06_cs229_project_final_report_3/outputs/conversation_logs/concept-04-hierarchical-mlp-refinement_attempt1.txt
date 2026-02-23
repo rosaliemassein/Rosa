@@ -1,0 +1,184 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-hierarchical-mlp-refinement",
+  "voice": "The final step is the refinement stage. Once CLIP tells us we are in a specific country, we pass the image embedding to a Multi-Layer Perceptron specifically trained for that nation. This MLP ignores all global data and focuses entirely on the local clusters we just created. It outputs a prediction for the most likely cluster, and our final coordinate guess is simply the center of that cluster. This hierarchical approach\u2014from global country to local region\u2014is what allows the model to find specific coordinates from visual clues.",
+  "goal": "Understand the two-stage inference pipeline that moves from coarse country classification to fine-grained cluster prediction.",
+  "remarks": "Create a flow chart starting with an image. Show it passing through the 'CLIP' block which points to a specific 'Country MLP'. Beneath this, show a 3-layer neural network (MLP) with ReLU activations. Animate signals flowing through the MLP layers. The output of the MLP should point to one of the K-means centroids on a map. Show the final coordinate result as a GPS 'pin' dropping onto the map at the centroid location. Use TransformMatchingTex to show the transition from the image vector to the final coordinate (lat, lon).",
+  "formula": "c^{(i)}:=\\arg\\min_{j}\\|x^{(i)}-\\mu_{j}\\|^{2}",
+  "image_ref": "img-8.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+c^{(i)}:=\arg\min_{j}\|x^{(i)}-\mu_{j}\|^{2}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ConceptHierarchicalMLPRefinement(Scene):
+    def construct(self):
+        # 1. Setup - Voice and Title
+        goal_text = Text("Two-stage Inference: CLIP + MLP", font_size=24).to_edge(UP)
+        self.add(goal_text)
+
+        # 2. Image and CLIP block
+        # Using a placeholder for the image to ensure it runs even if file is missing
+        try:
+            img = ImageMobject("img-8.jpeg").scale(0.8)
+        except:
+            img = Rectangle(width=2, height=1.5, color=GRAY).add(Text("Image", font_size=20))
+            
+        img.to_edge(LEFT, buff=1).shift(UP * 1.5)
+        
+        clip_box = Rectangle(width=2, height=1, color=BLUE)
+        clip_text = Text("CLIP", color=BLUE).scale(0.8)
+        clip_group = VGroup(clip_box, clip_text).next_to(img, RIGHT, buff=1.5)
+        
+        arrow_to_clip = Arrow(img.get_right(), clip_group.get_left(), buff=0.1)
+
+        self.play(FadeIn(img))
+        self.play(Create(clip_group), GrowArrow(arrow_to_clip))
+
+        # 3. Country MLP Block (Intermediate classification)
+        country_box = Rectangle(width=3, height=1, color=GREEN)
+        country_text = Text("Country MLP", color=GREEN).scale(0.8)
+        country_group = VGroup(country_box, country_text).next_to(clip_group, DOWN, buff=1)
+        
+        arrow_to_country = Arrow(clip_group.get_bottom(), country_group.get_top(), buff=0.1)
+
+        self.play(Create(country_group), GrowArrow(arrow_to_country))
+        self.wait(1)
+
+        # 4. Detailed MLP structure
+        layers = [4, 5, 3]
+        mlp_layers = VGroup()
+        for i, size in enumerate(layers):
+            layer = VGroup(*[Circle(radius=0.15, color=YELLOW, fill_opacity=0.5) for _ in range(size)])
+            layer.arrange(DOWN, buff=0.2)
+            layer.shift(RIGHT * i * 2)
+            mlp_layers.add(layer)
+        
+        mlp_layers.scale(0.7).next_to(country_group, DOWN, buff=1.5).shift(LEFT * 2)
+
+        connections = VGroup()
+        for i in range(len(layers) - 1):
+            for n1 in mlp_layers[i]:
+                for n2 in mlp_layers[i+1]:
+                    line = Line(n1.get_right(), n2.get_left(), stroke_width=1, color=WHITE, stroke_opacity=0.3)
+                    connections.add(line)
+
+        relu_labels = VGroup(
+            Text("ReLU", font_size=16, color=YELLOW).next_to(mlp_layers[0], UP, buff=0.1),
+            Text("ReLU", font_size=16, color=YELLOW).next_to(mlp_layers[1], UP, buff=0.1)
+        )
+
+        self.play(Create(mlp_layers), Create(connections), FadeIn(relu_labels))
+
+        # Signal animation - Using MoveAlongPath which is standard in Manim
+        dots = VGroup()
+        for i in range(0, len(connections), 4): 
+            line = connections[i]
+            dots.add(Dot(line.get_start(), radius=0.05, color=YELLOW))
+        
+        self.play(AnimationGroup(*[MoveAlongPath(dots[j], connections[j*4]) for j in range(len(dots))], run_time=1.5))
+        self.play(FadeOut(dots))
+
+        # 5. Formula and K-means centroid
+        formula = MathTex(r"c^{(i)}:=\arg\min_{j}\|x^{(i)}-\mu_{j}\|^{2}", font_size=30)
+        formula.next_to(mlp_layers, RIGHT, buff=1)
+        self.play(Write(formula))
+
+        # 6. Map and Pin
+        map_rect = Rectangle(width=3, height=2, color=WHITE).to_edge(DR, buff=1)
+        map_label = Text("Local Region Map", font_size=18).next_to(map_rect, UP)
+        
+        # Coordinates using np.array
+        centroids = VGroup(*[Dot(map_rect.get_center() + np.array([x, y, 0]), radius=0.05, color=BLUE) 
+                            for x, y in [(0.5, 0.4), (-0.7, -0.2), (0.2, -0.6), (-0.3, 0.5)]])
+        
+        self.play(Create(map_rect), FadeIn(map_label), FadeIn(centroids))
+
+        target_centroid = centroids[0]
+        pin = Dot(target_centroid.get_center(), color=RED).scale(1.5)
+        pin_label = Text("Final Guess", font_size=16, color=RED).next_to(pin, UP, buff=0.1)
+        
+        arrow_to_map = Arrow(mlp_layers[-1].get_right(), target_centroid.get_center(), color=YELLOW)
+        
+        self.play(GrowArrow(arrow_to_map))
+        self.play(pin.animate.shift(UP*0.5).set_opacity(0), run_time=0.1)
+        self.play(pin.animate.shift(DOWN*0.5).set_opacity(1), FadeIn(pin_label))
+
+        # 7. Final Coordinate Transition
+        # Using ReplacementTransform as it is a more universal fallback if TransformMatchingTex is missing
+        input_vector = MathTex(r"\mathbf{x}^{(i)}", color=WHITE).move_to(img.get_center())
+        final_coords = MathTex(r"(\text{Lat, Lon: } 0.3579, 12.4818)", color=RED, font_size=32).next_to(map_rect, DOWN)
+        
+        self.play(FadeOut(img), FadeIn(input_vector))
+        self.wait(1)
+        
+        # Manim Community provides TransformMatchingTex; using Transform as a robust alternative if identifiers are weird
+        self.play(ReplacementTransform(input_vector, final_coords))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: MoveAlongPath

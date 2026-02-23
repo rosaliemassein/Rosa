@@ -1,0 +1,6 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log
+concept-01-multi-agent-orchestration,1,slides/concept-01-multi-agent-orchestration.py,,False,3,,,compile_failed,conversation_logs/concept-01-multi-agent-orchestration_attempt1.txt
+concept-01-multi-agent-orchestration,2,slides/concept-01-multi-agent-orchestration_v2.py,concept-01-multi-agent-orchestration_v4.mp4,True,2,,,success,conversation_logs/concept-01-multi-agent-orchestration_attempt2.txt
+concept-02-retrieval-augmented-planning,1,slides/concept-02-retrieval-augmented-planning.py,,False,3,,,compile_failed,conversation_logs/concept-02-retrieval-augmented-planning_attempt1.txt
+concept-02-retrieval-augmented-planning,2,slides/concept-02-retrieval-augmented-planning_v2.py,,False,3,,,compile_failed,conversation_logs/concept-02-retrieval-augmented-planning_attempt2.txt
+concept-02-retrieval-augmented-planning,0,,,False,0,,,"error: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.",

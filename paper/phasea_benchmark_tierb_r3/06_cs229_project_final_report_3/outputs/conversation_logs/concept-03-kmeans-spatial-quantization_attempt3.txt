@@ -1,0 +1,182 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-kmeans-spatial-quantization",
+  "voice": "Predicting exact latitude and longitude is incredibly difficult because coordinates are continuous and high-variance. To solve this, we simplify the problem using spatial clustering. Within each country, we group our training coordinates into K clusters. Instead of asking the model to guess any point on the map, we ask it to classify which 'region' or cluster the image belongs to. This turns a complex regression problem into a more manageable classification task.",
+  "goal": "Understand how K-means clustering discretizes a continuous geographic space into predictable regions.",
+  "remarks": "Draw an outline of a country (e.g., Australia) on a NumberPlane. Populate it with many small gray dots representing data points. Animate several 'Centroid' crosses (mu_j) appearing at random locations. Use an animation to show points changing color based on the nearest centroid (Voronoi-like behavior). Then, show the centroids moving to the center of their respective colored groups as the K-means algorithm converges. Highlight the final cluster centers as the discrete 'targets' for the next stage.",
+  "formula": "\\mu_{j}:=\\frac{\\sum_{i=1}^{n}\\mathbf{1}\\{c^{(i)}=j\\}x^{(i)}}{\\sum_{i=1}^{n}\\mathbf{1}\\{c^{(i)}=j\\}}",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mu_{j}:=\frac{\sum_{i=1}^{n}\mathbf{1}\{c^{(i)}=j\}x^{(i)}}{\sum_{i=1}^{n}\mathbf{1}\{c^{(i)}=j\}}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ConceptAnimation(Scene):
+    def construct(self):
+        # Helper to create a Cross since 'Cross' might be restricted/undefined
+        def create_cross_marker(color=WHITE):
+            return VGroup(
+                Line(0.15 * LEFT + 0.15 * UP, 0.15 * RIGHT + 0.15 * DOWN, color=color, stroke_width=4),
+                Line(0.15 * LEFT + 0.15 * DOWN, 0.15 * RIGHT + 0.15 * UP, color=color, stroke_width=4)
+            )
+
+        # 1. Use Axes instead of NumberPlane to avoid restricted features
+        axes = Axes(
+            x_range=[-6, 6, 1],
+            y_range=[-4, 4, 1],
+            x_length=10,
+            y_length=6,
+            axis_config={"color": BLUE, "stroke_opacity": 0.5},
+            tips=False
+        )
+        self.add(axes)
+
+        # 2. Draw an outline of a country (Australia-like shape)
+        australia_points = [
+            [-3, 1.5, 0], [-1, 1.8, 0], [1, 1.5, 0], [3, 0.5, 0], 
+            [3.5, -1, 0], [2, -2, 0], [0, -2.5, 0], [-2, -2, 0], 
+            [-3.5, -0.5, 0], [-3, 1, 0]
+        ]
+        country_outline = Polygon(*australia_points, color=BLUE, fill_opacity=0.1)
+        self.play(Create(country_outline))
+
+        # 3. Populate with many small gray dots
+        np.random.seed(42)
+        dots = VGroup()
+        for _ in range(70):
+            # Simple rejection sampling for the shape
+            px = np.random.uniform(-3.5, 3.5)
+            py = np.random.uniform(-2.5, 2.0)
+            dots.add(Dot(point=[px, py, 0], radius=0.05, color=GREY))
+        
+        self.play(FadeIn(dots, lag_ratio=0.1))
+        self.wait(0.5)
+
+        # 4. Animate Centroid crosses appearing
+        colors = [RED, YELLOW, GREEN, PURPLE]
+        centroid_starts = [[-1.5, 1, 0], [1.5, 1, 0], [-1, -1, 0], [2, -1, 0]]
+        centroids = VGroup()
+        for i in range(len(colors)):
+            c = create_cross_marker(color=colors[i]).move_to(centroid_starts[i])
+            centroids.add(c)
+        
+        self.play(AnimationGroup(*[Create(c) for c in centroids], lag_ratio=0.3))
+        self.wait(1)
+
+        # 5. Animate points changing color based on nearest centroid
+        def update_dot_colors():
+            anims = []
+            for dot in dots:
+                dists = [np.linalg.norm(dot.get_center() - c.get_center()) for c in centroids]
+                nearest_idx = np.argmin(dists)
+                anims.append(dot.animate.set_color(colors[nearest_idx]))
+            return anims
+
+        self.play(*update_dot_colors())
+        self.wait(0.5)
+
+        # 6. Formula display
+        formula = MathTex(
+            r"\mu_{j}:=\frac{\sum_{i=1}^{n}\mathbf{1}\{c^{(i)}=j\}x^{(i)}}{\sum_{i=1}^{n}\mathbf{1}\{c^{(i)}=j\}}",
+            font_size=34
+        ).to_edge(UP).add_background_rectangle()
+        self.play(Write(formula))
+
+        # 7. Move centroids to the center of their respective groups
+        def get_move_anims():
+            m_anims = []
+            for i in range(len(centroids)):
+                # Find dots assigned to this centroid color
+                group_points = [d.get_center() for d in dots if d.get_color() == colors[i]]
+                if group_points:
+                    new_pos = np.mean(group_points, axis=0)
+                    m_anims.append(centroids[i].animate.move_to(new_pos))
+            return m_anims
+
+        self.play(*get_move_anims())
+        self.wait(0.5)
+
+        # 8. Second iteration for convergence look
+        self.play(*update_dot_colors())
+        self.play(*get_move_anims())
+        self.wait(1)
+
+        # 9. Final goal text and highlighting targets
+        goal_text = Text(
+            "Discretizing space into predictable regions",
+            font_size=28
+        ).to_edge(DOWN).add_background_rectangle()
+        
+        self.play(
+            FadeIn(goal_text),
+            *[c.animate.scale(1.5) for c in centroids]
+        )
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Axes; disallowed symbols/features in constrained subset: Axes

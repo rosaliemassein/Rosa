@@ -1,0 +1,104 @@
+from manim import *
+import numpy as np
+
+class AdaptiveVSStaticSelection(Scene):
+    def construct(self):
+        # 1. Main Titles and Dividers
+        title = Text("Adaptive ML vs. Static ASHRAE Selection", font_size=32).to_edge(UP)
+        labels = VGroup(
+            Text("Static Benchmark", color=BLUE, font_size=24).shift(3.5 * LEFT + 2.5 * UP),
+            Text("Logistic Model (ML)", color=GREEN, font_size=24).shift(3.5 * RIGHT + 2.5 * UP)
+        )
+        divider = Line(UP * 2.2, DOWN * 1.5, color=WHITE)
+        self.add(title, labels, divider)
+
+        # 2. Timeline at the bottom
+        # x_range: May(5) to Sept(9). Using Axes instead of NumberLine to ensure compatibility.
+        timeline = Axes(
+            x_range=[5, 9, 1],
+            y_range=[0, 1, 1],
+            x_length=10,
+            y_length=0,
+            axis_config={"include_tip": True}
+        ).shift(DOWN * 3)
+        timeline.get_y_axis().set_opacity(0)
+        
+        month_names = ["May", "Jun", "Jul", "Aug", "Sep"]
+        month_labels = VGroup(*[
+            Text(month_names[i], font_size=18).next_to(timeline.c2p(5+i, 0), DOWN)
+            for i in range(5)
+        ])
+        
+        time_tracker = ValueTracker(5)
+        pointer = Triangle(color=YELLOW, fill_opacity=1).scale(0.15).rotate(PI)
+        pointer.add_updater(lambda m: m.move_to(timeline.c2p(time_tracker.get_value(), 0) + UP * 0.2))
+        
+        self.add(timeline, month_labels, pointer)
+
+        # 3. Floorplan visualization
+        def get_floorplan(offset):
+            frame = Rectangle(width=4.5, height=3, color=WHITE, stroke_width=2, fill_opacity=0.05).move_to(offset)
+            # Create a grid of "zones" (dots)
+            dots = VGroup()
+            for x in np.linspace(-1.8, 1.8, 5):
+                for y in np.linspace(-1, 1, 4):
+                    dots.add(Dot(point=frame.get_center() + [x, y, 0], radius=0.1, color=GRAY))
+            return VGroup(frame, dots)
+
+        left_fp = get_floorplan(3.5 * LEFT + 0.5 * UP)
+        right_fp = get_floorplan(3.5 * RIGHT + 0.5 * UP)
+        
+        # Static side: some zones stay highlighted RED forever
+        for i in [2, 7, 12, 18]:
+            left_fp[1][i].set_color(RED)
+        
+        self.add(left_fp, right_fp)
+
+        # 4. Adaptive Animation Logic
+        # The right floorplan zones flicker and change count based on time_tracker
+        def adaptive_update(m):
+            t = time_tracker.get_value()
+            # Calculate "stress" level (higher in middle of summer, peak at t=7)
+            stress = np.exp(-0.5 * (t - 7)**2) * 10 
+            for i, dot in enumerate(m):
+                # Deterministic pseudo-randomness based on index and time
+                if (i * 1.3 + t * 5) % 10 < stress:
+                    dot.set_color(GREEN)
+                else:
+                    dot.set_color(GRAY)
+
+        right_fp[1].add_updater(adaptive_update)
+
+        # 5. Missed Requests Graph
+        graph_axes = Axes(
+            x_range=[5, 9, 1],
+            y_range=[0, 100, 20],
+            x_length=6,
+            y_length=1.5,
+            axis_config={"font_size": 14}
+        ).shift(DOWN * 1.2)
+        
+        graph_title = Text("Missed Requests (%)", font_size=14).next_to(graph_axes, UP, buff=0.1)
+        
+        # Static: Higher error, ML: Consistently lower error
+        static_plot = graph_axes.plot(lambda x: 60 + 10 * np.sin(x), color=RED)
+        ml_plot = graph_axes.plot(lambda x: 15 + 5 * np.cos(x*3), color=GREEN)
+        
+        graph_group = VGroup(graph_axes, graph_title, static_plot, ml_plot)
+        self.add(graph_group)
+
+        # 6. Description Text
+        narrative = Text(
+            "ML stays adaptive, reducing missed requests during summer peaks.",
+            font_size=18, color=YELLOW
+        ).to_edge(DOWN, buff=0.1)
+
+        # 7. Execution
+        self.add(narrative)
+        # Using lambda for rate_func to avoid potential undefined identifier 'linear'
+        self.play(
+            time_tracker.animate.set_value(9), 
+            run_time=10, 
+            rate_func=lambda t: t
+        )
+        self.wait(2)

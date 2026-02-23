@@ -1,0 +1,96 @@
+Tier C benchmark run
+[1/10] START 01_8647_automl_agent_a_multi_agen
+[1/10] TIMEOUT 01_8647_automl_agent_a_multi_agen elapsed=180.0s
+[2/10] START 02_baxterbartlett_cs229_termproject_report
+[2/10] TIMEOUT 02_baxterbartlett_cs229_termproject_report elapsed=180.0s
+[3/10] START 03_cs229_2024_final_project_amin_zareian_rl_optimization_tool
+[3/10] TIMEOUT 03_cs229_2024_final_project_amin_zareian_rl_optimization_tool elapsed=180.0s
+[4/10] START 04_cs229_fin
+[4/10] END 04_cs229_fin rc=0 elapsed=63.0s
+
+============================================================
+PaperTok Pipeline
+============================================================
+  Folder: /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/04_cs229_fin
+  From slides: True
+  Slides only: False
+  Code only: False
+  Include paper: False
+  Concurrency: 1
+  Vertical (9:16): False
+============================================================
+
+[1/4] Loading existing slides from slides.json...
+  ✓ Loaded: 4 slides
+  ✓ Loaded paper.md (20689 chars)
+
+[4/4] Running Manim video pipeline...
+
+============================================================
+Manim Video Pipeline
+============================================================
+  Backend: LMStudio (local)
+  Slides: 4
+  ✓ Already completed: 3 (resuming from previous run)
+  Remaining: 1
+    ✓ concept-01-granular-softmax-classification — already done
+    ✓ concept-02-synthetic-pile-generation — already done
+    ✓ concept-03-yolov10-localization-loss — already done
+  Concurrency: 1
+  Max attempts per slide: 3
+  Max compile retries per attempt: 3
+============================================================
+
+
+  [4/4] [concept-04-selective-layer-activation] === Attempt 1/3 ===
+  [4/4] [concept-04-selective-layer-activation] Step 1/3: Generating manim code...
+    ⏳ Calling LMStudio (qwen2.5-coder-3b-instruct-mlx)...
+    ✓ LMStudio responded (15.0s)
+  [4/4] [concept-04-selective-layer-activation] Step 1/3: Code generated (15.0s)
+  [4/4] [concept-04-selective-layer-activation] Step 2/3: Compiling & rendering with Manim...
+  [4/4] [concept-04-selective-layer-activation]   Compile attempt 1/3...
+  [4/4] [concept-04-selective-layer-activation] ✗ Compile failed (retry 1/3)
+  [4/4] [concept-04-selective-layer-activation]   Error: syntax error: unexpected indent (line 40)
+    ⏳ Switching to gemini-3-flash-preview (Tutor Mode) for correction...
+    ✓ Gemini responded (23.5s)
+  [4/4] [concept-04-selective-layer-activation]   Compile attempt 2/3...
+  [4/4] [concept-04-selective-layer-activation] ✗ Compile failed (retry 2/3)
+  [4/4] [concept-04-selective-layer-activation]   Error: undefined identifiers detected: BLUE_A
+    ⏳ gemini-3-flash-preview (Tutor Mode) retrying with new error...
+    ✓ Gemini responded (21.5s)
+  [4/4] [concept-04-selective-layer-activation]   Compile attempt 3/3...
+  [4/4] [concept-04-selective-layer-activation] ✓ Compiled successfully
+  [4/4] [concept-04-selective-layer-activation] Step 2/3: Compile succeeded (46.9s, 2 retries)
+  [4/4] [concept-04-selective-layer-activation] ✓ Done! Video ready (61.9s total)
+
+============================================================
+Pipeline Complete!
+============================================================
+  Total slides: 4
+  Previously completed: 3
+  Processed this run: 1
+  Slides with success (this run): 1
+  Total attempts (this run): 1
+  Successful: 1
+  Compile failures: 0
+  Feedback rejections: 0
+  Results CSV: /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/04_cs229_fin/outputs/pipeline_results.csv
+============================================================
+
+
+🎬 Results CSV: /Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/04_cs229_fin/outputs/pipeline_results.csv
+
+
+[5/10] START 05_cs229_final_report
+[5/10] TIMEOUT 05_cs229_final_report elapsed=180.0s
+[6/10] START 06_cs229_project_final_report_3
+[6/10] TIMEOUT 06_cs229_project_final_report_3 elapsed=180.0s
+[7/10] START 07_cs229_project_final_report_dakotajp_3
+[7/10] TIMEOUT 07_cs229_project_final_report_dakotajp_3 elapsed=180.0s
+[8/10] START 08_cs_229_final_report
+[8/10] TIMEOUT 08_cs_229_final_report elapsed=2032.6s
+[9/10] START 09_final_project_final
+[9/10] TIMEOUT 09_final_project_final elapsed=362.4s
+[10/10] START 10_predicting_nba_team_success_by_player_personnel
+[10/10] TIMEOUT 10_predicting_nba_team_success_by_player_personnel elapsed=180.0s
+TOTAL_ELAPSED=3718.2s

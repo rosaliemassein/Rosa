@@ -1,0 +1,175 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-gravnet-message-passing",
+  "voice": "The LDMX calorimeter has an irregular geometry, so we treat every hit as a node in a graph. GravNet works by creating a local neighborhood around each hit. The key is that the strength of the connection between hits isn't fixed; it's weighted by a potential that depends on their distance in a learned feature space. This allows the network to dynamically decide which energy deposits belong to the same particle shower, effectively 'feeling' the shape of the energy deposit as it develops through the detector.",
+  "goal": "Explain how GravNet uses distance-weighted graph connections to process irregular calorimeter data.",
+  "remarks": "Create a 3D scatter plot of dots representing ECal cells in an irregular hexagonal-like grid. Highlight one central dot. Draw arrows from the central dot to its neighbors. Animate the arrows' opacity and thickness scaling with the function exp(-d^2), where d is the distance. As the 'learned features' update, show the dots moving slightly and the connections shifting dynamically to emphasize that the graph structure is not fixed by physical geometry but by learned relationships.",
+  "formula": "V_{jk} = \\exp(-d_{jk}^2)",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+V_{jk} = \exp(-d_{jk}^2)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class GravNetMessagePassing(Scene):
+    def construct(self):
+        # 1. Formula Display
+        formula = MathTex(r"V_{jk} = \exp(-d_{jk}^2)").to_corner(UL)
+        self.add(formula)
+
+        # 2. Create an irregular grid of dots
+        # Using a 2D approach since 3D features were restricted
+        dots = VGroup()
+        rows, cols = 5, 5
+        points = []
+        for r in range(rows):
+            for c in range(cols):
+                # Hexagonal-like grid spacing
+                x = (c + 0.5 * (r % 2)) * 1.4 - 3.0
+                y = r * 1.0 - 2.0
+                # Adding some jitter for "irregularity"
+                x += np.random.uniform(-0.15, 0.15)
+                y += np.random.uniform(-0.15, 0.15)
+                points.append([x, y, 0])
+        
+        for p in points:
+            dots.add(Dot(point=p, radius=0.08, color=GRAY_B))
+
+        # Identify central dot
+        central_idx = len(dots) // 2
+        central_dot = dots[central_idx]
+        
+        self.play(FadeIn(dots))
+        self.play(central_dot.animate.set_color(RED).scale(1.4))
+        self.wait(0.5)
+
+        # 3. Helper for distance-weighted styling
+        def get_line_style(p1, p2):
+            dist = np.linalg.norm(p1 - p2)
+            # The formula exp(-d^2). We scale d slightly for better visuals in screen space.
+            weight = np.exp(-(dist**2) / 2.0)
+            return {
+                "stroke_width": weight * 12,
+                "stroke_opacity": weight
+            }
+
+        # 4. Create connections (lines) with updaters
+        connections = VGroup()
+        for i, dot in enumerate(dots):
+            if i == central_idx:
+                continue
+            
+            # Initial style
+            style = get_line_style(central_dot.get_center(), dot.get_center())
+            line = Line(
+                central_dot.get_center(), 
+                dot.get_center(), 
+                color=YELLOW,
+                buff=0.1
+            ).set_stroke(width=style["stroke_width"], opacity=style["stroke_opacity"])
+            
+            # Dynamic updater to respond to moving dots
+            def line_updater(obj, d_node=dot):
+                p1 = central_dot.get_center()
+                p2 = d_node.get_center()
+                s = get_line_style(p1, p2)
+                obj.put_start_and_end_on(p1, p2)
+                obj.set_stroke(width=s["stroke_width"], opacity=s["stroke_opacity"])
+            
+            line.add_updater(line_updater)
+            connections.add(line)
+
+        self.play(Create(connections), run_time=2)
+        self.wait(1)
+
+        # 5. Animate "learned features" updating by moving dots
+        # This will trigger the updaters on the connections
+        move_animations = []
+        for dot in dots:
+            # Move each dot to a new nearby random position
+            random_offset = np.array([
+                np.random.uniform(-1.0, 1.0),
+                np.random.uniform(-1.0, 1.0),
+                0
+            ])
+            move_animations.append(dot.animate.shift(random_offset))
+
+        self.play(
+            *move_animations,
+            run_time=4,
+            rate_func=smooth
+        )
+        
+        self.wait(1)
+        
+        # Highlight the final dynamic state
+        self.play(Indicate(central_dot, color=RED))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: smooth

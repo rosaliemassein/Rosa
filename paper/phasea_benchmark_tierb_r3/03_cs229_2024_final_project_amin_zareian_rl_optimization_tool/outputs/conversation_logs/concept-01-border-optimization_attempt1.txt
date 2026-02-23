@@ -1,0 +1,174 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-border-optimization",
+  "voice": "The core objective of this pixel design problem is to maximize the border length between two colors. Think of the border as the contact line where a red pixel touches a blue one. If we have large blocks of color, the border is short. But if we interleave the colors, like a checkerboard, we maximize the surface area where these regions interact.",
+  "goal": "Understand how border length is calculated and why the checkerboard is the optimal state.",
+  "remarks": "Create a 4x4 VGroup of Square objects. Initially, color the left half red and the right half blue. Draw thick green lines between adjacent pixels of different colors. Animate the squares flipping colors one by one to a checkerboard pattern. As each pixel flips, show the green border lines updating dynamically. Use a counter in the corner that increments as the number of red-blue adjacencies increases.",
+  "formula": "B = \\sum_{i,j \\in \\text{Neighbors}} [P_i \\neq P_j]",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+B = \sum_{i,j \in \text{Neighbors}} [P_i \neq P_j]
+
+
+=== ASSISTANT ===
+from manim import *
+
+class BorderOptimization(Scene):
+    def construct(self):
+        # 1. Title and Objective
+        title = Text("Border Optimization", font_size=36).to_edge(UP)
+        formula = MathTex(r"B = \sum_{i,j \in \text{Neighbors}} [P_i \neq P_j]", font_size=32).next_to(title, DOWN)
+        self.add(title, formula)
+
+        # 2. Create 4x4 Grid of Squares
+        squares = VGroup()
+        for i in range(16):
+            sq = Square(side_length=0.7, fill_opacity=1, stroke_width=2, stroke_color=WHITE)
+            col = i % 4
+            if col < 2:
+                sq.set_fill(RED)
+            else:
+                sq.set_fill(BLUE)
+            squares.add(sq)
+        
+        squares.arrange_in_grid(4, 4, buff=0.1).shift(LEFT * 1.5 + DOWN * 0.5)
+        self.add(squares)
+
+        # 3. Helper Function to Generate Border Lines
+        def get_borders(sq_group):
+            lines = VGroup()
+            for i in range(16):
+                r, c = i // 4, i % 4
+                # Check Right neighbor
+                if c < 3:
+                    # Compare fill colors
+                    if sq_group[i].get_fill_color() != sq_group[i+1].get_fill_color():
+                        mid_point = (sq_group[i].get_center() + sq_group[i+1].get_center()) / 2
+                        lines.add(Line(
+                            mid_point + UP * 0.35, 
+                            mid_point + DOWN * 0.35, 
+                            color=GREEN, 
+                            stroke_width=8
+                        ))
+                # Check Bottom neighbor
+                if r < 3:
+                    # Compare fill colors
+                    if sq_group[i].get_fill_color() != sq_group[i+4].get_fill_color():
+                        mid_point = (sq_group[i].get_center() + sq_group[i+4].get_center()) / 2
+                        lines.add(Line(
+                            mid_point + LEFT * 0.35, 
+                            mid_point + RIGHT * 0.35, 
+                            color=GREEN, 
+                            stroke_width=8
+                        ))
+            return lines
+
+        # 4. Initial Border Visuals and Counter
+        current_borders = get_borders(squares)
+        self.add(current_borders)
+
+        counter_label = Text("Adjacencies:", font_size=24).to_edge(RIGHT, buff=1.5).shift(UP)
+        count_val = MathTex(str(len(current_borders)), font_size=48, color=GREEN).next_to(counter_label, DOWN)
+        self.add(counter_label, count_val)
+
+        # 5. Determine flipping order to achieve Checkerboard
+        # Checkerboard target: (row + col) % 2 == 0 -> RED, else BLUE
+        flip_indices = []
+        for i in range(16):
+            r, c = i // 4, i % 4
+            target_is_red = ((r + c) % 2 == 0)
+            # Initial state: col < 2 is Red
+            initial_is_red = (c < 2)
+            if target_is_red != initial_is_red:
+                flip_indices.append(i)
+
+        self.wait(1)
+
+        # 6. Animation Loop
+        for idx in flip_indices:
+            r, c = idx // 4, idx % 4
+            target_color = RED if (r + c) % 2 == 0 else BLUE
+            
+            # Update internal state to calculate new geometry
+            old_color = squares[idx].get_fill_color()
+            squares[idx].set_fill(target_color)
+            new_border_group = get_borders(squares)
+            new_count = len(new_border_group)
+            
+            # Prepare UI update
+            new_count_val = MathTex(str(new_count), font_size=48, color=GREEN).move_to(count_val)
+            
+            # Reset square to old color for the animation step
+            squares[idx].set_fill(old_color)
+            
+            # Play combined animation
+            self.play(
+                squares[idx].animate.set_fill(target_color),
+                current_borders.animate.become(new_border_group),
+                count_val.animate.become(new_count_val),
+                run_time=0.4
+            )
+
+        self.wait(2)

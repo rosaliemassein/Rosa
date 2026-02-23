@@ -1,0 +1,76 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/03_cs229_2024_final_project_amin_zareian_rl_optimization_tool/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/05_cs229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 61,
+  "compiled_attempts": 13,
+  "compile_rate": 0.2131,
+  "slides_evaluated_for_pass1": 29,
+  "pass_at_1": 0.3103,
+  "bucket_counts": {
+    "gate_fail": 47,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 52,
+    "uses_axes_or_numberplane": 16
+  },
+  "gate_reason_tag_counts": {
+    "undefined_symbol": 47,
+    "disallowed_tier_symbol": 17
+  },
+  "top_error_signatures": [
+    [
+      "undefined identifiers detected: VMobject",
+      6
+    ],
+    [
+      "undefined identifiers detected: smooth",
+      4
+    ],
+    [
+      "undefined identifiers detected: Axes | disallowed symbols/features in constrained subset: Axes",
+      3
+    ],
+    [
+      "undefined identifiers detected: ArcBetweenPoints",
+      2
+    ],
+    [
+      "undefined identifiers detected: t",
+      2
+    ],
+    [
+      "undefined identifiers detected: Axes, ValueTracker | disallowed symbols/features in constrained subset: Axes, ValueTracker",
+      2
+    ],
+    [
+      "undefined identifiers detected: Axes, smooth | disallowed symbols/features in constrained subset: Axes",
+      2
+    ],
+    [
+      "undefined identifiers detected: Axes, BLUE_B, x | disallowed symbols/features in constrained subset: Axes",
+      1
+    ],
+    [
+      "undefined identifiers detected: BLUE_C, VMobject",
+      1
+    ],
+    [
+      "undefined identifiers detected: m, t, y",
+      1
+    ]
+  ]
+}

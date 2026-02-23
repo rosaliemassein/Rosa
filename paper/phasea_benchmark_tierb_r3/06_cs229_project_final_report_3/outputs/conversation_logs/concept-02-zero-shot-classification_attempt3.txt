@@ -1,0 +1,175 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-zero-shot-classification",
+  "voice": "Once the model is trained, we can use it as a zero-shot classifier. For a new image, we generate its vector representation, v. We then compare this against a pre-computed matrix, X, which contains the text embeddings for every possible country. By taking the dot product and applying a softmax function, we get a probability distribution. The country with the highest score is our first-stage prediction. It's like asking the model, 'Which of these 140 country descriptions does this visual scene look like most?'",
+  "goal": "Understand the mathematical mechanism of using CLIP as a linear classifier for country prediction.",
+  "remarks": "Show a vector 'v' representing the image. Next to it, show a large matrix 'X' where each row is a country name. Use a pulsing highlight to show the dot product operation between 'v' and each row of 'X'. Create a bar chart that updates in real-time to show the results of the Softmax function, with one bar (e.g., France) shooting up while others drop. Use MathTex to transform the dot product expression into the final probability vector.",
+  "formula": "h(\\mathbf{v};\\mathbf{X})=\\frac{\\exp(\\mathbf{X}\\mathbf{v})}{\\sum_{j=1}^{N}\\exp(\\mathbf{X}_{j}^{T}\\mathbf{v})}",
+  "image_ref": "img-8.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+h(\mathbf{v};\mathbf{X})=\frac{\exp(\mathbf{X}\mathbf{v})}{\sum_{j=1}^{N}\exp(\mathbf{X}_{j}^{T}\mathbf{v})}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ZeroShotClassification(Scene):
+    def construct(self):
+        # 1. Header and Goal
+        goal_text = Text("CLIP Zero-Shot Classifier Mechanism", font_size=24).to_edge(UP)
+        self.add(goal_text)
+
+        # 2. Vector v representing the image embedding
+        v_label = MathTex(r"\mathbf{v}").shift(LEFT * 5 + UP * 0.5)
+        # Using MathTex to represent the vector matrix to avoid 'Matrix' identifier issues
+        v_vec = MathTex(r"\begin{bmatrix} 0.12 \\ -0.45 \\ \vdots \\ 0.89 \end{bmatrix}").next_to(v_label, RIGHT)
+        v_group = VGroup(v_label, v_vec)
+
+        # 3. Matrix X representing Country Text Embeddings
+        x_label = MathTex(r"\mathbf{X}").shift(LEFT * 1.5 + UP * 0.5)
+        x_mat = MathTex(
+            r"\begin{bmatrix} \text{USA} \\ \text{Canada} \\ \text{France} \\ \text{Mexico} \\ \vdots \\ \text{Japan} \end{bmatrix}"
+        ).next_to(x_label, RIGHT)
+        x_group = VGroup(x_label, x_mat)
+
+        self.play(FadeIn(v_group), FadeIn(x_group))
+        self.wait(1)
+
+        # 4. Dot Product Pulsing Highlight
+        # Create a highlight rectangle that scans through the rows of X
+        highlight = Rectangle(
+            width=2.2, height=0.45, 
+            color=YELLOW, stroke_width=2, fill_opacity=0.2
+        ).move_to(x_mat.get_center() + UP * 1.1)
+        
+        self.play(Create(highlight))
+        # Move through a few rows to represent the dot product operation
+        for _ in range(3):
+            self.play(highlight.animate.shift(DOWN * 0.45), run_time=0.4)
+        self.play(FadeOut(highlight))
+
+        # 5. Math Formula (Softmax over dot products)
+        formula = MathTex(
+            r"h(\mathbf{v};\mathbf{X})=\frac{\exp(\mathbf{X}\mathbf{v})}{\sum_{j=1}^{N}\exp(\mathbf{X}_{j}^{T}\mathbf{v})}",
+            font_size=32
+        ).to_edge(DOWN, buff=1.2)
+        self.play(Write(formula))
+
+        # 6. Bar Chart for Probability Distribution (Manually using Axes and Rectangles)
+        axes = Axes(
+            x_range=[0, 5, 1],
+            y_range=[0, 1, 0.5],
+            x_length=4.5,
+            y_length=2.5,
+            axis_config={"include_tip": False}
+        ).shift(RIGHT * 3.8 + DOWN * 0.5)
+        
+        country_labels = ["USA", "CAN", "FRA", "MEX", "JAP"]
+        labels = VGroup(*[
+            Text(name, font_size=14).next_to(axes.c2p(i + 0.5, 0), DOWN)
+            for i, name in enumerate(country_labels)
+        ])
+
+        # Initial uniform probability bars
+        initial_probs = [0.1, 0.1, 0.1, 0.1, 0.1]
+        bars = VGroup()
+        for i, prob in enumerate(initial_probs):
+            bar_height = axes.c2p(0, prob)[1] - axes.c2p(0, 0)[1]
+            bar = Rectangle(
+                width=0.5, 
+                height=bar_height,
+                fill_opacity=0.8,
+                color=BLUE,
+                stroke_width=1
+            ).move_to(axes.c2p(i + 0.5, prob / 2))
+            bars.add(bar)
+
+        self.play(Create(axes), Create(labels), Create(bars))
+        self.wait(0.5)
+
+        # 7. Real-time update (Softmax results: France peaks)
+        final_probs = [0.05, 0.08, 0.75, 0.04, 0.08]
+        bar_animations = []
+        for i, prob in enumerate(final_probs):
+            target_h = axes.c2p(0, prob)[1] - axes.c2p(0, 0)[1]
+            # stretch_to_fit_height combined with move_to base point
+            anim = bars[i].animate.stretch_to_fit_height(target_h, about_edge=DOWN).move_to(axes.c2p(i + 0.5, prob / 2))
+            if i == 2: # Highlight France
+                anim = bars[i].animate.set_color(GREEN).stretch_to_fit_height(target_h, about_edge=DOWN).move_to(axes.c2p(i + 0.5, prob / 2))
+            bar_animations.append(anim)
+
+        self.play(*bar_animations, run_time=2)
+
+        # Final explanation text
+        explanation = Text(
+            "Highest probability matches 'France'",
+            font_size=18, color=GREEN
+        ).next_to(formula, DOWN, buff=0.2)
+        self.play(Write(explanation))
+
+        self.wait(3)
+
+=== ERROR ===
+undefined identifiers detected: Axes; disallowed symbols/features in constrained subset: Axes

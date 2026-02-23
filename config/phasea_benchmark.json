@@ -1,0 +1,39 @@
+{
+  "name": "phasea_compile_reliability",
+  "version": 1,
+  "description": "Frozen benchmark for Phase A compile reliability.",
+  "papers_root": "paper/phasea_benchmark",
+  "papers": [
+    "01_8647_automl_agent_a_multi_agen",
+    "02_baxterbartlett_cs229_termproject_report",
+    "03_cs229_2024_final_project_amin_zareian_rl_optimization_tool",
+    "04_cs229_fin",
+    "05_cs229_final_report",
+    "06_cs229_project_final_report_3",
+    "07_cs229_project_final_report_dakotajp_3",
+    "08_cs_229_final_report",
+    "09_final_project_final",
+    "10_predicting_nba_team_success_by_player_personnel"
+  ],
+  "settings": {
+    "backend": "lmstudio",
+    "quality": "l",
+    "vertical": false,
+    "tier": "A",
+    "timeout_seconds": 90,
+    "max_generation_attempts": 3,
+    "max_compile_retries": 3
+  },
+  "manifest_fields": [
+    "run_id",
+    "timestamp",
+    "benchmark_name",
+    "model_id",
+    "prompt_version",
+    "gate_tier",
+    "quality",
+    "timeout_seconds",
+    "git_commit",
+    "notes"
+  ]
+}

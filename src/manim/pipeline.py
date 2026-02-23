@@ -9,6 +9,7 @@ Supports two backends:
 
 import asyncio
 import csv
+import os
 import time
 from pathlib import Path
 from typing import Optional, Any, Union
@@ -18,6 +19,8 @@ from src.manim.executor import ManimExecutor
 from src.manim.feedback import VisualFeedback
 from src.manim.tracker import ResultsTracker, AttemptRecord
 from src.manim.models import ManimCode
+from src.manim.evaluator import evaluate_code, EvaluationResult
+from src.manim.gate import GateConfig, make_gate_config
 
 MAX_GENERATION_ATTEMPTS = 3
 MAX_COMPILE_RETRIES = 3
@@ -49,7 +52,8 @@ async def _try_compile(
     is_fresh_context: bool = False,
     quality: str = "l",
     vertical: bool = False,
-) -> tuple[bool, Optional[Path], ManimCode, GeneratorContext, int, str]:
+    gate_config: GateConfig | None = None,
+) -> tuple[bool, Optional[Path], ManimCode, GeneratorContext, int, str, EvaluationResult]:
     """
     Try to compile manim code, retrying up to MAX_COMPILE_RETRIES times.
     """
@@ -63,13 +67,24 @@ async def _try_compile(
     
     for compile_attempt in range(MAX_COMPILE_RETRIES):
         print(f"{log_prefix}   Compile attempt {compile_attempt + 1}/{MAX_COMPILE_RETRIES}...")
-        # Save the code file
-        code_file = executor.save_code(current_code, version=version, vertical=vertical)
-        
-        # Try to compile/render
-        success, video_path, stderr = executor.execute(
-            current_code, code_file, quality=quality, version=version, vertical=vertical
+        eval_result = evaluate_code(
+            manim_code=current_code,
+            executor=executor,
+            version=version,
+            quality=quality,
+            vertical=vertical,
+            gate_config=gate_config or GateConfig(),
+            timeout_seconds=90,
         )
+        # Keep the sanitized version for subsequent retries/logging.
+        current_code = ManimCode(
+            slide_id=current_code.slide_id,
+            scene_name=current_code.scene_name,
+            code=eval_result.sanitized_code,
+        )
+        success = eval_result.compiled
+        video_path = eval_result.video_path
+        stderr = eval_result.stderr
         
         if success:
             print(f"{log_prefix} ✓ Compiled successfully")
@@ -83,7 +98,7 @@ async def _try_compile(
                     # Qwen failed, but subsequent fix (GPT-5) succeeded
                     generator.log_outcome(prompt_text, initial_code_content, False, current_code.code, True)
             
-            return True, video_path, current_code, current_context, compile_retries, ""
+            return True, video_path, current_code, current_context, compile_retries, "", eval_result
         
         # Compile failed
         compile_retries += 1
@@ -111,7 +126,7 @@ async def _try_compile(
                 # First attempt (Qwen) failed, and last attempt (GPT-5) also failed
                 generator.log_outcome(prompt_text, initial_code_content, False, current_code.code, False)
     
-    return False, None, current_code, current_context, compile_retries, last_error
+    return False, None, current_code, current_context, compile_retries, last_error, eval_result
 
 
 async def process_single_slide(
@@ -126,6 +141,7 @@ async def process_single_slide(
     vertical: bool = False,
     slide_index: int = 0,
     total_slides: int = 0,
+    gate_config: GateConfig | None = None,
 ) -> Optional[Path]:
     """
     Process a single slide through the full pipeline:
@@ -158,7 +174,7 @@ async def process_single_slide(
         # --- Step 2: Try to compile (with retries) ---
         print(f"{prefix} Step 2/3: Compiling & rendering with Manim...")
         t0 = time.time()
-        compiled, video_path, manim_code, context, compile_retries, last_error = await _try_compile(
+        compiled, video_path, manim_code, context, compile_retries, last_error, eval_meta = await _try_compile(
             executor=executor,
             generator=generator,
             manim_code=manim_code,
@@ -170,6 +186,7 @@ async def process_single_slide(
             prompt_text=prompt_text,
             quality=quality,
             vertical=vertical,
+            gate_config=gate_config,
         )
         
         compile_elapsed = time.time() - t0
@@ -177,6 +194,12 @@ async def process_single_slide(
         
         record.compiled = compiled
         record.compile_retries = compile_retries
+        record.reward = eval_meta.reward
+        record.error_bucket = eval_meta.error_bucket
+        record.gate_errors = " | ".join(eval_meta.gate_errors)
+        record.gate_reason_tags = "|".join(eval_meta.gate_reason_tags)
+        record.detected_features = "|".join(eval_meta.detected_features)
+        record.undefined_names = "|".join(eval_meta.undefined_names)
         
         if not compiled:
             record.status = "compile_failed"
@@ -256,7 +279,7 @@ async def process_single_slide(
             
             # Try to compile the feedback-improved code
             print(f"{prefix} Compiling feedback-improved code...")
-            compiled2, video_path2, manim_code, context2, cr2, err2 = await _try_compile(
+            compiled2, video_path2, manim_code, context2, cr2, err2, eval_meta2 = await _try_compile(
                 executor=executor,
                 generator=generator,
                 manim_code=manim_code,
@@ -269,6 +292,7 @@ async def process_single_slide(
                 is_fresh_context=True,
                 quality=quality,
                 vertical=vertical,
+                gate_config=gate_config,
             )
             
             if compiled2 and video_path2:
@@ -285,6 +309,12 @@ async def process_single_slide(
                     compile_retries=cr2,
                     status="pending_feedback",
                 )
+                record2.reward = eval_meta2.reward
+                record2.error_bucket = eval_meta2.error_bucket
+                record2.gate_errors = " | ".join(eval_meta2.gate_errors)
+                record2.gate_reason_tags = "|".join(eval_meta2.gate_reason_tags)
+                record2.detected_features = "|".join(eval_meta2.detected_features)
+                record2.undefined_names = "|".join(eval_meta2.undefined_names)
                 
                 # Run feedback on this version too
                 print(f"{prefix} Running visual feedback on improved version...")
@@ -332,6 +362,12 @@ async def process_single_slide(
                         suffix="feedback_retry_fail"
                     ),
                 )
+                record_fail.reward = eval_meta2.reward
+                record_fail.error_bucket = eval_meta2.error_bucket
+                record_fail.gate_errors = " | ".join(eval_meta2.gate_errors)
+                record_fail.gate_reason_tags = "|".join(eval_meta2.gate_reason_tags)
+                record_fail.detected_features = "|".join(eval_meta2.detected_features)
+                record_fail.undefined_names = "|".join(eval_meta2.undefined_names)
                 tracker.add_record(record_fail)
                 
                 # Start fresh with error context for next attempt
@@ -410,6 +446,10 @@ async def run_manim_pipeline(
     executor = ManimExecutor(output_dir)
     feedback_reviewer = VisualFeedback(vertical=vertical)
     tracker = ResultsTracker(output_dir)
+    gate_tier = "A"
+    if not use_codex:
+        gate_tier = str(os.environ.get("MANIM_GATE_TIER", "A")).upper()
+    gate_config = make_gate_config(gate_tier)
     
     backend_name = "OpenAI Codex" if use_codex else "LMStudio (local)"
     
@@ -441,6 +481,7 @@ async def run_manim_pipeline(
                 vertical=vertical,
                 slide_index=slide_display_index.get(slide.id, 0),
                 total_slides=total_slide_count,
+                gate_config=gate_config,
             )
     
     print(f"\n{'='*60}")
@@ -479,6 +520,7 @@ async def run_manim_pipeline(
                     vertical=vertical,
                     slide_index=slide_display_index.get(slide.id, 0),
                     total_slides=total_slide_count,
+                    gate_config=gate_config,
                 )
                 results.append(result)
             except Exception as e:

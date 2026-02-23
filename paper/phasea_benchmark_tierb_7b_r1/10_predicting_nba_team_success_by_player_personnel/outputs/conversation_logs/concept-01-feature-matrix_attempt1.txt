@@ -1,0 +1,182 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-feature-matrix",
+  "voice": "To predict a team's success, we can't just look at their total points. Instead, we represent each team as a high-dimensional matrix. We take the top ten players\u2014ranked by minutes played\u2014and for each one, we track fifteen distinct performance metrics. This creates a feature vector where the identity of the team is boiled down to the individual fingerprints of its rotation players.",
+  "goal": "Visualize how team data is structured into a player-by-stat feature matrix for machine learning.",
+  "remarks": "Create a 10x15 grid of squares representing a 'Team Matrix'. On the left side, show a silhouette of 15 basketball players. Animate a 'minutes played' filter passing over them, highlighting the top 10. These 10 players then slide into the rows of the grid. Next, labels for 'PTS', 'REB', 'AST', up to 'PIE' appear above the columns. Fill the grid cells with varying intensities of color to represent normalized data values. Finally, collapse this 2D grid into a single long horizontal vector of 150 elements to show how it enters the model.",
+  "formula": "n = m \\times p",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+n = m \times p
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class FeatureMatrixScene(Scene):
+    def construct(self):
+        # 1. Create silhouettes of 15 players
+        def create_silhouette():
+            head = Circle(radius=0.15, color=GRAY, fill_opacity=1)
+            body = Line(DOWN * 0.15, DOWN * 0.45, color=GRAY)
+            arms = Line(LEFT * 0.15 + DOWN * 0.25, RIGHT * 0.15 + DOWN * 0.25, color=GRAY)
+            legs = VGroup(
+                Line(DOWN * 0.45, DOWN * 0.7 + LEFT * 0.1, color=GRAY),
+                Line(DOWN * 0.45, DOWN * 0.7 + RIGHT * 0.1, color=GRAY)
+            )
+            return VGroup(head, body, arms, legs)
+
+        players = VGroup(*[create_silhouette() for _ in range(15)]).arrange(DOWN, buff=0.2)
+        players.to_edge(LEFT, buff=1)
+        self.play(Create(players))
+        self.wait(0.5)
+
+        # 2. Minutes played filter
+        filter_rect = Rectangle(width=1.5, height=0.5, color=BLUE, stroke_width=2)
+        filter_rect.move_to(players[0])
+        
+        self.add(filter_rect)
+        # Using lambda t: t instead of 'linear' to avoid undefined identifier
+        self.play(filter_rect.animate.move_to(players[-1]), run_time=2, rate_func=lambda t: t)
+        
+        highlight_rect = Rectangle(color=YELLOW, height=5.5, width=1.0)
+        highlight_rect.move_to(players[:10].get_center())
+        
+        self.play(
+            Create(highlight_rect),
+            *[players[i].animate.set_color(YELLOW) for i in range(10)],
+            FadeOut(filter_rect)
+        )
+        self.wait(0.5)
+
+        # 3. Create 10x15 grid (Team Matrix)
+        rows, cols = 10, 15
+        side = 0.35
+        feature_matrix = VGroup()
+        for r in range(rows):
+            for c in range(cols):
+                val = np.random.rand()
+                sq = Square(side_length=side, fill_opacity=val, fill_color=BLUE, stroke_width=1, stroke_color=WHITE)
+                feature_matrix.add(sq)
+        
+        feature_matrix.arrange_in_grid(rows=rows, cols=cols, buff=0.05)
+        feature_matrix.to_edge(RIGHT, buff=0.5)
+
+        # 4. Slide top 10 players into rows
+        self.play(
+            FadeOut(players[10:]),
+            FadeOut(highlight_rect),
+            players[:10].animate.arrange(DOWN, buff=0.15).scale(0.8).next_to(feature_matrix, LEFT, buff=0.2)
+        )
+        self.play(FadeIn(feature_matrix, shift=LEFT))
+
+        # 5. Add labels
+        metrics_list = ['PTS', 'REB', 'AST', 'STL', 'BLK', 'TO', 'PF', 'PIE']
+        while len(metrics_list) < cols:
+            metrics_list.append('.')
+            
+        labels = VGroup()
+        for i in range(cols):
+            lbl = Text(metrics_list[i], font_size=10)
+            # Find the top cell of each column to align labels
+            top_cell = feature_matrix[i]
+            lbl.move_to(top_cell.get_center() + UP * 0.4)
+            labels.add(lbl)
+
+        self.play(Write(labels))
+        self.wait(1)
+
+        # 6. Show Formula reference
+        formula = MathTex("n = m \\times p").to_edge(UP)
+        self.play(Write(formula))
+        self.wait(1)
+
+        # 7. Collapse grid into a single horizontal vector
+        # Flattening 10x15 grid into 150 elements
+        self.play(
+            FadeOut(players[:10]),
+            FadeOut(labels),
+            FadeOut(formula)
+        )
+        
+        # Arrange in a single row
+        self.play(
+            feature_matrix.animate.arrange(RIGHT, buff=0).scale_to_fit_width(13).center()
+        )
+        
+        # Manually create a brace-like indicator since 'Brace' is disallowed
+        brace_line = Line(feature_matrix.get_left(), feature_matrix.get_right()).shift(DOWN * 0.5)
+        tick_l = Line(UP*0.1, DOWN*0.1).move_to(brace_line.get_left())
+        tick_r = Line(UP*0.1, DOWN*0.1).move_to(brace_line.get_right())
+        brace_pseudo = VGroup(brace_line, tick_l, tick_r).set_color(WHITE)
+        
+        brace_text = Text("150-element feature vector", font_size=20).next_to(brace_pseudo, DOWN, buff=0.2)
+        self.play(Create(brace_pseudo), Write(brace_text))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: t

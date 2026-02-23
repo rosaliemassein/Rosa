@@ -1,0 +1,162 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-parameter-vs-data-bottleneck",
+  "voice": "Why did the simple LWR outperform a powerful Neural Network? It comes down to data. With only 27 training points, the Neural Network's 24 internal parameters were prone to 'overfitting'\u2014it was essentially memorizing the noise rather than learning the physics. LWR, being a local linear approximation, was much more robust to this small sample size.",
+  "goal": "Explain why the Neural Network struggled compared to LWR due to the high-variance/small-dataset problem.",
+  "remarks": "Show two side-by-side plots. On the left, 'Neural Network': show a complex, highly 'wiggling' curve that hits every single data point but looks erratic. Label it 'High Variance'. On the right, 'LWR': show a smoother, piecewise-linear path through the same points. Below, animate a bar chart showing MSE: the LWR bar is significantly shorter (0.85) than the Neural Network bar (1.21).",
+  "formula": "MSE = \\frac{||Y_{test} - Y_{pred}||_F^2}{3n}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+MSE = \frac{||Y_{test} - Y_{pred}||_F^2}{3n}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ParameterVsDataBottleneck(Scene):
+    def construct(self):
+        # 1. Header (Using Text instead of MathTex to avoid disallowed identifiers)
+        header = Text("MSE = ||Y_test - Y_pred||^2 / 3n").scale(0.5).to_edge(UP)
+        self.add(header)
+
+        # 2. Define Plot Origins and Coordinate Systems (Using Line instead of Axes)
+        # Left side: Neural Network
+        origin_l = 4 * LEFT + 1 * DOWN
+        line_l_x = Line(origin_l, origin_l + 3 * RIGHT, color=WHITE)
+        line_l_y = Line(origin_l, origin_l + 3 * UP, color=WHITE)
+        label_l = Text("Neural Network", color=BLUE).scale(0.5).next_to(line_l_y, UP)
+        variance_l = Text("High Variance", color=RED).scale(0.4).next_to(line_l_x, DOWN, buff=0.2)
+        
+        # Right side: LWR
+        origin_r = 1 * RIGHT + 1 * DOWN
+        line_r_x = Line(origin_r, origin_r + 3 * RIGHT, color=WHITE)
+        line_r_y = Line(origin_r, origin_r + 3 * UP, color=WHITE)
+        label_r = Text("LWR", color=YELLOW).scale(0.5).next_to(line_r_y, UP)
+        robust_r = Text("Robust / Low Variance", color=GREEN).scale(0.4).next_to(line_r_x, DOWN, buff=0.2)
+
+        # 3. Training Data Points
+        x_data = np.array([0.5, 1.0, 1.5, 2.0, 2.5])
+        y_data = np.array([0.4, 1.8, 0.7, 2.3, 1.1])
+        
+        dots_left = VGroup(*[Dot(origin_l + x * RIGHT + y * UP, radius=0.06) for x, y in zip(x_data, y_data)])
+        dots_right = VGroup(*[Dot(origin_r + x * RIGHT + y * UP, radius=0.06) for x, y in zip(x_data, y_data)])
+
+        # 4. Neural Network Curve (Overfitting)
+        # We generate a high-frequency wiggle that still passes through the data points
+        nn_curve = VMobject(color=BLUE)
+        nn_path_points = []
+        for t in np.linspace(0.5, 2.5, 100):
+            # Base linear interpolation
+            y_base = np.interp(t, x_data, y_data)
+            # Add high-frequency noise that is zero at training points
+            y_wiggle = 0.4 * np.sin((t - 0.5) * np.pi * 4)
+            nn_path_points.append(origin_l + t * RIGHT + (y_base + y_wiggle) * UP)
+        nn_curve.set_points_as_corners(nn_path_points)
+
+        # 5. LWR Curve (Piecewise Linear)
+        lwr_path = VMobject(color=YELLOW)
+        lwr_points = [origin_r + x * RIGHT + y * UP for x, y in zip(x_data, y_data)]
+        lwr_path.set_points_as_corners(lwr_points)
+
+        # 6. MSE Bars (Using Polygon instead of Rectangle)
+        # NN Bar (Value 1.21)
+        nn_bar = Polygon(
+            origin_l + 1.0 * RIGHT + 1.3 * DOWN,
+            origin_l + 2.0 * RIGHT + 1.3 * DOWN,
+            origin_l + 2.0 * RIGHT + (1.3 - 1.21) * DOWN,
+            origin_l + 1.0 * RIGHT + (1.3 - 1.21) * DOWN,
+            fill_opacity=0.8, fill_color=BLUE, stroke_width=0
+        )
+        nn_val_text = Text("1.21").scale(0.4).next_to(nn_bar, UP, buff=0.1)
+
+        # LWR Bar (Value 0.85)
+        lwr_bar = Polygon(
+            origin_r + 1.0 * RIGHT + 1.3 * DOWN,
+            origin_r + 2.0 * RIGHT + 1.3 * DOWN,
+            origin_r + 2.0 * RIGHT + (1.3 - 0.85) * DOWN,
+            origin_r + 1.0 * RIGHT + (1.3 - 0.85) * DOWN,
+            fill_opacity=0.8, fill_color=YELLOW, stroke_width=0
+        )
+        lwr_val_text = Text("0.85").scale(0.4).next_to(lwr_bar, UP, buff=0.1)
+        
+        mse_footer = Text("Model Error Comparison").scale(0.4).to_edge(DOWN, buff=0.2)
+
+        # 7. Animation Sequence
+        self.play(
+            Create(line_l_x), Create(line_l_y), 
+            Create(line_r_x), Create(line_r_y),
+            Write(label_l), Write(label_r)
+        )
+        self.play(Create(dots_left), Create(dots_right))
+        self.wait(0.5)
+        
+        self.play(Create(nn_curve), Write(variance_l), run_time=2.5)
+        self.play(Create(lwr_path), Write(robust_r), run_time=2.5)
+        self.wait(1)
+        
+        self.play(
+            FadeIn(nn_bar, shift=UP), FadeIn(lwr_bar, shift=UP),
+            Write(nn_val_text), Write(lwr_val_text),
+            Write(mse_footer)
+        )
+        self.wait(3)
+
+=== ERROR ===
+undefined identifiers detected: Polygon, VMobject; disallowed symbols/features in constrained subset: Polygon

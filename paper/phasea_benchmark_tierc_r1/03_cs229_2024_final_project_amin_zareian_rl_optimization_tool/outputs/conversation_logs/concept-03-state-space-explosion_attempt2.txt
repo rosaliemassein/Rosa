@@ -1,0 +1,184 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-state-space-explosion",
+  "voice": "The main challenge for standard Q-learning is the state space explosion. Since each pixel can be red or blue, a small five-by-five grid has over thirty-three million possible configurations. As the matrix size grows linearly, the number of states we need to track in our Q-table grows exponentially, making the training time skyrocket.",
+  "goal": "Explain why standard Q-tables fail as matrix dimensions increase.",
+  "remarks": "Create an Axes where the x-axis is 'Matrix Size' (2 to 6) and the y-axis is 'Possible States' (log scale). Plot the function 2^(x^2). Start with a small table graphic for a 2x2 grid (16 rows). As the grid size increases to 5x5, animate the table rows multiplying and scrolling at high speed, eventually turning into a solid blur of color to represent the 2^25 states, while the graph curve shoots off the top of the screen.",
+  "formula": "\\text{Total States} = 2^{(N \\times N)}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{Total States} = 2^{(N \times N)}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class StateSpaceExplosion(Scene):
+    def construct(self):
+        # 1. Formula and Title
+        formula = MathTex(r"\text{Total States} = 2^{(N \times N)}").to_edge(UP)
+        self.play(Write(formula))
+
+        # 2. Setup Axes (Manual Log Scale mapping)
+        # x is Matrix Size (2 to 6)
+        # y represents log10(states). So y=1 means 10^1 states, y=10 means 10^10 states.
+        ax = Axes(
+            x_range=[2, 6, 1],
+            y_range=[0, 12, 2],
+            x_length=7,
+            y_length=5,
+            axis_config={"include_tip": True},
+            x_axis_label="N",
+            y_axis_label="States"
+        ).shift(RIGHT * 1 + DOWN * 0.5)
+
+        # Label the y-axis with powers of 10 to represent log scale
+        y_labels = VGroup()
+        for val in range(2, 13, 2):
+            label = MathTex(f"10^{{{val}}}").scale(0.6)
+            label.next_to(ax.c2p(2, val), LEFT)
+            y_labels.add(label)
+        
+        ax_labels = ax.get_axis_labels(
+            x_label=Text("Matrix Size (N)", font_size=20), 
+            y_label=Text("Possible States (log scale)", font_size=20)
+        )
+
+        self.play(Create(ax), FadeIn(ax_labels), FadeIn(y_labels))
+
+        # 3. Initial Table graphic for N=2 (16 states)
+        # Position it on the left
+        table_rows = VGroup(*[
+            Rectangle(width=1.2, height=0.08, stroke_width=1, fill_opacity=0.5, fill_color=BLUE) 
+            for _ in range(16)
+        ]).arrange(DOWN, buff=0.02).to_edge(LEFT, buff=0.5).shift(UP * 0.5)
+        
+        table_title = Text("N=2: 16 States", font_size=18).next_to(table_rows, UP)
+        table_group = VGroup(table_title, table_rows)
+        
+        self.play(FadeIn(table_group))
+        self.wait(1)
+
+        # 4. Plot the function in log space: log10(2^(x^2)) = x^2 * log10(2)
+        log_growth_func = lambda x_val: (x_val**2) * np.log10(2)
+        graph = ax.plot(log_growth_func, x_range=[2, 6], color=YELLOW)
+        
+        # 5. Animate Transition: Grid size increases to 5x5
+        # Create a "blur" box to represent the massive amount of states
+        blur_box = Rectangle(
+            width=1.2, height=3, 
+            fill_color=BLUE, fill_opacity=0.7, 
+            stroke_width=0
+        ).move_to(table_rows)
+        
+        # Add internal lines that "scroll" to simulate many rows
+        scrolling_lines = VGroup(*[
+            Line(LEFT, RIGHT).set_width(1.2).set_stroke(WHITE, width=0.5, opacity=0.3)
+            for _ in range(40)
+        ]).arrange(DOWN, buff=0.05).move_to(blur_box)
+
+        def scroll_updater(mob, dt):
+            mob.shift(UP * 4 * dt)
+            if mob.get_top()[1] > blur_box.get_top()[1]:
+                mob.shift(DOWN * 1.0)
+
+        new_table_title = Text("N=5: >33 Million States", font_size=18).next_to(blur_box, UP)
+
+        # Draw graph and transform table simultaneously
+        self.play(
+            Create(graph),
+            ReplacementTransform(table_rows, blur_box),
+            Transform(table_title, new_table_title),
+            run_time=4,
+            rate_func=rate_functions.linear
+        )
+        
+        # Start scrolling effect
+        scrolling_lines.add_updater(scroll_updater)
+        self.add(scrolling_lines)
+        
+        # 6. Curve "shoots off" the graph area
+        extra_graph = ax.plot(log_growth_func, x_range=[6, 8], color=YELLOW)
+        self.play(
+            Create(extra_graph),
+            graph.animate.set_stroke(opacity=0.3),
+            run_time=1.5,
+            rate_func=rate_functions.ease_in_expo
+        )
+
+        # 7. Final narration text
+        conclusion = Text(
+            "State space explosion makes\nstandard Q-learning impossible", 
+            font_size=24, color=YELLOW
+        ).to_edge(DOWN, buff=0.5)
+        
+        self.play(Write(conclusion))
+        self.wait(3)
+
+        # Cleanup
+        scrolling_lines.remove_updater(scroll_updater)
+
+=== ERROR ===
+undefined identifiers detected: rate_functions, x_val

@@ -1,0 +1,32 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tier3dlite_qwenonly_3p/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tier3dlite_qwenonly_3p/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tier3dlite_qwenonly_3p/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 8,
+  "compiled_attempts": 7,
+  "compile_rate": 0.875,
+  "slides_evaluated_for_pass1": 7,
+  "pass_at_1": 0.8571,
+  "bucket_counts": {
+    "gate_fail": 1,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_axes_or_numberplane": 1,
+    "uses_mathtex": 1
+  },
+  "gate_reason_tag_counts": {
+    "syntax_error": 1
+  },
+  "top_error_signatures": [
+    [
+      "syntax error: invalid syntax (line 12)",
+      1
+    ]
+  ]
+}

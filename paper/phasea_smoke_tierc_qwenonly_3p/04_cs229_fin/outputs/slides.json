@@ -1,0 +1,37 @@
+{
+  "title": "PickNet: Deep Dive into Complex Trash Classification",
+  "slides": [
+    {
+      "id": "concept-01-granular-softmax-classification",
+      "voice": "In real-world recycling, trash isn't just binary\u2014it's complex. To handle this, the researchers used a Deep CNN to map images into twenty distinct categories. After the convolutional layers extract features, a Softmax function turns those raw scores into a probability distribution. Essentially, it treats the scores as exponents, then normalizes them so the sum of all categories equals one. This allows the model to pick the most likely material, like distinguishing a pizza box from a newspaper with high confidence.",
+      "goal": "Understand how Softmax transforms neural network outputs into a 20-category probability distribution.",
+      "remarks": "Create a 2D image of a plastic bottle (input) on the left. Draw a series of vertical rectangles representing CNN layers. Use arrows to show data flow through these layers into a column vector of 20 raw values (MathTex labeled 'x_i'). To the right, animate the Softmax formula appearing. Then, transform the 20 raw values into a horizontal BarChart where the heights represent probabilities. Use 'Indicate' on the highest bar and label it 'Plastic Bottle'.",
+      "formula": "softmax(x_{i})=\\frac{e^{x_{i}}}{\\sum_{j=1}^{n}e^{x_{j}}}",
+      "image_ref": "img-12.jpeg"
+    },
+    {
+      "id": "concept-02-synthetic-pile-generation",
+      "voice": "Detecting trash in a pile is hard because training data is scarce. The researchers solved this by creating synthetic 'piles'. They manually segmented single objects\u2014like a can or a piece of cardboard\u2014and then used a script to randomly sample, scale, and rotate them onto a blank canvas. By overlapping these images at different angles, they forced the model to learn how to identify objects even when they are partially hidden or tilted, mimicking the messy reality of a recycling bin.",
+      "goal": "Visualize the process of creating a synthetic multi-object dataset using rotation, scaling, and layering.",
+      "remarks": "Start with a blank white Rectangle representing the canvas. Display five segmented trash icons (e.g., a bottle, a can, a paper scrap) floating around it. Use a ValueTracker to show random numbers for 'scale' and 'rotation'. One by one, animate each icon moving onto the canvas, applying 'Rotate' and 'Scale' transforms as they land. Ensure some icons 'overlap' by placing them on different Z-indices, creating a crowded scene of 9 objects.",
+      "formula": null,
+      "image_ref": "img-0.jpeg"
+    },
+    {
+      "id": "concept-03-yolov10-localization-loss",
+      "voice": "To find these objects in a pile, YOLOv10 divides the image into a grid. If the center of a piece of trash falls into a cell, that cell is responsible for predicting a bounding box. The model's loss function specifically penalizes errors in the box coordinates and the square roots of the width and height. By using square roots, the model ensures that a small error in a tiny object is penalized more heavily than the same error in a large object, which is crucial for finding small scraps of paper amidst larger debris.",
+      "goal": "Understand the geometric intuition behind the YOLO coordinate loss function.",
+      "remarks": "Display an image of multiple trash items. Overlay a 7x7 'NumberPlane' (grid). Highlight one specific cell where a soda can't center lies. Draw a 'SurroundingRectangle' (the predicted box) and a slightly offset dashed rectangle (the ground truth). Animate arrows showing the distance between their centers (x, y) and the difference in their dimensions (w, h). Show the LaTeX loss formula and highlight the coordinate terms as the boxes align during a mock 'training' animation.",
+      "formula": "\\lambda_{coord}\\sum_{i=0}^{S^{2}}\\sum_{j=0}^{B}1_{ij}^{obj}\\left((x_{i}-\\hat{x}_{i})^{2}+(y_{i}-\\hat{y}_{i})^{2}\\right) + \\sum_{i=0}^{S^{2}}\\sum_{j=0}^{B}1_{ij}^{obj}\\left((\\sqrt{w_{i}}-\\sqrt{\\hat{w}_{i}})^{2}+(\\sqrt{h_{i}}-\\sqrt{\\hat{h}_{i}})^{2}\\right)",
+      "image_ref": "img-11.jpeg"
+    },
+    {
+      "id": "concept-04-selective-layer-activation",
+      "voice": "The breakthrough in efficiency came from 'targeted' fine-tuning. Instead of retraining the whole YOLO model, the team found that the early layers\u2014the backbone\u2014already knew how to see basic shapes. By freezing most of the model and only 'activating' the high-level semantic layers, specifically layers 7 through 10 and the final classification head at layer 23, they achieved 86 percent accuracy. It\u2019s like keeping a person\u2019s general vision intact but specifically training their brain to recognize the nuances of 20 types of garbage.",
+      "goal": "Visualize the strategy of freezing specific model layers to optimize training performance.",
+      "remarks": "Create a horizontal chain of 24 'Square' objects representing layers 0 to 23. Color layers 0-6 gray (labeled 'Frozen Backbone'). Color layers 7-10 bright blue with a 'Glow' effect (labeled 'Active Semantics'). Color layers 11-22 gray. Color layer 23 bright orange (labeled 'Active Head'). Animate a 'Succession' of pulses moving through the blue and orange squares while the gray ones remain static, representing gradients updating only in selected regions.",
+      "formula": null,
+      "image_ref": "img-10.jpeg"
+    }
+  ]
+}

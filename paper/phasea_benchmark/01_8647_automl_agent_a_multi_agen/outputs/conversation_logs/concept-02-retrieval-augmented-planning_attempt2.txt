@@ -1,0 +1,150 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-retrieval-augmented-planning",
+  "voice": "To find the best path, we use Retrieval-Augmented Planning, or RAP. Instead of the Agent Manager generating a single guess, it queries external knowledge\u2014like arXiv papers or web searches\u2014to understand current state-of-the-art methods for your specific task. This allows the system to generate multiple diverse plans in parallel, exploring different strategies like trying a Transformer versus a standard CNN based on real-world evidence.",
+  "goal": "Explain how external knowledge retrieval informs the generation of multiple parallel plans.",
+  "remarks": "Place a central 'Agent Manager' icon. To its left, create a 'Knowledge Base' icon (a cloud). Animate arrows pulling 'Knowledge' into the Manager. Then, show the Manager branching out into three distinct paths (Plan A, Plan B, Plan C) using TransformMatchingShapes. Each plan path should have a different icon representing a different ML strategy.",
+  "formula": "\\mathbf{P} = \\mathcal{A}_{mgr}(\\mathrm{RAP}(R))",
+  "image_ref": "img-2.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathbf{P} = \mathcal{A}_{mgr}(\mathrm{RAP}(R))
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptAnimation02RetrievalAugmentedPlanning(Scene):
+    def construct(self):
+        # 1. Formula at the top (Using Text instead of MathTex as per constraint)
+        formula = Text("P = A_mgr(RAP(R))", font_size=36).to_edge(UP)
+        self.play(Write(formula))
+        self.wait(0.5)
+
+        # 2. Agent Manager (Central Icon)
+        manager_circle = Circle(radius=1.0, color=YELLOW)
+        manager_text = Text("Agent\nManager", font_size=20, color=YELLOW).move_to(manager_circle.get_center())
+        agent_manager = VGroup(manager_circle, manager_text).move_to(ORIGIN)
+
+        # 3. Knowledge Base (Left Icon) - Using Square scaled to look like a rectangle
+        kb_shape = Square(side_length=1.5, color=BLUE, fill_opacity=0.1).scale([1.5, 0.8, 1])
+        kb_text = Text("Knowledge\nBase", font_size=20, color=BLUE).move_to(kb_shape.get_center())
+        knowledge_base = VGroup(kb_shape, kb_text).to_edge(LEFT, buff=1)
+
+        # 4. Show initial components
+        self.play(FadeIn(agent_manager), FadeIn(knowledge_base))
+        self.wait(1)
+
+        # 5. Arrows pulling Knowledge into Manager
+        arrow_kb_to_mgr = Arrow(knowledge_base.get_right(), agent_manager.get_left(), color=WHITE, buff=0.1)
+        knowledge_dot = Dot(color=BLUE).move_to(knowledge_base.get_right())
+        
+        self.play(Create(arrow_kb_to_mgr))
+        self.play(
+            knowledge_dot.animate.move_to(agent_manager.get_center()),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        self.play(FadeOut(knowledge_dot))
+        self.wait(0.5)
+
+        # 6. Branching out into three paths (Plan A, B, C)
+        plan_a_pos = RIGHT * 4 + UP * 2
+        plan_b_pos = RIGHT * 4
+        plan_c_pos = RIGHT * 4 + DOWN * 2
+
+        arrow_a = Arrow(agent_manager.get_right(), plan_a_pos, color=GREEN)
+        arrow_b = Arrow(agent_manager.get_right(), plan_b_pos, color=BLUE)
+        arrow_c = Arrow(agent_manager.get_right(), plan_c_pos, color=RED)
+
+        plan_a_label = Text("Plan A", font_size=24, color=GREEN).next_to(plan_a_pos, RIGHT)
+        plan_b_label = Text("Plan B", font_size=24, color=BLUE).next_to(plan_b_pos, RIGHT)
+        plan_c_label = Text("Plan C", font_size=24, color=RED).next_to(plan_c_pos, RIGHT)
+
+        self.play(
+            Create(arrow_a), Create(arrow_b), Create(arrow_c),
+            Write(plan_a_label), Write(plan_b_label), Write(plan_c_label)
+        )
+        self.wait(1)
+
+        # 7. Transforming plan labels into ML Strategy Icons
+        # Using Square and RegularPolygon(n=3) as Rectangle/Triangle are disallowed
+        transformer_icon = VGroup(
+            Square(side_length=0.8, color=GREEN),
+            Text("Transformer", font_size=14, color=GREEN).shift(DOWN * 0.6)
+        ).move_to(plan_a_label.get_center())
+
+        cnn_icon = VGroup(
+            Circle(radius=0.4, color=BLUE),
+            Text("CNN", font_size=14, color=BLUE).shift(DOWN * 0.6)
+        ).move_to(plan_b_label.get_center())
+
+        other_icon = VGroup(
+            RegularPolygon(n=3, color=RED).scale(0.5),
+            Text("Other", font_size=14, color=RED).shift(DOWN * 0.6)
+        ).move_to(plan_c_label.get_center())
+
+        self.play(
+            ReplacementTransform(plan_a_label, transformer_icon),
+            ReplacementTransform(plan_b_label, cnn_icon),
+            ReplacementTransform(plan_c_label, other_icon)
+        )
+        self.wait(2)
+
+        # Final move to clear center
+        group_to_move = VGroup(
+            agent_manager, knowledge_base, arrow_kb_to_mgr,
+            arrow_a, arrow_b, arrow_c, 
+            transformer_icon, cnn_icon, other_icon
+        )
+        self.play(group_to_move.animate.scale(0.7).shift(LEFT * 1))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: RegularPolygon, ReplacementTransform, smooth

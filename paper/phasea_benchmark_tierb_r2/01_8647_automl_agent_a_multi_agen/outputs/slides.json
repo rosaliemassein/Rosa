@@ -1,0 +1,37 @@
+{
+  "title": "AutoML-Agent: A Multi-Agent LLM Framework for Full-Pipeline AutoML",
+  "slides": [
+    {
+      "id": "concept-01-full-pipeline-dependencies",
+      "voice": "In traditional AutoML, we often treat model selection and data processing as isolated steps. But in a full-pipeline system, they are deeply interconnected. Imagine your raw data as the foundation; a change here, like a specific preprocessing technique, ripples through the entire structure, dictating which models are viable and which hyperparameters need tuning. AutoML-Agent manages this complexity by mapping the entire flow from initial data retrieval all the way to a deployment-ready inference endpoint.",
+      "goal": "Understand the inter-dependency and end-to-end nature of the AutoML pipeline.",
+      "remarks": "Create a sequence of four large circles representing 'Data Retrieval', 'Preprocessing', 'Model Search', and 'Deployment'. Connect them with thick arrows. When the voice mentions 'ripples through', apply a pulse animation to the 'Data Retrieval' circle and propagate a color change (e.g., from blue to gold) through the arrows to the 'Deployment' circle. Use a NumberPlane in the background to give a technical feel.",
+      "formula": "Pipeline = \\{Data \\to Preprocessing \\to Model \\to HPO \\to Deployment\\}",
+      "image_ref": "img-1.jpeg"
+    },
+    {
+      "id": "concept-02-retrieval-augmented-planning",
+      "voice": "To find the best path, we use Retrieval-Augmented Planning, or RAP. Instead of the Agent Manager generating a single guess, it queries external knowledge\u2014like arXiv papers or web searches\u2014to understand current state-of-the-art methods for your specific task. This allows the system to generate multiple diverse plans in parallel, exploring different strategies like trying a Transformer versus a standard CNN based on real-world evidence.",
+      "goal": "Explain how external knowledge retrieval informs the generation of multiple parallel plans.",
+      "remarks": "Place a central 'Agent Manager' icon. To its left, create a 'Knowledge Base' icon (a cloud). Animate arrows pulling 'Knowledge' into the Manager. Then, show the Manager branching out into three distinct paths (Plan A, Plan B, Plan C) using TransformMatchingShapes. Each plan path should have a different icon representing a different ML strategy.",
+      "formula": "\\mathbf{P} = \\mathcal{A}_{mgr}(\\mathrm{RAP}(R))",
+      "image_ref": "img-2.jpeg"
+    },
+    {
+      "id": "concept-03-pseudo-execution-handoff",
+      "voice": "The real magic happens during plan execution. We decompose each plan into sub-tasks for specialized agents. The Data Agent performs a 'pseudo-analysis'\u2014it acts as if it's processing the data to identify key characteristics. It then hands off these insights to the Model Agent. Notice how the Model Agent\u2019s sub-tasks depend directly on the Data Agent's output. This allows for a training-free search, where agents use in-context learning to estimate performance before a single line of training code is ever run.",
+      "goal": "Visualize the information hand-off between specialized agents and the concept of training-free search.",
+      "remarks": "Create a split-screen animation. On the top, the 'Data Agent' (A_d) processes a Data block to output 'O_d' (Data Insights). Animate an arrow carrying 'O_d' down to the 'Model Agent' (A_m). Show the Model Agent's task block (s_m) expanding as it receives this input. Use a ValueTracker to show a 'Search Efficiency' bar increasing as the agents communicate without actual GPU training execution.",
+      "formula": "s_i^m = \\mathrm{PD}(R, \\mathcal{A}_m, \\mathbf{p}_i, O_i^d)",
+      "image_ref": "img-1.jpeg"
+    },
+    {
+      "id": "concept-04-multi-stage-verification-loop",
+      "voice": "Finally, we ensure reliability through a three-stage verification gate. First, 'Request Verification' ensures the user's instructions are clear. Then, 'Execution Verification' filters the most promising plans from the pseudo-results. Finally, 'Implementation Verification' checks the actual compiled code. If a solution fails any gate, the feedback is fed back to the Agent Manager, which revises the plans and restarts the loop\u2014ensuring only deployment-ready models reach the finish line.",
+      "goal": "Understand the iterative feedback loop and the three distinct verification stages.",
+      "remarks": "Draw three vertical lines acting as 'Gates' labeled ReqVer, ExecVer, and ImpVer. Animate a 'Plan' object (a small square) moving through them. If it hits a gate and 'fails' (turns red), draw a CurvedArrow looping it back to the 'Planning' stage at the beginning. When it 'passes' (turns green), it moves to the next gate until it reaches a 'Deployment' icon.",
+      "formula": "\\mathcal{M}^{\\star} = \\mathcal{A}_{o}(I^{\\star}) \\text{ s.t. } \\mathrm{ImpVer}(\\mathcal{M}^{\\star}) = \\text{Pass}",
+      "image_ref": "img-2.jpeg"
+    }
+  ]
+}

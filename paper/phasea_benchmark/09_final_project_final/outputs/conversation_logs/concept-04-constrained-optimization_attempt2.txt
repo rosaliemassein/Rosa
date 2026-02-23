@@ -1,0 +1,187 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-constrained-optimization",
+  "voice": "The final step is the hardest: assigning reviewers. We use Integer Programming to solve a massive balancing act. Our objective function wants to maximize expertise matching, but it\u2019s held back by hard constraints. We can't assign a reviewer to a proposal from their own institution, we must limit their workload so they aren't overwhelmed, and we must meet specific diversity targets for gender and career stage. The solver searches for the perfect 'assignment matrix' that satisfies all these rules while keeping the expertise score as high as possible.",
+  "goal": "Understand how the system balances expertise against diversity and workload constraints.",
+  "remarks": "Show a large binary matrix (zeros and ones) labeled 'Assignment Matrix'. Next to it, show a 'Score' bar. As the ones in the matrix shift around, the Score bar goes up and down. Introduce 'Constraint' icons: a red 'X' for institutional conflict, a 'Scale' for gender diversity, and a 'Clock' for workload. When a one is placed in a cell that violates a constraint (e.g., a reviewer with too many assignments), highlight that row in red and show the 'Score' dropping significantly due to the penalty term.",
+  "formula": "\\max \\sum_{i,j} s_{i,j} x_{i,j} - \\sum_{k} P_k \\delta_k",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\max \sum_{i,j} s_{i,j} x_{i,j} - \sum_{k} P_k \delta_k
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ConceptOptimization(Scene):
+    def construct(self):
+        # 1. Assignment Matrix Label
+        label = Text("Assignment Matrix").scale(0.7).to_edge(UP, buff=0.5)
+        
+        # 2. Assignment Matrix Construction (Manual VGroup)
+        matrix = VGroup()
+        for i in range(4):
+            row = VGroup()
+            for j in range(6):
+                char = "1" if (i + j) % 3 == 0 else "0"
+                t = Text(char).scale(0.5)
+                # Manual positioning using core directions
+                t.move_to(RIGHT * (j * 0.6) + DOWN * (i * 0.6))
+                row.add(t)
+            matrix.add(row)
+        matrix.center().shift(LEFT * 2)
+
+        # 3. Score Bar using Polygon (as Rectangle is restricted)
+        # Background
+        bar_bg = Polygon(
+            LEFT * 2 + UP * 0.2, RIGHT * 2 + UP * 0.2, 
+            RIGHT * 2 + DOWN * 0.2, LEFT * 2 + DOWN * 0.2
+        ).to_edge(RIGHT, buff=1).shift(UP * 1.5)
+        bar_bg.set_stroke(WHITE, 1)
+        
+        # Fill (represents Score going up and down)
+        bar_fill = Polygon(
+            LEFT * 2 + UP * 0.2, RIGHT * 1 + UP * 0.2, 
+            RIGHT * 1 + DOWN * 0.2, LEFT * 2 + DOWN * 0.2
+        ).set_fill(GREEN, opacity=0.8).set_stroke(width=0)
+        # Position fill relative to the background
+        bar_fill.move_to(bar_bg.get_left(), aligned_edge=LEFT)
+        
+        score_txt = Text("Expertise Score").scale(0.5).next_to(bar_bg, UP)
+
+        # 4. Constraint Icons (Manual Construction)
+        # Institutional Conflict (X Icon)
+        x_icon = VGroup(
+            Line(LEFT * 0.2 + UP * 0.2, RIGHT * 0.2 + DOWN * 0.2),
+            Line(LEFT * 0.2 + DOWN * 0.2, RIGHT * 0.2 + UP * 0.2)
+        ).set_color(RED).next_to(matrix, DOWN, buff=1).shift(LEFT)
+        
+        # Diversity (Circle placeholder)
+        div_icon = Circle(radius=0.2, color=BLUE).next_to(x_icon, RIGHT, buff=1)
+        
+        # Workload (Clock placeholder)
+        work_icon = VGroup(
+            Circle(radius=0.2, color=WHITE),
+            Line(ORIGIN, UP * 0.15)
+        ).next_to(div_icon, RIGHT, buff=1)
+
+        # 5. Narration and Formula (using Text for compatibility)
+        narration = Text(
+            "Integer Programming solves a balancing act.",
+            line_spacing=0.5
+        ).scale(0.4).to_edge(DOWN)
+
+        formula_txt = Text("max Sum(s*x) - Sum(Penalty)").scale(0.5).next_to(bar_bg, DOWN, buff=1)
+
+        # --- ANIMATION SEQUENCE ---
+        
+        self.play(Write(label), Write(narration))
+        self.play(FadeIn(matrix))
+        self.play(Create(bar_bg), Create(bar_fill), Write(score_txt))
+        self.play(Write(formula_txt))
+        self.play(Create(x_icon), Create(div_icon), Create(work_icon))
+        self.wait(1)
+
+        # Show a Violation (Shift values and drop score)
+        # Visual highlight of a row violating a constraint
+        violation_box = Polygon(
+            matrix[1].get_left() + LEFT * 0.1 + UP * 0.3,
+            matrix[1].get_right() + RIGHT * 0.1 + UP * 0.3,
+            matrix[1].get_right() + RIGHT * 0.1 + DOWN * 0.3,
+            matrix[1].get_left() + LEFT * 0.1 + DOWN * 0.3,
+            color=RED
+        )
+        
+        # Target state for a lower score
+        penalty_fill = Polygon(
+            LEFT * 2 + UP * 0.2, LEFT * 1.5 + UP * 0.2, 
+            LEFT * 1.5 + DOWN * 0.2, LEFT * 2 + DOWN * 0.2
+        ).set_fill(RED, opacity=0.8).set_stroke(width=0)
+        penalty_fill.move_to(bar_bg.get_left(), aligned_edge=LEFT)
+
+        self.play(
+            Create(violation_box),
+            Transform(bar_fill, penalty_fill),
+            x_icon.animate.scale(1.5),
+            run_time=2
+        )
+        self.wait(2)
+
+        # Fade out elements to finish with a clean view or placeholder
+        self.play(
+            FadeOut(narration),
+            FadeOut(matrix),
+            FadeOut(violation_box),
+            FadeOut(label)
+        )
+        
+        # Final image placeholder (as ImageMobject is restricted)
+        img_placeholder = Polygon(
+            LEFT * 2.5 + UP * 1.5, RIGHT * 2.5 + UP * 1.5,
+            RIGHT * 2.5 + DOWN * 1.5, LEFT * 2.5 + DOWN * 1.5,
+            color=WHITE
+        ).to_edge(DOWN, buff=0.5)
+        img_text = Text("Final Assignment Result").scale(0.5).move_to(img_placeholder)
+        
+        self.play(Create(img_placeholder), Write(img_text))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Polygon; disallowed symbols/features in constrained subset: Polygon

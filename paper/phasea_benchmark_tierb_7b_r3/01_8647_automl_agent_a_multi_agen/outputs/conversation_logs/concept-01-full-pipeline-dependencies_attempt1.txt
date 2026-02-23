@@ -1,0 +1,142 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-full-pipeline-dependencies",
+  "voice": "In traditional AutoML, we often treat model selection and data processing as isolated steps. But in a full-pipeline system, they are deeply interconnected. Imagine your raw data as the foundation; a change here, like a specific preprocessing technique, ripples through the entire structure, dictating which models are viable and which hyperparameters need tuning. AutoML-Agent manages this complexity by mapping the entire flow from initial data retrieval all the way to a deployment-ready inference endpoint.",
+  "goal": "Understand the inter-dependency and end-to-end nature of the AutoML pipeline.",
+  "remarks": "Create a sequence of four large circles representing 'Data Retrieval', 'Preprocessing', 'Model Search', and 'Deployment'. Connect them with thick arrows. When the voice mentions 'ripples through', apply a pulse animation to the 'Data Retrieval' circle and propagate a color change (e.g., from blue to gold) through the arrows to the 'Deployment' circle. Use a NumberPlane in the background to give a technical feel.",
+  "formula": "Pipeline = \\{Data \\to Preprocessing \\to Model \\to HPO \\to Deployment\\}",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+Pipeline = \{Data \to Preprocessing \to Model \to HPO \to Deployment\}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class FullPipelineDependencies(Scene):
+    def construct(self):
+        # Background: Manual Grid instead of NumberPlane to avoid restricted features
+        grid = VGroup()
+        for x in range(-7, 8):
+            grid.add(Line([x, -4, 0], [x, 4, 0], stroke_width=0.5, color=GRAY, stroke_opacity=0.3))
+        for y in range(-4, 5):
+            grid.add(Line([-7, y, 0], [7, y, 0], stroke_width=0.5, color=GRAY, stroke_opacity=0.3))
+        self.add(grid)
+
+        # Pipeline steps configuration
+        step_names = ["Data Retrieval", "Preprocessing", "Model Search", "Deployment"]
+        colors = [BLUE, BLUE, BLUE, BLUE]
+        positions = [LEFT * 4.5, LEFT * 1.5, RIGHT * 1.5, RIGHT * 4.5]
+        
+        circles = VGroup()
+        labels = VGroup()
+        
+        for name, color, pos in zip(step_names, colors, positions):
+            circle = Circle(radius=0.9, color=color, fill_opacity=0.2)
+            circle.move_to(pos)
+            label = Text(name, font_size=20).next_to(circle, DOWN)
+            circles.add(circle)
+            labels.add(label)
+
+        # Thick arrows connecting the circles
+        arrows = VGroup()
+        for i in range(len(circles) - 1):
+            arrow = Arrow(
+                circles[i].get_right(), 
+                circles[i+1].get_left(), 
+                buff=0.1, 
+                stroke_width=8,
+                color=BLUE
+            )
+            arrows.add(arrow)
+
+        # Formula at the top
+        formula = MathTex(
+            r"Pipeline = \{Data \to Preprocessing \to Model \to HPO \to Deployment\}",
+            font_size=30
+        ).to_edge(UP)
+
+        # Initial render
+        self.add(circles, labels, arrows, formula)
+
+        # Animation sequence
+        # 1. Pulse 'Data Retrieval'
+        self.play(Indicate(circles[0], color=WHITE, scale_factor=1.2), run_time=1.5)
+
+        # 2. Ripple color change from Blue to Gold through the pipeline
+        ripple_animations = []
+        for i in range(len(circles)):
+            # Change circle color
+            ripple_animations.append(circles[i].animate.set_color(GOLD).set_fill(GOLD, opacity=0.4))
+            # Change arrow color (if exists)
+            if i < len(arrows):
+                ripple_animations.append(arrows[i].animate.set_color(GOLD))
+
+        self.play(
+            LaggedStart(*ripple_animations, lag_ratio=0.4),
+            run_time=4
+        )
+
+        self.wait(2)

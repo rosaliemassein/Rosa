@@ -1,0 +1,166 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-spatial-grid-encoding",
+  "voice": "To teach a neural network Chinese Checkers, we have to transform the hexagonal board into a language it understands: grids. We encode the game state into a three-layered stack. The first layer marks the current player's pieces, the second marks the target destination, and the third marks all opponent pieces. By embedding this hex-geometry into a square coordinate system, a standard convolutional network can 'see' the spatial relationships between pegs and their goals.",
+  "goal": "Understand how the hexagonal board is represented as a multi-layered square grid for CNN processing.",
+  "remarks": "Create a hexagonal grid of circles representing a Chinese Checkers board. Animate it tilting into a 3D perspective and then morphing into a square grid of cells. Split this square grid into three separate, semi-transparent layers floating vertically. Layer 1: Highlight 'Self' pieces in blue. Layer 2: Highlight 'Target' zone in green. Layer 3: Highlight 'Opponent' pieces in red. Use TransformMatchingShapes to show the transition from the board to the grid layers. Label the dimensions with MathTex 'n \\times n \\times 3'.",
+  "formula": "n = 4 \\times \\text{board radius} + 1",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+n = 4 \times \text{board radius} + 1
+
+
+=== ASSISTANT ===
+from manim import *
+
+class SpatialGridEncoding(Scene):
+    def construct(self):
+        # 1. Define Formula and Initial Board Data
+        board_radius = 2
+        n_val = 4 * board_radius + 1
+        formula = MathTex(r"n = 4 \times \text{board radius} + 1").to_edge(UP)
+        self.play(Write(formula))
+        
+        # Create hexagonal grid of circles to represent the board
+        hex_grid = VGroup()
+        for r in range(-board_radius, board_radius + 1):
+            for q in range(-board_radius, board_radius + 1):
+                if abs(r + q) <= board_radius:
+                    # Axial to 2D Cartesian conversion
+                    x_pos = 0.5 * (3**0.5 * q + (3**0.5 / 2) * r)
+                    y_pos = 0.5 * (1.5 * r)
+                    hex_grid.add(Circle(radius=0.18, color=WHITE, fill_opacity=0.3).move_to([x_pos, y_pos, 0]))
+        
+        hex_grid.center()
+        self.play(Create(hex_grid))
+        self.wait(1)
+
+        # 2. Simulate 3D tilt (Using 2D stretch and rotation)
+        self.play(
+            hex_grid.animate.stretch(0.5, dim=1).rotate(-15 * DEGREES),
+            formula.animate.scale(0.7).to_corner(UL)
+        )
+        self.wait(0.5)
+
+        # 3. Morph into a square grid (n x n)
+        # Based on formula: n = 4*2 + 1 = 9
+        n = 9
+        square_grid = VGroup()
+        cell_size = 0.35
+        for i in range(n):
+            for j in range(n):
+                square_grid.add(
+                    Square(side_length=cell_size, stroke_width=1)
+                    .move_to([(i - (n-1)/2) * cell_size, (j - (n-1)/2) * cell_size, 0])
+                )
+        square_grid.center()
+        
+        # Morph the board into the grid
+        self.play(ReplacementTransform(hex_grid, square_grid))
+        self.wait(1)
+
+        # 4. Separate into three semi-transparent floating layers
+        # Layer 1: Self (Blue)
+        layer1 = square_grid.copy().set_color(BLUE).set_stroke(BLUE, 1).set_fill(BLUE, opacity=0.15)
+        # Layer 2: Target (Green)
+        layer2 = square_grid.copy().set_color(GREEN).set_stroke(GREEN, 1).set_fill(GREEN, opacity=0.15)
+        # Layer 3: Opponent (Red)
+        layer3 = square_grid.copy().set_color(RED).set_stroke(RED, 1).set_fill(RED, opacity=0.15)
+
+        # Position them to look like a vertical stack in 2D perspective
+        self.play(
+            layer1.animate.shift(UP * 2.2 + RIGHT * 0.4),
+            layer2.animate.shift(ORIGIN),
+            layer3.animate.shift(DOWN * 2.2 + LEFT * 0.4),
+            FadeOut(square_grid),
+            run_time=2
+        )
+
+        # Highlight pieces on each layer to show encoding
+        l1_highlights = [20, 21, 22]
+        l2_highlights = [40, 41, 42]
+        l3_highlights = [60, 61, 62]
+
+        self.play(
+            *[layer1[idx].animate.set_fill(BLUE, opacity=0.8) for idx in l1_highlights],
+            *[layer2[idx].animate.set_fill(GREEN, opacity=0.8) for idx in l2_highlights],
+            *[layer3[idx].animate.set_fill(RED, opacity=0.8) for idx in l3_highlights],
+        )
+
+        # 5. Label dimensions and semantic layers
+        dim_label = MathTex(r"n \times n \times 3", color=YELLOW).to_edge(RIGHT, buff=1.2)
+        
+        l1_tag = Text("Current Player", color=BLUE, font_size=20).next_to(layer1, LEFT, buff=0.5)
+        l2_tag = Text("Target Zone", color=GREEN, font_size=20).next_to(layer2, LEFT, buff=0.5)
+        l3_tag = Text("Opponent Pieces", color=RED, font_size=20).next_to(layer3, LEFT, buff=0.5)
+
+        self.play(
+            Write(dim_label),
+            Write(l1_tag),
+            Write(l2_tag),
+            Write(l3_tag)
+        )
+
+        self.wait(3)

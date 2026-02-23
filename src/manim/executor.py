@@ -84,6 +84,7 @@ class ManimExecutor:
         quality: str = "l",  # l=low, m=medium, h=high, k=4k
         version: int = 1,
         vertical: bool = False,
+        timeout_seconds: int | None = None,
     ) -> Tuple[bool, Optional[Path], str]:
         """
         Execute Manim code to generate video.
@@ -94,6 +95,7 @@ class ManimExecutor:
             quality: Video quality (l/m/h/k)
             version: Version number for output naming
             vertical: If True, render in 9:16 portrait format
+            timeout_seconds: Optional timeout for render subprocess
         
         Returns:
             Tuple of (success, video_path, stderr)
@@ -101,8 +103,11 @@ class ManimExecutor:
             - video_path: Path to the video file (or None)
             - stderr: Error output (empty string on success)
         """
-        # Run manim command
+        # Run manim via current Python interpreter to avoid PATH drift
+        # (e.g., accidentally picking a global/conda manim binary).
         cmd = [
+            sys.executable,
+            "-m",
             "manim",
             f"-q{quality}",
             str(code_file),
@@ -122,6 +127,48 @@ class ManimExecutor:
             cmd.extend(["-r", res])
         
         try:
+            if timeout_seconds is not None:
+                # Timeout-aware execution path used by compile-first evaluation.
+                process = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=timeout_seconds,
+                )
+                stderr_output = process.stderr or ""
+                if process.returncode != 0:
+                    return False, None, stderr_output
+
+                # Reuse existing output discovery logic below.
+                quality_dirs = {
+                    "l": "854p15",
+                    "m": "1280p30",
+                    "h": "1920p60",
+                    "k": "3840p60",
+                } if vertical else {
+                    "l": "480p15",
+                    "m": "720p30",
+                    "h": "1080p60",
+                    "k": "2160p60",
+                }
+                video_subdir = quality_dirs.get(quality, "720p30")
+                expected_video = (
+                    self.output_dir / "media" / "videos" /
+                    code_file.stem / video_subdir /
+                    f"{manim_code.scene_name}.mp4"
+                )
+                if version == 1:
+                    video_name = f"{manim_code.slide_id}.mp4"
+                else:
+                    video_name = f"{manim_code.slide_id}_v{version}.mp4"
+
+                if expected_video.exists():
+                    final_video = self.videos_dir / video_name
+                    shutil.copy2(expected_video, final_video)
+                    return True, final_video, ""
+                return False, None, "Video not found after render"
+
             # Use Popen to stream output in real-time (shows manim progress bars)
             # No timeout — we wait for manim to finish and only fail on errors
             print(f"    🎬 Manim rendering: {manim_code.scene_name} (quality={quality})...")
@@ -224,5 +271,7 @@ class ManimExecutor:
                 
                 return False, None, "Video not found after render"
                 
+        except subprocess.TimeoutExpired:
+            return False, None, f"timeout: exceeded {timeout_seconds}s"
         except Exception as e:
             return False, None, f"Execution error: {str(e)}"

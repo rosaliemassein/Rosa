@@ -1,0 +1,3 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tierc_qwenonly_3p/02_baxterbartlett_cs229_termproject_report/outputs/media/videos/concept-01-inverse-mapping_v2/480p15/partial_movie_files/FixCode/1584795214_361659234_223132457.mp4'
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tierc_qwenonly_3p/02_baxterbartlett_cs229_termproject_report/outputs/media/videos/concept-01-inverse-mapping_v2/480p15/partial_movie_files/FixCode/4072820271_2834709167_1379842599.mp4'

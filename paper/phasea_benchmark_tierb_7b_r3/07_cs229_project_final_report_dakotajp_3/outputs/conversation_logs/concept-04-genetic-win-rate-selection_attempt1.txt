@@ -1,0 +1,183 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-genetic-win-rate-selection",
+  "voice": "Standard training minimizes mathematical error, but that doesn't always lead to more wins. To bridge this gap, we use a genetic algorithm. We create 'child' models from the current 'parent' and have them compete in actual games. We only keep the descendant that achieves the highest win rate. This creates a direct 'evolutionary gradient' for victory, ensuring that the model isn't just getting better at math, but better at the game itself.",
+  "goal": "Understand why genetic selection is used alongside DQL to optimize for win rates.",
+  "remarks": "Draw a central 'Parent' node. Animate three 'Child' nodes branching out from it. Below each child, create a BarChart representing 'Win Rate'. Animate the bars growing to different heights. Highlight the child with the highest bar in gold. Use a 'FadeOut' on the parent and other children, then move the gold child to the center to become the new 'Parent'. Repeat the cycle quickly to show evolution.",
+  "formula": "P_{t+1} = \\arg\\max_{c \\in \\text{Children}(P_t)} \\text{WinRate}(c)",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+P_{t+1} = \arg\max_{c \in \text{Children}(P_t)} \text{WinRate}(c)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class GeneticSelection(Scene):
+    def construct(self):
+        # Formula Reference from JSON
+        formula = MathTex(r"P_{t+1} = \arg\max_{c \in \text{Children}(P_t)} \text{WinRate}(c)")
+        formula.to_edge(UP)
+        self.add(formula)
+
+        # 1. Central 'Parent' node
+        parent_circle = Circle(radius=0.5, color=BLUE, fill_opacity=0.5)
+        parent_label = Text("Parent", font_size=24).next_to(parent_circle, UP)
+        parent = VGroup(parent_circle, parent_label).move_to(UP * 1.5)
+        self.play(Create(parent))
+        self.wait(0.5)
+
+        # 2. Three 'Child' nodes branching out
+        win_rates = [0.25, 0.85, 0.45]
+        children = VGroup()
+        child_labels = VGroup()
+        branch_lines = VGroup()
+        
+        positions = [[-4, -0.5, 0], [0, -0.5, 0], [4, -0.5, 0]]
+        
+        for i in range(3):
+            child = Square(side_length=0.8, color=BLUE, fill_opacity=0.3)
+            child.move_to(positions[i])
+            label = Text(f"Child {i+1}", font_size=20).next_to(child, UP, buff=0.1)
+            line = Line(parent_circle.get_bottom(), child.get_top(), buff=0.1)
+            children.add(child)
+            child_labels.add(label)
+            branch_lines.add(line)
+
+        self.play(
+            Create(branch_lines),
+            Create(children),
+            Write(child_labels)
+        )
+
+        # 3. Representing 'Win Rate' bars below each child
+        bars = VGroup()
+        for i, rate in enumerate(win_rates):
+            # Create a bar that represents the win rate
+            bar = Rectangle(
+                width=0.6, 
+                height=rate * 2.5, 
+                color=GREEN, 
+                fill_opacity=0.8
+            )
+            # Position bar base relative to child
+            bar.move_to(children[i].get_bottom() + DOWN * 2.5, DOWN)
+            
+            rate_text = Text(f"{int(rate*100)}%", font_size=18).next_to(bar, DOWN, buff=0.1)
+            bars.add(VGroup(bar, rate_text))
+
+        # Animate the bars growing to different heights
+        # Using GrowFromPoint since GrowFromEdge was flagged
+        self.play(
+            *[GrowFromPoint(b[0], b[0].get_bottom()) for b in bars],
+            *[Write(b[1]) for b in bars],
+            run_time=1.5
+        )
+        self.wait(1)
+
+        # 4. Highlight the child with the highest bar in gold
+        best_idx = 1 # 85% is highest
+        self.play(
+            bars[best_idx][0].animate.set_color(GOLD),
+            children[best_idx].animate.set_color(GOLD),
+            Indicate(children[best_idx], color=GOLD, scale_factor=1.2)
+        )
+        self.wait(1)
+
+        # 5. FadeOut on parent and other children
+        others = VGroup(
+            parent, branch_lines,
+            children[0], children[2],
+            child_labels[0], child_labels[1], child_labels[2],
+            bars[0], bars[2], bars[1][1]
+        )
+        
+        # 6. Move the gold child to the center to become the new 'Parent'
+        new_parent_center = [0, 1.5, 0]
+        self.play(
+            FadeOut(others),
+            children[best_idx].animate.move_to(new_parent_center),
+            bars[best_idx][0].animate.scale(0).move_to(new_parent_center)
+        )
+        
+        # Transitioning to the next generation
+        final_circle = Circle(radius=0.5, color=BLUE, fill_opacity=0.5).move_to(new_parent_center)
+        final_label = Text("New Parent", font_size=24).next_to(final_circle, UP)
+        
+        self.play(
+            Transform(children[best_idx], final_circle),
+            Write(final_label)
+        )
+        
+        # Quick indication of repeated evolution
+        flash = SurroundingRectangle(VGroup(children[best_idx], final_label), color=GOLD, buff=0.2)
+        self.play(Create(flash))
+        self.play(FadeOut(flash))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: GrowFromPoint

@@ -1,0 +1,160 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-cosine-similarity-matrix",
+  "voice": "Now that our proposals and reviewer interests are points in space, how do we measure their alignment? We use Cosine Similarity. Rather than looking at the distance between points, we look at the angle between their vectors. If two vectors point in exactly the same direction, the cosine is one\u2014a perfect match. We calculate this for every keyword pair to build a similarity matrix, which serves as a heat map of how well a reviewer's expertise overlaps with a proposal's needs.",
+  "goal": "Visualize the geometric intuition of cosine similarity and the resulting similarity matrix.",
+  "remarks": "Create an Axes with two vectors, A and B, originating from the origin. Use a ValueTracker to rotate vector B. Show an Arc representing the angle theta between them. As the angle decreases, show a 'Similarity' value (cos theta) increasing toward 1.0. Then, transition to a grid of squares (a 5x5 Matrix). As the vectors on the left align, the corresponding cell in the matrix should glow brighter (white/yellow) and as they diverge, it should turn dark (blue/black).",
+  "formula": "\\text{similarity} = \\cos(\\theta) = \\frac{\\mathbf{A} \\cdot \\mathbf{B}}{\\|\\mathbf{A}\\| \\|\\mathbf{B}\\|}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{similarity} = \cos(\theta) = \frac{\mathbf{A} \cdot \mathbf{B}}{\|\mathbf{A}\| \|\mathbf{B}\|}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class CosineSimilarity(Scene):
+    def construct(self):
+        # 1. Coordinate system setup
+        ax = Axes(
+            x_range=[-1, 5, 1], 
+            y_range=[-1, 5, 1], 
+            x_length=5, 
+            y_length=5
+        ).to_edge(LEFT, buff=0.5)
+        
+        # 2. Angle tracker for animation (Reference Example 2)
+        vt = ValueTracker(60)
+        
+        # 3. Vectors representing proposals and interests
+        # We use Line + add_tip for maximum compatibility
+        v1 = Line(ax.c2p(0, 0), ax.c2p(3.5, 0.5), color=BLUE)
+        v1.add_tip()
+        
+        v2_ref = Line(ax.c2p(0, 0), ax.c2p(3.5, 0.5), color=YELLOW)
+        v2_ref.add_tip()
+        
+        # v2 will be our moving vector
+        v2 = v2_ref.copy()
+        
+        def update_v2(mob):
+            # Rotate v2 based on the current tracker value
+            angle_val = vt.get_value() * DEGREES
+            mob.become(v2_ref.copy().rotate(angle_val, about_point=ax.c2p(0, 0)))
+        
+        v2.add_updater(update_v2)
+        
+        # 4. Angle Arc (Reference Example 2)
+        angle_arc = Angle(v1, v2, radius=0.8, other_angle=False)
+        
+        def update_arc(mob):
+            mob.become(Angle(v1, v2, radius=0.8, other_angle=False))
+        
+        angle_arc.add_updater(update_arc)
+        
+        # 5. Display Similarity value (cos theta)
+        # Using MathTex updated by a function
+        sim_label = MathTex(r"\text{Similarity } \cos(\theta) =").shift(UP * 2.5 + RIGHT * 2)
+        sim_val = MathTex("0.50").next_to(sim_label, RIGHT)
+        
+        def update_val(mob):
+            # cos(theta) calculation
+            current_cos = np.cos(vt.get_value() * DEGREES)
+            mob.become(MathTex("{:.2f}".format(current_cos)).next_to(sim_label, RIGHT))
+            
+        sim_val.add_updater(update_val)
+        
+        # 6. Similarity Matrix (5x5 grid of squares)
+        matrix_group = VGroup(*[
+            Square(side_length=0.7, fill_opacity=0.3, color=BLUE)
+            for _ in range(25)
+        ]).arrange_in_grid(rows=5, cols=5, buff=0.1).to_edge(RIGHT, buff=0.5)
+        
+        # Heatmap effect: The center cell glows based on alignment
+        def update_cell(mob):
+            current_cos = np.cos(vt.get_value() * DEGREES)
+            # Map cos_val (0 to 1) to opacity
+            opac = max(0.0, min(1.0, current_cos))
+            mob.set_fill(WHITE, opacity=opac)
+        
+        matrix_group[12].add_updater(update_cell)
+        
+        # 7. Rendering the Scene
+        self.add(ax, v1, v2, angle_arc, sim_label, sim_val, matrix_group)
+        
+        # Animation: Vectors aligning (Similarity increases to 1.0)
+        self.play(vt.animate.set_value(0), run_time=3)
+        self.wait(1)
+        
+        # Animation: Vectors diverging (Similarity decreases)
+        self.play(vt.animate.set_value(90), run_time=3)
+        self.wait(1)
+        
+        # Return to a middle state
+        self.play(vt.animate.set_value(45), run_time=2)
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Angle, Axes, ValueTracker, np; disallowed symbols/features in constrained subset: Axes, ValueTracker

@@ -1,0 +1,29 @@
+{
+  "title": "NBA Team Success by Player Personnel",
+  "slides": [
+    {
+      "id": "concept-01-feature-matrix",
+      "voice": "To predict a team's success, we can't just look at their total points. Instead, we represent each team as a high-dimensional matrix. We take the top ten players\u2014ranked by minutes played\u2014and for each one, we track fifteen distinct performance metrics. This creates a feature vector where the identity of the team is boiled down to the individual fingerprints of its rotation players.",
+      "goal": "Visualize how team data is structured into a player-by-stat feature matrix for machine learning.",
+      "remarks": "Create a 10x15 grid of squares representing a 'Team Matrix'. On the left side, show a silhouette of 15 basketball players. Animate a 'minutes played' filter passing over them, highlighting the top 10. These 10 players then slide into the rows of the grid. Next, labels for 'PTS', 'REB', 'AST', up to 'PIE' appear above the columns. Fill the grid cells with varying intensities of color to represent normalized data values. Finally, collapse this 2D grid into a single long horizontal vector of 150 elements to show how it enters the model.",
+      "formula": "n = m \\times p",
+      "image_ref": "img-0.jpeg"
+    },
+    {
+      "id": "concept-02-regularization-tradeoff",
+      "voice": "As we add more players and more stats, the model gets more information, but it also risks getting lost in the noise. This is the curse of dimensionality. While simple models like K-Nearest Neighbors struggle as the feature space grows, Lasso and Ridge regression excel. They apply a penalty to the size of the coefficients, effectively telling the model: 'only pay attention to the stats that actually drive wins.'",
+      "goal": "Explain why Lasso and Ridge regression outperform other models as dimensionality increases.",
+      "remarks": "Create an Axes plot where the x-axis is 'Number of Players' (1 to 10) and the y-axis is 'Mean Squared Error'. Recreate the curves from img-0. Plot the KNN line in red, showing it dipping then rising sharply as it overfits. Plot the Lasso/Ridge lines in green, showing a steady decline. To visualize the penalty, show the Lasso cost function equation. As the lambda term increases, show a bar chart of 150 coefficients shrinking, with many of them hitting zero (vanishing) in the Lasso case to highlight feature selection.",
+      "formula": "J(\\theta) = \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|_1",
+      "image_ref": "img-0.jpeg"
+    },
+    {
+      "id": "concept-03-player-depth-importance",
+      "voice": "The models reveal a hidden hierarchy in team success. While the top player's Impact Estimate is the strongest predictor, the 'star' alone isn't enough. Interestingly, the statistics of the fifth and eighth players carry surprising weight. This suggests that a team's floor is set by the quality of its fifth starter and its final rotation player, proving that depth is just as measurable as stardom.",
+      "goal": "Understand the non-linear relationship between player rank and team success coefficients.",
+      "remarks": "Draw a line of 10 basketball player icons representing the 1st through 10th man by minutes. Above each player, create a vertical bar representing their 'Average Coefficient' from Table 4. Animate the bars growing to their respective heights. Highlight the 1st and 2nd bars with a bright gold glow (the stars). Then, highlight the 5th and 8th bars with a pulsing blue light to emphasize the paper's finding that these specific depth positions are crucial for predicting wins, even more so than the 3rd or 4th players.",
+      "formula": "\\text{Wins} \\approx \\beta_1(\\text{1st\\_PIE}) + \\beta_5(\\text{5th\\_PIE}) + \\dots + \\beta_8(\\text{8th\\_PIE})",
+      "image_ref": null
+    }
+  ]
+}

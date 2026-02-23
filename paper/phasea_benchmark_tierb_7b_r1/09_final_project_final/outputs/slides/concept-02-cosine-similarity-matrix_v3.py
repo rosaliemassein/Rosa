@@ -1,0 +1,95 @@
+from manim import *
+import numpy as np
+
+class CosineSimilarityMatrix(Scene):
+    def construct(self):
+        # 1. Setup Manual Axes and Vectors
+        origin = LEFT * 3 + DOWN * 1
+        
+        # Manual Axes (since Axes is disallowed)
+        ax_x = Line(origin, origin + RIGHT * 4, color=GRAY)
+        ax_y = Line(origin, origin + UP * 4, color=GRAY)
+        label_x = MathTex("x").next_to(ax_x, RIGHT).scale(0.8)
+        label_y = MathTex("y").next_to(ax_y, UP).scale(0.8)
+        axes = VGroup(ax_x, ax_y, label_x, label_y)
+        
+        # Vector A (Static Proposal)
+        vec_a_end = origin + np.array([2.5, 1.5, 0])
+        vec_a = Line(origin, vec_a_end, color=BLUE).add_tip()
+        label_a = MathTex(r"\mathbf{A}", color=BLUE).next_to(vec_a.get_end(), UR, buff=0.1)
+        
+        # Vector B (Moving Reviewer)
+        # Starting at a wide angle (low similarity)
+        vec_b_start_end = origin + np.array([-1.0, 2.5, 0])
+        vec_b = Line(origin, vec_b_start_end, color=RED).add_tip()
+        label_b = MathTex(r"\mathbf{B}", color=RED).next_to(vec_b.get_end(), UL, buff=0.1)
+        
+        # Similarity UI
+        sim_formula = MathTex(
+            r"\text{similarity} = \cos(\theta) = \frac{\mathbf{A} \cdot \mathbf{B}}{\|\mathbf{A}\| \|\mathbf{B}\|}"
+        ).scale(0.7).to_edge(DOWN).shift(LEFT * 2)
+        
+        sim_val_low = MathTex(r"\cos(\theta) \approx 0.10", color=WHITE).to_edge(UP).shift(RIGHT * 3)
+        sim_val_high = MathTex(r"\cos(\theta) = 1.00", color=WHITE).to_edge(UP).shift(RIGHT * 3)
+        
+        # 2. Geometric Intuition Animation
+        self.add(axes, vec_a, label_a, vec_b, label_b, sim_formula, sim_val_low)
+        self.play(Create(axes), Create(vec_a), Write(label_a))
+        self.wait(0.5)
+        self.play(Create(vec_b), Write(label_b))
+        self.wait(1)
+        
+        # Align B with A (Perfect match)
+        # Using Transform instead of ValueTracker/always_redraw as they are disallowed
+        vec_b_aligned = Line(origin, vec_a_end, color=RED).add_tip()
+        label_b_aligned = MathTex(r"\mathbf{B}", color=RED).next_to(vec_a_end, DR, buff=0.1)
+        
+        self.play(
+            Transform(vec_b, vec_b_aligned),
+            Transform(label_b, label_b_aligned),
+            Transform(sim_val_low, sim_val_high),
+            run_time=3
+        )
+        self.wait(1)
+        
+        # 3. Transition to Similarity Matrix
+        # Clear screen for the matrix
+        self.play(
+            FadeOut(axes), FadeOut(vec_a), FadeOut(vec_b), 
+            FadeOut(label_a), FadeOut(label_b), FadeOut(sim_formula),
+            sim_val_low.animate.shift(LEFT * 3)
+        )
+        
+        # Create a 5x5 Grid (Similarity Matrix)
+        grid = VGroup()
+        for i in range(5):
+            for j in range(5):
+                sq = Square(side_length=0.7)
+                sq.move_to(RIGHT * 3 + UP * (i - 2) * 0.8 + RIGHT * (j - 2) * 0.8)
+                sq.set_stroke(GRAY, 1)
+                
+                # Determine "heat" based on diagonal (Reviewer matching Proposal)
+                if i == j:
+                    sq.set_fill(WHITE, opacity=0.9) # Perfect match
+                elif abs(i - j) == 1:
+                    sq.set_fill(BLUE, opacity=0.5) # Close match
+                else:
+                    sq.set_fill(BLUE, opacity=0.1) # Poor match
+                grid.add(sq)
+        
+        self.play(Create(grid))
+        self.wait(1)
+        
+        # Final Highlight: The "glow" of a matching cell
+        target_cell = grid[12] # The center cell (2,2)
+        glow = target_cell.copy().set_fill(YELLOW, opacity=1).scale(1.2)
+        
+        self.play(
+            Transform(target_cell, glow),
+            sim_val_low.animate.set_color(YELLOW).scale(1.2)
+        )
+        self.play(Indicate(target_cell))
+        
+        self.wait(2)
+
+# End of code. Outputs ONLY valid Python. No explanations or markdown.

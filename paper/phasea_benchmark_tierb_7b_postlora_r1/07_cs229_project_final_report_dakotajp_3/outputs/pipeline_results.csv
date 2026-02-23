@@ -1,0 +1,3 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-01-spatial-grid-encoding,1,slides/concept-01-spatial-grid-encoding.py,,False,3,,,compile_failed,conversation_logs/concept-01-spatial-grid-encoding_attempt1.txt,-1,gate_fail,undefined identifiers detected: Brace | disallowed symbols/features in constrained subset: Brace,disallowed_tier_symbol|undefined_symbol,uses_mathtex,Brace
+concept-01-spatial-grid-encoding,2,slides/concept-01-spatial-grid-encoding_v2.py,,False,3,,,compile_failed,conversation_logs/concept-01-spatial-grid-encoding_attempt2.txt,-1,manim_error,,,uses_mathtex,

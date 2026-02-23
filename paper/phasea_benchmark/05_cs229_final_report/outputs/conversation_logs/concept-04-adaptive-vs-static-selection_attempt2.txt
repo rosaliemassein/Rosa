@@ -1,0 +1,191 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-adaptive-vs-static-selection",
+  "voice": "Traditional industry standards use static 'rules of thumb' that never change. But dominance is dynamic. Our machine learning approach is adaptive; it can recognize when a zone stops being a problem due to cooler weather or shifts in occupancy. While the static benchmark stays stuck, the logistic model constantly updates its list, flagging more zones during heatwaves and fewer when the building is under less stress, ensuring high performance without wasting energy.",
+  "goal": "Demonstrate the superiority of adaptive ML over static ASHRAE guidelines.",
+  "remarks": "Create a split-screen animation. On the left, 'Static Benchmark'; on the right, 'Logistic Model'. Show a timeline moving across the bottom (May to September). On the left, the highlighted zones in a floorplan remain frozen. On the right, animate the highlighted zones flickering on and off and changing in count as the timeline progresses. Overlay a line graph showing 'Missed Requests' (Recall error) where the ML line stays significantly lower than the Static line.",
+  "formula": null,
+  "image_ref": "img-9.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class AdaptiveVsStaticSelection(Scene):
+    def construct(self):
+        # 1. Titles
+        static_title = Text("Static Benchmark").scale(0.6).to_edge(UP).shift(LEFT * 3)
+        ml_title = Text("Logistic Model").scale(0.6).to_edge(UP).shift(RIGHT * 3)
+        self.add(static_title, ml_title)
+
+        # 2. Floorplan Grids
+        def create_grid():
+            grid = VGroup()
+            for i in range(3):
+                for j in range(3):
+                    sq = Square(side_length=0.6, stroke_width=2)
+                    sq.move_to([j*0.7, -i*0.7, 0])
+                    grid.add(sq)
+            return grid
+
+        grid_left = create_grid().move_to(LEFT * 3.5 + UP * 0.5)
+        grid_right = create_grid().move_to(RIGHT * 3.5 + UP * 0.5)
+        self.add(grid_left, grid_right)
+
+        # 3. Static Highlights (Frozen)
+        static_highlights = VGroup(
+            grid_left[0].copy().set_fill(BLUE, opacity=0.5),
+            grid_left[4].copy().set_fill(BLUE, opacity=0.5),
+            grid_left[8].copy().set_fill(BLUE, opacity=0.5)
+        )
+        self.add(static_highlights)
+
+        # 4. Manual Timeline
+        timeline_line = Line(LEFT * 5, RIGHT * 5).to_edge(DOWN, buff=1.5)
+        months = ["May", "Jun", "Jul", "Aug", "Sep"]
+        month_labels = VGroup()
+        for i, m in enumerate(months):
+            pos = timeline_line.point_from_proportion(i / 4)
+            label = Text(m).scale(0.4).next_to(pos, DOWN)
+            tick = Line(UP * 0.1, DOWN * 0.1).move_to(pos)
+            month_labels.add(label, tick)
+        self.add(timeline_line, month_labels)
+
+        # 5. Graph Area (Manual implementation of Axes)
+        graph_origin = DOWN * 0.5 + LEFT * 2.5
+        x_axis = Line(graph_origin, graph_origin + RIGHT * 5, stroke_width=2)
+        y_axis = Line(graph_origin, graph_origin + UP * 1.5, stroke_width=2)
+        graph_label = Text("Missed Requests (Recall Error)", color=WHITE).scale(0.35).next_to(y_axis, UP)
+        self.add(x_axis, y_axis, graph_label)
+
+        # Data for plotting
+        x_points = np.linspace(0, 5, 5)
+        y_static = [0.1, 0.25, 0.4, 0.5, 0.55]
+        y_ml = [0.08, 0.12, 0.15, 0.13, 0.11]
+
+        # 6. Animation Controller (Using a Dot as a proxy for a ValueTracker)
+        time_proxy = Dot(radius=0).move_to(LEFT * 2) # Range: x from -2 to 2 representing 0 to 1
+
+        # 7. Adaptive Highlights (ML side)
+        ml_highlights = VGroup()
+        def update_ml_highlights(mobj):
+            t = (time_proxy.get_center()[0] + 2) / 4 # 0 to 1
+            mobj.submobjects = []
+            
+            # Select zones based on "time"
+            if t < 0.25: indices = [4]
+            elif t < 0.5: indices = [1, 3, 4, 5, 7]
+            elif t < 0.75: indices = [4, 8]
+            else: indices = [0, 4]
+            
+            flicker = 0.4 + 0.2 * np.sin(t * 50)
+            for idx in indices:
+                mobj.add(grid_right[idx].copy().set_fill(GREEN, opacity=flicker))
+
+        ml_highlights.add_updater(update_ml_highlights)
+        self.add(ml_highlights)
+
+        # 8. Dynamic Graphs
+        static_path = VMobject(color=RED, stroke_width=3)
+        ml_path = VMobject(color=GREEN, stroke_width=3)
+        
+        def update_paths(mobj):
+            t = (time_proxy.get_center()[0] + 2) / 4 # 0 to 1
+            
+            # Static Path
+            pts_static = []
+            for i in range(len(x_points)):
+                prog = i / (len(x_points) - 1)
+                if prog <= t:
+                    px = graph_origin[0] + prog * 5
+                    py = graph_origin[1] + y_static[i] * 2
+                    pts_static.append([px, py, 0])
+            if len(pts_static) > 1:
+                static_path.set_points_as_corners(pts_static)
+            
+            # ML Path
+            pts_ml = []
+            for i in range(len(x_points)):
+                prog = i / (len(x_points) - 1)
+                if prog <= t:
+                    px = graph_origin[0] + prog * 5
+                    py = graph_origin[1] + y_ml[i] * 2
+                    pts_ml.append([px, py, 0])
+            if len(pts_ml) > 1:
+                ml_path.set_points_as_corners(pts_ml)
+
+        static_path.add_updater(update_paths)
+        ml_path.add_updater(update_paths)
+        self.add(static_path, ml_path)
+
+        # Timeline Indicator
+        indicator = Dot(color=YELLOW).scale(0.8)
+        indicator.add_updater(lambda m: m.move_to(timeline_line.point_from_proportion((time_proxy.get_center()[0] + 2) / 4)))
+        self.add(indicator)
+
+        # 9. Play Animation
+        self.play(
+            time_proxy.animate.move_to(RIGHT * 2),
+            run_time=10,
+            rate_func=lambda t: t
+        )
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: VMobject

@@ -1,0 +1,37 @@
+{
+  "title": "Machine Learning for Research Proposals Reviewers Selection",
+  "slides": [
+    {
+      "id": "concept-01-semantic-embedding",
+      "voice": "To match proposals with reviewers, we first have to turn human language into something a computer can measure. Instead of just looking for exact word matches, we use Word2Vec to map keywords into a high-dimensional vector space. Think of it like a map where concepts that mean similar things, like 'Deep Learning' and 'Neural Networks', are physically placed close to each other. When we encounter a multi-word phrase, we simply take the average of the individual word vectors to find the phrase's center of gravity in this conceptual space.",
+      "goal": "Understand how keywords are transformed into mathematical vectors and averaged for multi-word phrases.",
+      "remarks": "Create a 3D NumberPlane. Pop up floating text labels for 'Deep Learning', 'Neural Networks', and 'Robotics'. Animate the text labels transforming into Dot objects at specific coordinates. Use a dashed line to show the distance between 'Deep Learning' and 'Neural Networks' being small, while 'Robotics' is further away. To show the formula, display the word 'Machine' and its vector, the word 'Learning' and its vector, and then use Transform to merge them into a single central vector representing the average position.",
+      "formula": "v_{phrase} = \\frac{1}{n} \\sum_{i=1}^{n} v_{i}",
+      "image_ref": null
+    },
+    {
+      "id": "concept-02-cosine-similarity-matrix",
+      "voice": "Now that our proposals and reviewer interests are points in space, how do we measure their alignment? We use Cosine Similarity. Rather than looking at the distance between points, we look at the angle between their vectors. If two vectors point in exactly the same direction, the cosine is one\u2014a perfect match. We calculate this for every keyword pair to build a similarity matrix, which serves as a heat map of how well a reviewer's expertise overlaps with a proposal's needs.",
+      "goal": "Visualize the geometric intuition of cosine similarity and the resulting similarity matrix.",
+      "remarks": "Create an Axes with two vectors, A and B, originating from the origin. Use a ValueTracker to rotate vector B. Show an Arc representing the angle theta between them. As the angle decreases, show a 'Similarity' value (cos theta) increasing toward 1.0. Then, transition to a grid of squares (a 5x5 Matrix). As the vectors on the left align, the corresponding cell in the matrix should glow brighter (white/yellow) and as they diverge, it should turn dark (blue/black).",
+      "formula": "\\text{similarity} = \\cos(\\theta) = \\frac{\\mathbf{A} \\cdot \\mathbf{B}}{\\|\\mathbf{A}\\| \\|\\mathbf{B}\\|}",
+      "image_ref": null
+    },
+    {
+      "id": "concept-03-iterative-clustering",
+      "voice": "Standard clustering methods like K-Means often fail on sparse data, so this system uses an iterative approach. We start by finding the two most similar proposals in our matrix and use them to 'seed' a cluster. We then greedily pull in the next most similar unassigned proposal until we hit our target size. This ensures each group of nine proposals has the highest possible thematic cohesion, making it easier to find a single panel of reviewers who can cover the whole batch.",
+      "goal": "Explain the step-by-step logic of the custom iterative clustering algorithm.",
+      "remarks": "Generate a cloud of 27 Dot objects scattered randomly. Highlight the two dots with the shortest distance (highest similarity) using a bright ring. Animate a 'search' circle expanding from this pair; when it touches the next closest dot, that dot changes color to match the seed pair. Continue this until 9 dots are the same color. Repeat the process for two more clusters until all dots are grouped into three distinct colored sets.",
+      "formula": null,
+      "image_ref": null
+    },
+    {
+      "id": "concept-04-constrained-optimization",
+      "voice": "The final step is the hardest: assigning reviewers. We use Integer Programming to solve a massive balancing act. Our objective function wants to maximize expertise matching, but it\u2019s held back by hard constraints. We can't assign a reviewer to a proposal from their own institution, we must limit their workload so they aren't overwhelmed, and we must meet specific diversity targets for gender and career stage. The solver searches for the perfect 'assignment matrix' that satisfies all these rules while keeping the expertise score as high as possible.",
+      "goal": "Understand how the system balances expertise against diversity and workload constraints.",
+      "remarks": "Show a large binary matrix (zeros and ones) labeled 'Assignment Matrix'. Next to it, show a 'Score' bar. As the ones in the matrix shift around, the Score bar goes up and down. Introduce 'Constraint' icons: a red 'X' for institutional conflict, a 'Scale' for gender diversity, and a 'Clock' for workload. When a one is placed in a cell that violates a constraint (e.g., a reviewer with too many assignments), highlight that row in red and show the 'Score' dropping significantly due to the penalty term.",
+      "formula": "\\max \\sum_{i,j} s_{i,j} x_{i,j} - \\sum_{k} P_k \\delta_k",
+      "image_ref": "img-0.jpeg"
+    }
+  ]
+}

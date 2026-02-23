@@ -1,0 +1,178 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-logistic-regression-features",
+  "voice": "To predict which zones will be dominant tomorrow, we use a logistic regression model for every single zone. Instead of looking at raw spikes, we look at the 'memory' of the zone. We calculate two main features: the average temperature gap from the setpoint over the last 24 hours, and the average over the last 30 days. This allows the model to distinguish between a temporary door being left open and a zone that is fundamentally struggling with its cooling load.",
+  "goal": "Visualize the mathematical inputs and the logistic mapping used for prediction.",
+  "remarks": "Display a NumberPlane. On the right, show a sigmoid curve. Create two sliding bars on the left labeled '1-Day T-CSP' and '30-Day T-CSP'. As the bars slide up and down, animate a dot moving along the sigmoid curve. Use TransformMatchingTex to show how the feature vector X scales the weights in the logistic formula to move the probability P(y=1) between 0 and 1.",
+  "formula": "P(y=1) = \\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 X_{1d} + \\beta_{30} X_{30d})}}",
+  "image_ref": "img-10.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+P(y=1) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 X_{1d} + \beta_{30} X_{30d})}}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class LogisticRegressionFeatures(Scene):
+    def construct(self):
+        # 1. Setup the Coordinate System (using Axes instead of NumberPlane to avoid disallowed symbols)
+        axes = Axes(
+            x_range=[-6, 6, 1],
+            y_range=[0, 1.1, 0.5],
+            x_length=7,
+            y_length=4,
+            axis_config={"include_tip": True, "color": BLUE},
+        ).to_edge(RIGHT, buff=0.5)
+        
+        sigmoid_graph = axes.plot(
+            lambda x: 1 / (1 + np.exp(-x)),
+            color=RED
+        )
+        
+        y_label = axes.get_y_axis_label(MathTex("P(y=1)"), edge=LEFT, direction=LEFT, buff=0.3)
+        x_label = axes.get_x_axis_label(MathTex("z"), edge=RIGHT, direction=DOWN, buff=0.3)
+
+        # 2. Formula and Feature Vector setup
+        # Splitting into parts to help TransformMatchingTex find commonalities
+        vector_x = MathTex(
+            "X", "=", "\\begin{bmatrix} X_{1d} \\\\ X_{30d} \\end{bmatrix}",
+            font_size=34
+        ).shift(LEFT * 4.5 + UP * 2.5)
+        
+        formula = MathTex(
+            "P(y=1)", "=", "\\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 X_{1d} + \\beta_{30} X_{30d})}}",
+            font_size=38
+        ).to_edge(UP)
+
+        # 3. Sliders (using ValueTracker for logic and Dot for visual)
+        val_1d = ValueTracker(0)
+        val_30d = ValueTracker(0)
+        
+        # UI for Slider 1
+        s1_line = Line(DOWN, UP, color=GRAY).scale(1.5).shift(LEFT * 5 + DOWN * 0.5)
+        s1_text = Text("1-Day T-CSP", font_size=16).next_to(s1_line, DOWN)
+        k1 = Dot(color=GREEN)
+        k1.add_updater(lambda m: m.move_to(s1_line.point_from_proportion(np.clip((val_1d.get_value() + 3)/6, 0, 1))))
+        
+        # UI for Slider 2
+        s2_line = Line(DOWN, UP, color=GRAY).scale(1.5).shift(LEFT * 3.5 + DOWN * 0.5)
+        s2_text = Text("30-Day T-CSP", font_size=16).next_to(s2_line, DOWN)
+        k2 = Dot(color=BLUE)
+        k2.add_updater(lambda m: m.move_to(s2_line.point_from_proportion(np.clip((val_30d.get_value() + 3)/6, 0, 1))))
+
+        # 4. Prediction Dot on the Sigmoid Curve
+        # Formula: z = b0 + b1*X1 + b2*X2. Simplified for visual: z = X1 + X2
+        dot = Dot(color=YELLOW)
+        def update_dot(d):
+            z = val_1d.get_value() + val_30d.get_value()
+            p = 1 / (1 + np.exp(-z))
+            d.move_to(axes.c2p(z, p))
+        dot.add_updater(update_dot)
+
+        # 5. Animation sequence
+        self.play(Write(vector_x))
+        self.wait(1)
+        
+        # Transform feature vector into the logic of the formula
+        self.play(
+            TransformMatchingTex(vector_x.copy(), formula),
+            run_time=2
+        )
+        self.wait(1)
+        
+        self.play(
+            Create(axes), 
+            Write(y_label), 
+            Write(x_label),
+            Create(sigmoid_graph)
+        )
+        
+        self.play(
+            Create(s1_line), 
+            Create(s2_line), 
+            Write(s1_text), 
+            Write(s2_text),
+            FadeIn(k1), 
+            FadeIn(k2)
+        )
+        
+        self.add(dot)
+        self.wait(1)
+
+        # Animate sliding interactions
+        self.play(val_1d.animate.set_value(2.5), run_time=2)
+        self.wait(0.5)
+        self.play(val_30d.animate.set_value(2.5), run_time=2)
+        self.wait(0.5)
+        self.play(
+            val_1d.animate.set_value(-3),
+            val_30d.animate.set_value(-2),
+            run_time=3
+        )
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Axes, TransformMatchingTex, ValueTracker, m, x; disallowed symbols/features in constrained subset: Axes, ValueTracker

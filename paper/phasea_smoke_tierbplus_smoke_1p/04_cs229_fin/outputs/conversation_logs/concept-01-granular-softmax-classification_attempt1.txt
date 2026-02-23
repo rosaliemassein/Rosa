@@ -1,0 +1,198 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, B+, C, or 3D-LITE) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+- BarChart/complex chart helpers -> Axes + Rectangle bars + Text labels
+- BLUE_A/BLUE_B/BLUE_C (or other *_A..*_E variants) -> BLUE (or RED/GREEN/YELLOW/WHITE/BLACK)
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B+ (advanced 2D, no 3D)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+- Avoid BarChart and uncommon color variants (BLUE_A/BLUE_C, etc.); use Axes + Rectangle and base colors.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-granular-softmax-classification",
+  "voice": "In real-world recycling, trash isn't just binary\u2014it's complex. To handle this, the researchers used a Deep CNN to map images into twenty distinct categories. After the convolutional layers extract features, a Softmax function turns those raw scores into a probability distribution. Essentially, it treats the scores as exponents, then normalizes them so the sum of all categories equals one. This allows the model to pick the most likely material, like distinguishing a pizza box from a newspaper with high confidence.",
+  "goal": "Understand how Softmax transforms neural network outputs into a 20-category probability distribution.",
+  "remarks": "Create a 2D image of a plastic bottle (input) on the left. Draw a series of vertical rectangles representing CNN layers. Use arrows to show data flow through these layers into a column vector of 20 raw values (MathTex labeled 'x_i'). To the right, animate the Softmax formula appearing. Then, transform the 20 raw values into a horizontal BarChart where the heights represent probabilities. Use 'Indicate' on the highest bar and label it 'Plastic Bottle'.",
+  "formula": "softmax(x_{i})=\\frac{e^{x_{i}}}{\\sum_{j=1}^{n}e^{x_{j}}}",
+  "image_ref": "img-12.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+softmax(x_{i})=\frac{e^{x_{i}}}{\sum_{j=1}^{n}e^{x_{j}}}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class SoftmaxAnimation(Scene):
+    def construct(self):
+        # 1. Input Image Placeholder (Representing the plastic bottle)
+        input_box = Square(side_length=1.8, color=WHITE)
+        input_label = Text("Plastic Bottle", font_size=20).move_to(input_box)
+        input_group = VGroup(input_box, input_label).to_edge(LEFT, buff=0.5)
+
+        # 2. CNN Layers (Vertical Rectangles)
+        cnn_layers = VGroup(*[
+            Rectangle(height=2.5, width=0.25, fill_opacity=0.7, color=BLUE)
+            for _ in range(4)
+        ]).arrange(RIGHT, buff=0.15).next_to(input_group, RIGHT, buff=0.8)
+        
+        cnn_text = Text("CNN Layers", font_size=18).next_to(cnn_layers, UP)
+
+        # 3. Raw values (Column Vector x_i)
+        # Creating a column of 20 small segments to represent the vector
+        raw_vector_elements = VGroup(*[
+            Line(LEFT*0.2, RIGHT*0.2, stroke_width=2, color=RED) for _ in range(20)
+        ]).arrange(DOWN, buff=0.07)
+        
+        vector_label = MathTex("x_i", color=RED, font_size=30).next_to(raw_vector_elements, LEFT, buff=0.1)
+        bracket_l = Tex("[", font_size=100).scale(0.5).next_to(raw_vector_elements, LEFT, buff=0.05)
+        bracket_r = Tex("]", font_size=100).scale(0.5).next_to(raw_vector_elements, RIGHT, buff=0.05)
+        vector_group = VGroup(raw_vector_elements, vector_label, bracket_l, bracket_r).next_to(cnn_layers, RIGHT, buff=0.8)
+
+        # 4. Data Flow Arrows
+        arrow1 = Arrow(input_group.get_right(), cnn_layers.get_left(), buff=0.1, color=GRAY)
+        arrow2 = Arrow(cnn_layers.get_right(), vector_group.get_left(), buff=0.1, color=GRAY)
+
+        # 5. Softmax Formula (Top Center)
+        softmax_formula = MathTex(
+            r"softmax(x_{i})=\frac{e^{x_{i}}}{\sum_{j=1}^{20}e^{x_{j}}}",
+            color=WHITE, font_size=36
+        ).to_edge(UP, buff=0.5)
+
+        # 6. Manually constructed Bar Chart (since BarChart identifier failed)
+        # Using Axes + Rectangles for maximum compatibility
+        chart_axes = Axes(
+            x_range=[0, 20, 1],
+            y_range=[0, 1, 0.5],
+            x_length=4.5,
+            y_length=2.5,
+            axis_config={"include_tip": False, "stroke_width": 1},
+            tips=False
+        ).to_edge(RIGHT, buff=0.5).shift(DOWN * 0.5)
+
+        # Create bars for the chart
+        bars = VGroup()
+        for i in range(20):
+            # One bar (index 5) is high to represent "Plastic Bottle"
+            prob_height = 0.8 if i == 5 else 0.05 + (0.1 * (i % 3) / 3)
+            # Create rectangle aligned to the axis
+            bar = Rectangle(
+                width=chart_axes.x_axis.get_unit_size() * 0.7,
+                height=prob_height * chart_axes.y_axis.get_unit_size(),
+                fill_opacity=0.8,
+                fill_color=GREEN,
+                stroke_width=1
+            )
+            bar.move_to(chart_axes.c2p(i + 0.5, 0), aligned_edge=DOWN)
+            bars.add(bar)
+
+        # --- ANIMATION ---
+
+        # Step 1: Input and CNN
+        self.play(FadeIn(input_group))
+        self.play(Create(cnn_layers), Write(cnn_text))
+        self.play(GrowArrow(arrow1))
+        self.wait(0.5)
+
+        # Step 2: Extract Features to Vector
+        self.play(GrowArrow(arrow2))
+        self.play(Create(bracket_l), Create(bracket_r), Create(raw_vector_elements), Write(vector_label))
+        self.wait(1)
+
+        # Step 3: Show Softmax Formula
+        self.play(Write(softmax_formula))
+        self.wait(1)
+
+        # Step 4: Transform to Probabilities (Bar Chart)
+        self.play(Create(chart_axes))
+        # Transform the vector elements into the bars
+        self.play(
+            ReplacementTransform(raw_vector_elements.copy(), bars),
+            run_time=2
+        )
+        self.wait(1)
+
+        # Step 5: Highlight result
+        winning_bar = bars[5]
+        result_label = Text("Plastic Bottle", font_size=20, color=YELLOW).next_to(winning_bar, UP, buff=0.2)
+        
+        self.play(
+            Indicate(winning_bar, color=YELLOW, scale_factor=1.3),
+            Write(result_label)
+        )
+        self.wait(2)
+
+=== ERROR ===
+Traceback (most recent call last):
+  File "/Users/rosaliemassein/opt/anaconda3/bin/manim", line 5, in <module>
+    from manim.__main__ import main
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/__init__.py", line 23, in <module>
+    from .animation.composition import *
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/animation/composition.py", line 16, in <module>
+    from manim.scene.scene import Scene
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/scene/scene.py", line 41, in <module>
+    from ..camera.camera import Camera
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/camera/camera.py", line 15, in <module>
+    import cairo
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/cairo/__init__.py", line 1, in <module>
+    from ._cairo import *  # noqa: F401,F403
+ImportError: dlopen(/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/cairo/_cairo.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '_cairo_append_path'
+

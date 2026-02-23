@@ -1,0 +1,167 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-efficiency-vs-overlap",
+  "voice": "Standard clustering algorithms usually struggle when two particles hit the detector very close to each other\u2014their efficiency drops to zero as the distance closes. But look at the ML approach. Even when the electrons are nearly on top of each other, the clustering efficiency stays remarkably flat. Because the network learns the underlying patterns of the showers rather than just looking at hit density, it can resolve individual clusters that would look like a single merged mess to traditional methods.",
+  "goal": "Compare the ML model's performance on overlapping clusters against standard algorithms.",
+  "remarks": "Create an Axes showing 'Efficiency' vs 'Distance between particles'. Plot a blue curve for the ML model (mostly flat at 0.9) and a red dashed curve for the 'Standard Algorithm' (starts high but drops sharply toward 0 at small x-values). Use a ValueTracker to move a vertical line across the x-axis. As the line moves to the left (closer distance), show a small animation overlay of two particle shower icons merging into one, while the ML curve stays high and the standard curve collapses.",
+  "formula": null,
+  "image_ref": "img-3.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class EfficiencyVsOverlap(Scene):
+    def construct(self):
+        # 1. Title and Labels
+        title = Text("Efficiency vs. Particle Distance", font_size=36).to_edge(UP)
+        self.add(title)
+
+        # 2. Manual Axes Construction
+        # Since Axes is disallowed, we build it with Line objects
+        # X-axis from -3 to 3 (total width 6), Y-axis from -2 to 1.5 (total height 3.5)
+        origin_coord = [ -3, -2, 0 ]
+        x_axis_line = Line(origin_coord, [ 3, -2, 0 ], color=WHITE)
+        y_axis_line = Line(origin_coord, [ -3, 1.5, 0 ], color=WHITE)
+        
+        # Axis Labels
+        dist_label = Text("Distance", font_size=24).next_to(x_axis_line, DOWN)
+        eff_label = Text("Efficiency", font_size=24).next_to(y_axis_line, LEFT).rotate(90 * DEGREES)
+        
+        self.add(x_axis_line, y_axis_line, dist_label, eff_label)
+
+        # 3. Performance Curves
+        # ML Efficiency Curve: mostly flat at 0.9 (y = -2 + 0.9 * 3.5 = 1.15)
+        ml_y_val = 1.15
+        ml_curve = Line([ -3, ml_y_val, 0 ], [ 3, ml_y_val, 0 ], color=BLUE)
+        ml_text = Text("ML Model", color=BLUE, font_size=20).next_to(ml_curve, UP, buff=0.1)
+        
+        # Standard Algorithm Curve: Drops sharply at small distance
+        # We build it manually as a VGroup of small lines to simulate a dashed curve
+        std_curve_group = VGroup()
+        num_segments = 50
+        for i_val in range(num_segments):
+            start_x_pos = -3 + (6 * i_val / num_segments)
+            end_x_pos = -3 + (6 * (i_val + 0.6) / num_segments) # 0.6 creates dash gap
+            
+            def get_y_for_x(input_x):
+                rel_dist = input_x + 3 # range 0 to 6
+                # Efficiency starts at 0 and grows to ~0.9
+                efficiency_percent = 0.9 * (1.0 - np.exp(-1.5 * rel_dist))
+                return -2 + (3.5 * efficiency_percent)
+
+            segment = Line(
+                [start_x_pos, get_y_for_x(start_x_pos), 0],
+                [end_x_pos, get_y_for_x(end_x_pos), 0],
+                color=RED
+            )
+            std_curve_group.add(segment)
+            
+        std_text = Text("Standard Algorithm", color=RED, font_size=20).next_to(std_curve_group, DOWN, buff=0.4).shift(RIGHT * 1.5)
+
+        self.play(Create(ml_curve), Write(ml_text))
+        self.play(Create(std_curve_group), Write(std_text))
+
+        # 4. Vertical Tracking Line
+        # We move a hidden Dot to act as a ValueTracker
+        tracker_mobject = Dot([ 3, -2, 0 ], fill_opacity=0)
+        
+        # Indicator line that stays vertical at the tracker position
+        v_indicator = Line(tracker_mobject.get_center(), [ tracker_mobject.get_center()[0], 1.5, 0 ], color=WHITE)
+        v_indicator.add_updater(lambda mob: mob.become(
+            Line(
+                [ tracker_mobject.get_center()[0], -2, 0 ],
+                [ tracker_mobject.get_center()[0], 1.5, 0 ],
+                color=WHITE, stroke_opacity=0.3
+            )
+        ))
+        
+        # 5. Particle Shower Icons
+        # Two icons that merge as the tracker moves left
+        shower_origin = [ 2, 2.2, 0 ]
+        icon_a = Dot(shower_origin, color=YELLOW).scale(3).set_opacity(0.6)
+        icon_b = Dot(shower_origin, color=YELLOW).scale(3).set_opacity(0.6)
+        
+        icon_a.add_updater(lambda mob: mob.move_to(
+            [ shower_origin[0] - (tracker_mobject.get_center()[0] + 3) * 0.2, shower_origin[1], 0 ]
+        ))
+        icon_b.add_updater(lambda mob: mob.move_to(
+            [ shower_origin[0] + (tracker_mobject.get_center()[0] + 3) * 0.2, shower_origin[1], 0 ]
+        ))
+        
+        shower_status = Text("Particle Proximity", font_size=20).next_to(icon_a, UP, buff=0.8)
+
+        # 6. Final Animation Sequence
+        self.add(tracker_mobject, v_indicator, icon_a, icon_b, shower_status)
+        
+        # Move tracker from right (distance 6) to left (distance 0)
+        self.play(
+            tracker_mobject.animate.move_to([ -3, -2, 0 ]),
+            run_time=8
+        )
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: mob

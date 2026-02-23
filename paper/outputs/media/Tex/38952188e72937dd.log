@@ -1,0 +1,107 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=latex 2026.2.16)  16 FEB 2026 17:15
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**"/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/outputs/media/Tex/38952188e72937dd.tex"
+(/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/outputs/media/Tex/38952188e72937dd.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/standalone/standalone.cls
+Document Class: standalone 2025/02/22 v1.5a Class to compile TeX sub-files standalone
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
+Package shellesc Info: Restricted shell escape enabled on input line 77.
+) (/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/iftex/ifluatex.sty
+Package: ifluatex 2019/10/25 v1.5 ifluatex legacy package. Use iftex instead.
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2024/12/12 v1.0g TeX engine tests
+)) (/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2025/11/04 v2.10 package option processing (HA)
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/xkeyval/xkeyval.tex (/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+\XKV@toks=\toks17
+\XKV@tempa@toks=\toks18
+\XKV@tempb@toks=\toks19
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/xkeyval/keyval.tex))
+\XKV@depth=\count275
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+))
+\sa@internal=\count276
+\c@sapage=\count277
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/standalone/standalone.cfg
+File: standalone.cfg 2025/02/22 v1.5a Default configuration file for 'standalone' class
+) (/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/base/size10.clo
+File: size10.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count278
+\c@section=\count279
+\c@subsection=\count280
+\c@subsubsection=\count281
+\c@paragraph=\count282
+\c@subparagraph=\count283
+\c@figure=\count284
+\c@table=\count285
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen148
+) (/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/preview/preview.sty
+Package: preview 2024/06/30 14.0.6 (AUCTeX/preview-latex)
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/latex/preview/prtightpage.def
+\PreviewBorder=\dimen149
+)
+\pr@snippet=\count286
+\pr@box=\box53
+\pr@output=\toks20
+)) (/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/babel/babel.sty
+Package: babel 2026/01/26 v26.2 The multilingual framework for LuaLaTeX, pdfLaTeX and XeLaTeX
+\babel@savecnt=\count287
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input line 2078.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input line 2080.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input line 2082.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input line 2083.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) on input line 2084.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) on input line 2086.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) on input line 2111.
+\U@D=\dimen150
+\l@unhyphenated=\language3
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/babel/txtbabel.def)
+\bbl@readstream=\read2
+\bbl@dirlevel=\count288
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/babel/locale/en/babel-english.tex)
+Package babel Info: Importing font and identification data for english
+(babel)             from babel-en.ini. Reported on input line 4330.
+(/Users/rosaliemassein/Library/TinyTeX/texmf-dist/tex/generic/babel/errbabel.def)
+
+! Package babel Error: Unknown option 'english'.
+(babel)                Suggested actions:
+(babel)                * Make sure you haven’t misspelled it
+(babel)                * Check in the babel manual that it's supported
+(babel)                * If supported and it's a language, you may
+(babel)                  need in some distributions a separate
+(babel)                  installation
+(babel)                * If installed, check there isn’t an old
+(babel)                  version of the required files in your system
+(babel)                * If it's an unsupported language, create it with
+(babel)                \babelprovide(see the manual).
+
+See the babel package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.4330 \bbl@tempb
+                 
+Valid options are, among others: shorthands=, KeepShorthandsActive,
+activeacute, activegrave, noconfigs, safe=, main=, math=
+headfoot=, strings=, config=, hyphenmap=, or a language name.
+
+ 
+Here is how much of TeX's memory you used:
+ 2076 strings out of 469515
+ 38683 string characters out of 5469048
+ 449278 words of memory out of 5000000
+ 30766 multiletter control sequences out of 15000+600000
+ 627721 words of font info for 40 fonts, out of 8000000 for 9000
+ 14 hyphenation exceptions out of 8191
+ 57i,0n,71p,353b,84s stack positions out of 10000i,1000n,20000p,200000b,200000s
+No pages of output.

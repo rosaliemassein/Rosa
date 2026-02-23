@@ -1,0 +1,192 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-state-space-explosion",
+  "voice": "The main challenge for standard Q-learning is the state space explosion. Since each pixel can be red or blue, a small five-by-five grid has over thirty-three million possible configurations. As the matrix size grows linearly, the number of states we need to track in our Q-table grows exponentially, making the training time skyrocket.",
+  "goal": "Explain why standard Q-tables fail as matrix dimensions increase.",
+  "remarks": "Create an Axes where the x-axis is 'Matrix Size' (2 to 6) and the y-axis is 'Possible States' (log scale). Plot the function 2^(x^2). Start with a small table graphic for a 2x2 grid (16 rows). As the grid size increases to 5x5, animate the table rows multiplying and scrolling at high speed, eventually turning into a solid blur of color to represent the 2^25 states, while the graph curve shoots off the top of the screen.",
+  "formula": "\\text{Total States} = 2^{(N \\times N)}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{Total States} = 2^{(N \times N)}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class StateSpaceExplosion(Scene):
+    def construct(self):
+        # 1. Formula Reference at the top
+        formula_tex = r"\text{Total States} = 2^{(N \times N)}"
+        formula = MathTex(formula_tex).to_edge(UP)
+        self.play(Write(formula))
+
+        # 2. Manual Coordinate System (Avoiding 'Axes' and 'Table' keywords which are restricted)
+        # origin of the graph
+        gr_origin = RIGHT * 1.5 + DOWN * 2.5
+        x_axis_line = Arrow(gr_origin, gr_origin + RIGHT * 5.5, buff=0)
+        y_axis_line = Arrow(gr_origin, gr_origin + UP * 5.5, buff=0)
+        
+        x_label_txt = Text("Matrix Size (N)", font_size=20).next_to(x_axis_line, DOWN)
+        y_label_txt = Text("States (Log Scale)", font_size=20).rotate(90 * DEGREES).next_to(y_axis_line, LEFT)
+        
+        self.add(x_axis_line, y_axis_line, x_label_txt, y_label_txt)
+
+        # Draw manual ticks for N = 2 to 6
+        for val_i in range(2, 7):
+            tick_x = gr_origin + RIGHT * (val_i - 1) * 1.1
+            tick_mark = Line(tick_x + UP * 0.1, tick_x + DOWN * 0.1)
+            tick_label = Text(str(val_i), font_size=16).next_to(tick_mark, DOWN)
+            self.add(tick_mark, tick_label)
+
+        # 3. Table Representation using basic shapes
+        q_table_box = Rectangle(width=2.5, height=3.5, color=WHITE).to_edge(LEFT).shift(UP * 0.5)
+        q_table_title = Text("Q-Table Rows", font_size=24).next_to(q_table_box, UP)
+        
+        # Initial rows for 2x2 grid
+        row_lines = VGroup(*[
+            Line(q_table_box.get_left() + UP * h_offset, q_table_box.get_right() + UP * h_offset, stroke_width=1)
+            for h_offset in np.linspace(-1.6, 1.6, 8)
+        ])
+        
+        self.play(Create(q_table_box), Write(q_table_title), Create(row_lines))
+
+        # 4. State explosion setup
+        n_val_tracker = ValueTracker(2)
+
+        # Define the curve: 2^(N^2). On log axis, this is Y = N^2.
+        # Mapping: x = (N-1)*1.1, y = (N^2)*0.15
+        curve_path = VMobject(color=BLUE)
+        
+        def calculate_points():
+            pts = []
+            for v_n in np.linspace(2, 6.2, 80):
+                px = (v_n - 1) * 1.1
+                py = (v_n**2) * 0.13
+                pts.append(gr_origin + RIGHT * px + UP * py)
+            return pts
+
+        curve_path.set_points_as_corners(calculate_points())
+
+        # Dynamic row density updater
+        def update_rows(mobj):
+            current_n = n_val_tracker.get_value()
+            # Visual simulation: increase line count dramatically
+            # We use a cap to prevent rendering lag while achieving the 'blur' effect
+            line_count = int(2**current_n * 2)
+            if current_n > 5:
+                line_count = 300 # Sufficient for a blur
+            
+            new_rows = VGroup(*[
+                Line(
+                    q_table_box.get_left() + UP * h_pos, 
+                    q_table_box.get_right() + UP * h_pos, 
+                    stroke_width=max(0.1, 2.0 / (line_count/10 + 1)),
+                    stroke_opacity=min(1.0, 50.0 / line_count) if line_count > 50 else 0.8
+                )
+                for h_pos in np.linspace(-1.7, 1.7, line_count)
+            ])
+            mobj.become(new_rows)
+
+        row_lines.add_updater(update_rows)
+
+        # 5. Run the Growth Animation
+        # Using a custom rate function to avoid potential 'linear' identifier issues
+        self.play(
+            Create(curve_path),
+            n_val_tracker.animate.set_value(6),
+            run_time=6,
+            rate_func=lambda t_param: t_param 
+        )
+        
+        # 6. Final State: Blur and Graph Shoot-off
+        # Represent the 2^25 states as a solid color blur
+        blur_fill = Rectangle(
+            width=2.5, height=3.5, 
+            fill_opacity=0.9, 
+            fill_color=BLUE_E, 
+            stroke_width=0
+        ).move_to(q_table_box)
+        
+        explosion_label = Text("33 Million+\nConfigurations", font_size=24, color=YELLOW).move_to(q_table_box)
+        
+        self.play(
+            FadeIn(blur_fill),
+            Write(explosion_label),
+            curve_path.animate.set_color(RED),
+            formula.animate.set_color(RED).scale(1.1)
+        )
+        
+        # Shoot the curve off the screen
+        self.play(
+            curve_path.animate.shift(UP * 5 + RIGHT * 2),
+            rate_func=lambda t_param: t_param**2,
+            run_time=1.5
+        )
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: BLUE_E, VMobject, ValueTracker, t_param; disallowed symbols/features in constrained subset: ValueTracker

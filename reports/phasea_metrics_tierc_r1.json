@@ -1,0 +1,77 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/03_cs229_2024_final_project_amin_zareian_rl_optimization_tool/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/05_cs229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r1/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 60,
+  "compiled_attempts": 21,
+  "compile_rate": 0.35,
+  "slides_evaluated_for_pass1": 32,
+  "pass_at_1": 0.375,
+  "bucket_counts": {
+    "gate_fail": 37,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 1,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_axes_or_numberplane": 34,
+    "uses_mathtex": 52,
+    "uses_3d": 1
+  },
+  "gate_reason_tag_counts": {
+    "undefined_symbol": 37,
+    "disallowed_tier_symbol": 3
+  },
+  "top_error_signatures": [
+    [
+      "undefined identifiers detected: t",
+      6
+    ],
+    [
+      "undefined identifiers detected: smooth",
+      2
+    ],
+    [
+      "undefined identifiers detected: Arc",
+      2
+    ],
+    [
+      "undefined identifiers detected: TransformMatchingShapes, t",
+      1
+    ],
+    [
+      "undefined identifiers detected: TransformFromCopy, linear",
+      1
+    ],
+    [
+      "undefined identifiers detected: Circumscribe, rate_functions",
+      1
+    ],
+    [
+      "undefined identifiers detected: VMobject",
+      1
+    ],
+    [
+      "error: [Errno 32] Broken pipe",
+      1
+    ],
+    [
+      "undefined identifiers detected: Brace | disallowed symbols/features in constrained subset: Brace",
+      1
+    ],
+    [
+      "undefined identifiers detected: DoubleArrow, t",
+      1
+    ]
+  ]
+}

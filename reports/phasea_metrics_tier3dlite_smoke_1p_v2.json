@@ -1,0 +1,22 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_smoke_tier3dlite_smoke_1p_v2/04_cs229_fin/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 2,
+  "compiled_attempts": 2,
+  "compile_rate": 1.0,
+  "slides_evaluated_for_pass1": 2,
+  "pass_at_1": 1.0,
+  "bucket_counts": {
+    "gate_fail": 0,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 2
+  },
+  "gate_reason_tag_counts": {},
+  "top_error_signatures": []
+}

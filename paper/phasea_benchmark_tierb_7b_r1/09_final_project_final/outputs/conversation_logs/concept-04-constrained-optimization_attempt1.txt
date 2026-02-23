@@ -1,0 +1,178 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-constrained-optimization",
+  "voice": "The final step is the hardest: assigning reviewers. We use Integer Programming to solve a massive balancing act. Our objective function wants to maximize expertise matching, but it\u2019s held back by hard constraints. We can't assign a reviewer to a proposal from their own institution, we must limit their workload so they aren't overwhelmed, and we must meet specific diversity targets for gender and career stage. The solver searches for the perfect 'assignment matrix' that satisfies all these rules while keeping the expertise score as high as possible.",
+  "goal": "Understand how the system balances expertise against diversity and workload constraints.",
+  "remarks": "Show a large binary matrix (zeros and ones) labeled 'Assignment Matrix'. Next to it, show a 'Score' bar. As the ones in the matrix shift around, the Score bar goes up and down. Introduce 'Constraint' icons: a red 'X' for institutional conflict, a 'Scale' for gender diversity, and a 'Clock' for workload. When a one is placed in a cell that violates a constraint (e.g., a reviewer with too many assignments), highlight that row in red and show the 'Score' dropping significantly due to the penalty term.",
+  "formula": "\\max \\sum_{i,j} s_{i,j} x_{i,j} - \\sum_{k} P_k \\delta_k",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\max \sum_{i,j} s_{i,j} x_{i,j} - \sum_{k} P_k \delta_k
+
+
+=== ASSISTANT ===
+from manim import *
+
+class Concept04ConstrainedOptimization(Scene):
+    def construct(self):
+        # 1. Setup Title and Formula
+        title = Text("Integer Programming: Assignment Matrix", font_size=24).to_edge(UP)
+        formula = MathTex(
+            r"\max \sum_{i,j} s_{i,j} x_{i,j} - \sum_{k} P_k \delta_k"
+        ).scale(0.7).next_to(title, DOWN)
+        
+        self.add(title, formula)
+
+        # 2. Manual Matrix Construction (to avoid Matrix/IntegerMatrix identifiers)
+        matrix_elements = VGroup()
+        # Initial binary data
+        vals = [
+            "1", "0", "1", "0", "0",
+            "0", "1", "0", "0", "1",
+            "1", "0", "0", "1", "0",
+            "0", "0", "1", "0", "1",
+            "1", "1", "0", "0", "0"
+        ]
+        
+        for i in range(25):
+            char = MathTex(vals[i]).scale(0.6)
+            row = i // 5
+            col = i % 5
+            # Position elements in a 5x5 grid
+            char.move_to(LEFT * 4 + RIGHT * col * 0.6 + DOWN * row * 0.6 + UP * 0.5)
+            matrix_elements.add(char)
+            
+        l_bracket = MathTex(r"[", font_size=90).next_to(matrix_elements, LEFT, buff=0.1)
+        r_bracket = MathTex(r"]", font_size=90).next_to(matrix_elements, RIGHT, buff=0.1)
+        matrix_group = VGroup(matrix_elements, l_bracket, r_bracket)
+        matrix_label = Text("Assignment Matrix", font_size=20).next_to(matrix_group, UP)
+        
+        self.play(Create(matrix_group), Write(matrix_label))
+
+        # 3. Score Bar (Manual animation without ValueTracker/always_redraw)
+        score_label = Text("Expertise Score", font_size=20).move_to(RIGHT * 3 + UP * 1)
+        bar_bg = Rectangle(width=3, height=0.4, color=WHITE).next_to(score_label, DOWN)
+        # Initial bar at 70%
+        bar_fill = Rectangle(
+            width=2.1, height=0.35, 
+            fill_color=GREEN, fill_opacity=0.8, 
+            stroke_width=0
+        ).align_to(bar_bg, LEFT)
+        score_num = MathTex("70").scale(0.8).next_to(bar_bg, RIGHT)
+        
+        self.play(Create(bar_bg), Create(bar_fill), Write(score_label), Write(score_num))
+
+        # 4. Constraint Icons
+        inst_x = VGroup(Line(UL, DR), Line(UR, DL)).set_color(RED).scale(0.2).move_to(RIGHT * 1.5 + DOWN * 1.5)
+        div_tri = Triangle().set_color(BLUE).scale(0.2).move_to(RIGHT * 3 + DOWN * 1.5)
+        work_clock = VGroup(Circle(), Line(ORIGIN, UP*0.8), Line(ORIGIN, RIGHT*0.5)).set_color(YELLOW).scale(0.2).move_to(RIGHT * 4.5 + DOWN * 1.5)
+        
+        icon_labels = VGroup(
+            Text("Conflict", font_size=14).next_to(inst_x, DOWN),
+            Text("Diversity", font_size=14).next_to(div_tri, DOWN),
+            Text("Workload", font_size=14).next_to(work_clock, DOWN)
+        )
+        self.play(FadeIn(inst_x), FadeIn(div_tri), FadeIn(work_clock), FadeIn(icon_labels))
+
+        # 5. Animation: Shift a value and update score
+        # Changing entry at index 1 from '0' to '1'
+        new_val_1 = MathTex("1").scale(0.6).move_to(matrix_elements[1])
+        
+        self.play(
+            Transform(matrix_elements[1], new_val_1),
+            bar_fill.animate.stretch_to_fit_width(2.5, about_edge=LEFT),
+            Transform(score_num, MathTex("83").scale(0.8).next_to(bar_bg, RIGHT))
+        )
+        self.wait(0.5)
+
+        # 6. Animation: Constraint Violation
+        # Highlight row 3 (indices 10 to 14)
+        row3_group = VGroup(*[matrix_elements[i] for i in range(10, 15)])
+        violation_rect = SurroundingRectangle(row3_group, color=RED, buff=0.1)
+        
+        # Trigger conflict at index 12
+        bad_val = MathTex("1", color=RED).scale(0.6).move_to(matrix_elements[12])
+        
+        self.play(
+            Create(violation_rect),
+            Transform(matrix_elements[12], bad_val),
+            inst_x.animate.scale(1.3).set_color(WHITE),
+            bar_fill.animate.stretch_to_fit_width(0.5, about_edge=LEFT).set_color(RED),
+            Transform(score_num, MathTex("15").scale(0.8).next_to(bar_bg, RIGHT))
+        )
+        self.wait(1)
+
+        # 7. Animation: Resolution / Optimization
+        self.play(
+            FadeOut(violation_rect),
+            matrix_elements[12].animate.set_color(WHITE),
+            bar_fill.animate.stretch_to_fit_width(2.8, about_edge=LEFT).set_color(GREEN),
+            Transform(score_num, MathTex("94").scale(0.8).next_to(bar_bg, RIGHT)),
+            inst_x.animate.scale(1/1.3).set_color(RED)
+        )
+        
+        final_text = Text("Constraints Satisfied: Optimal Score", font_size=24, color=GREEN).to_edge(DOWN)
+        self.play(Write(final_text))
+        self.wait(2)

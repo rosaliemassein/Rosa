@@ -1,0 +1,174 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-border-optimization",
+  "voice": "The core objective of this pixel design problem is to maximize the border length between two colors. Think of the border as the contact line where a red pixel touches a blue one. If we have large blocks of color, the border is short. But if we interleave the colors, like a checkerboard, we maximize the surface area where these regions interact.",
+  "goal": "Understand how border length is calculated and why the checkerboard is the optimal state.",
+  "remarks": "Create a 4x4 VGroup of Square objects. Initially, color the left half red and the right half blue. Draw thick green lines between adjacent pixels of different colors. Animate the squares flipping colors one by one to a checkerboard pattern. As each pixel flips, show the green border lines updating dynamically. Use a counter in the corner that increments as the number of red-blue adjacencies increases.",
+  "formula": "B = \\sum_{i,j \\in \\text{Neighbors}} [P_i \\neq P_j]",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+B = \sum_{i,j \in \text{Neighbors}} [P_i \neq P_j]
+
+
+=== ASSISTANT ===
+from manim import *
+
+class Concept01BorderOptimization(Scene):
+    def construct(self):
+        # Create a 4x4 grid of Square objects (pixels)
+        # Using a side length and buff=0 to make them touch
+        grid = VGroup(*[
+            Square(side_length=0.8, fill_opacity=1, stroke_width=2, stroke_color=WHITE) 
+            for _ in range(16)
+        ])
+        grid.arrange_in_grid(rows=4, cols=4, buff=0).shift(LEFT * 2.5)
+
+        # Initially color left half red (cols 0, 1) and right half blue (cols 2, 3)
+        for i in range(16):
+            col = i % 4
+            if col < 2:
+                grid[i].set_fill(RED)
+            else:
+                grid[i].set_fill(BLUE)
+
+        # Objective and Formula display
+        formula = MathTex(r"B = \sum_{i,j \in \text{Neighbors}} [P_i \neq P_j]").scale(0.8)
+        formula.to_corner(UR, buff=0.7)
+        
+        goal_text = Text("Maximize Border Length", font_size=20, color=YELLOW).next_to(formula, UP, buff=0.3)
+        
+        counter_label = Text("Adjacencies (B):", font_size=24).next_to(formula, DOWN, buff=1.0)
+        # Use DecimalNumber with 0 decimal places to act as an Integer
+        counter = DecimalNumber(0, num_decimal_places=0).scale(1.2).next_to(counter_label, DOWN)
+        
+        # Container for the dynamic green border lines
+        borders = VGroup()
+        
+        # Helper function to calculate current adjacencies and create border lines
+        def get_border_data():
+            lines = VGroup()
+            count = 0
+            # Horizontal adjacency check (between columns)
+            for r in range(4):
+                for c in range(3):
+                    idx1 = r * 4 + c
+                    idx2 = r * 4 + c + 1
+                    # Compare the fill colors of adjacent squares
+                    if not np.array_equal(grid[idx1].get_fill_color(), grid[idx2].get_fill_color()):
+                        count += 1
+                        lines.add(Line(
+                            grid[idx1].get_corner(UR), 
+                            grid[idx1].get_corner(DR), 
+                            color=GREEN, stroke_width=8
+                        ))
+            # Vertical adjacency check (between rows)
+            for r in range(3):
+                for c in range(4):
+                    idx1 = r * 4 + c
+                    idx2 = (r + 1) * 4 + c
+                    if not np.array_equal(grid[idx1].get_fill_color(), grid[idx2].get_fill_color()):
+                        count += 1
+                        lines.add(Line(
+                            grid[idx1].get_corner(DL), 
+                            grid[idx1].get_corner(DR), 
+                            color=GREEN, stroke_width=8
+                        ))
+            return lines, count
+
+        # Updater to synchronize lines and counter with the current grid state
+        def update_scene_elements(mob):
+            new_lines, val = get_border_data()
+            mob.become(new_lines)
+            counter.set_value(val)
+
+        borders.add_updater(update_scene_elements)
+
+        # Initial presentation
+        self.add(grid, goal_text, formula, counter_label, counter, borders)
+        self.wait(1)
+
+        # Animation: Flip pixels one by one to achieve a checkerboard pattern
+        # A checkerboard pattern has color based on (row + column) % 2
+        for i in range(16):
+            row = i // 4
+            col = i % 4
+            
+            # Target color for checkerboard
+            target_color = RED if (row + col) % 2 == 0 else BLUE
+            
+            # Current color based on initial state (Col 0,1=RED, Col 2,3=BLUE)
+            initial_color = RED if col < 2 else BLUE
+            
+            # Only play animation if a flip is needed
+            if initial_color != target_color:
+                self.play(
+                    grid[i].animate.set_fill(target_color),
+                    run_time=0.25
+                )
+
+        # Hold the final optimized state
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: np

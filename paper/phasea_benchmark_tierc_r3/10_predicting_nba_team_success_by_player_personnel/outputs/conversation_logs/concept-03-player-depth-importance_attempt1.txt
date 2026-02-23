@@ -1,0 +1,168 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-player-depth-importance",
+  "voice": "The models reveal a hidden hierarchy in team success. While the top player's Impact Estimate is the strongest predictor, the 'star' alone isn't enough. Interestingly, the statistics of the fifth and eighth players carry surprising weight. This suggests that a team's floor is set by the quality of its fifth starter and its final rotation player, proving that depth is just as measurable as stardom.",
+  "goal": "Understand the non-linear relationship between player rank and team success coefficients.",
+  "remarks": "Draw a line of 10 basketball player icons representing the 1st through 10th man by minutes. Above each player, create a vertical bar representing their 'Average Coefficient' from Table 4. Animate the bars growing to their respective heights. Highlight the 1st and 2nd bars with a bright gold glow (the stars). Then, highlight the 5th and 8th bars with a pulsing blue light to emphasize the paper's finding that these specific depth positions are crucial for predicting wins, even more so than the 3rd or 4th players.",
+  "formula": "\\text{Wins} \\approx \\beta_1(\\text{1st\\_PIE}) + \\beta_5(\\text{5th\\_PIE}) + \\dots + \\beta_8(\\text{8th\\_PIE})",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{Wins} \approx \beta_1(\text{1st\_PIE}) + \beta_5(\text{5th\_PIE}) + \dots + \beta_8(\text{8th\_PIE})
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptPlayerDepthImportance(Scene):
+    def construct(self):
+        # 1. Create player icons (represented by simple Circles)
+        players = VGroup(*[
+            Circle(radius=0.3, color=WHITE, fill_opacity=0.3) 
+            for _ in range(10)
+        ]).arrange(RIGHT, buff=0.4).shift(DOWN * 2)
+
+        # Labels for player positions (1st through 10th)
+        player_labels = VGroup(*[
+            Text(str(i + 1), font_size=20).next_to(players[i], DOWN, buff=0.2)
+            for i in range(10)
+        ])
+
+        # 2. Vertical bars for Average Coefficients
+        # Manually defined heights to show the relative importance mentioned (1st, 2nd, 5th, 8th)
+        heights = [3.5, 3.0, 1.5, 1.2, 2.2, 1.0, 0.8, 1.8, 0.5, 0.3]
+        bars = VGroup()
+        for i in range(10):
+            bar = Rectangle(
+                width=0.4, 
+                height=heights[i], 
+                fill_opacity=0.8, 
+                color=BLUE
+            )
+            # Position the bar above the player icon
+            bar.next_to(players[i], UP, buff=0.1)
+            # Align the bottom of the bar with its starting position so it grows upward
+            bar.align_to(players[i], DOWN).shift(UP * 0.4)
+            bars.add(bar)
+
+        # 3. Formula and Voiceover Text
+        formula = MathTex(
+            r"\text{Wins} \approx \beta_1(\text{1st\_PIE}) + \beta_5(\text{5th\_PIE}) + \dots + \beta_8(\text{8th\_PIE})",
+            font_size=32
+        ).to_edge(UP, buff=0.5)
+
+        voiceover_text = Text(
+            "The 5th and 8th players set the team's floor.",
+            font_size=24,
+            color=WHITE
+        ).next_to(formula, DOWN, buff=0.3)
+
+        # 4. Animation Sequence
+        # Draw players and labels
+        self.play(Create(players), Write(player_labels))
+        self.wait(0.5)
+
+        # Animate bars growing (using FadeIn and shift as a robust alternative to GrowFromEdge)
+        self.play(
+            LaggedStart(*[FadeIn(b, shift=UP) for b in bars], lag_ratio=0.1),
+            run_time=2
+        )
+        self.wait(1)
+
+        # Highlight 1st and 2nd bars with gold (the stars)
+        self.play(
+            bars[0].animate.set_color(GOLD),
+            bars[1].animate.set_color(GOLD),
+            Indicate(bars[0], color=GOLD),
+            Indicate(bars[1], color=GOLD)
+        )
+        self.wait(0.5)
+
+        # Show the formula
+        self.play(Write(formula))
+        self.wait(0.5)
+
+        # Highlight 5th and 8th bars with pulsing light (indices 4 and 7)
+        self.play(
+            bars[4].animate.set_color(YELLOW),
+            bars[7].animate.set_color(YELLOW),
+            Write(voiceover_text)
+        )
+
+        # Pulsing effect using simple scaling and rate functions
+        for _ in range(3):
+            self.play(
+                bars[4].animate(rate_func=there_and_back).scale(1.2),
+                bars[7].animate(rate_func=there_and_back).scale(1.2),
+                run_time=0.8
+            )
+
+        # Final emphasis
+        conclusion = Text("Depth is just as measurable as stardom.", font_size=20, color=GOLD)
+        conclusion.next_to(voiceover_text, DOWN, buff=0.2)
+        self.play(Write(conclusion))
+        
+        self.wait(3)
+
+=== ERROR ===
+undefined identifiers detected: there_and_back

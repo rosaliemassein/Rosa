@@ -1,0 +1,17 @@
+{
+  "three_b_baseline": {
+    "median_compile_rate": 0.2892,
+    "median_pass_at_1": 0.3333,
+    "low_level_failure_share": 0.67
+  },
+  "seven_b_baseline": {
+    "median_compile_rate": 0.3333,
+    "median_pass_at_1": 0.3846,
+    "low_level_failure_share": 0.5786
+  },
+  "seven_b_prompt_refine": {
+    "compile_rate": 0.4103,
+    "pass_at_1": 0.56,
+    "low_level_failure_share": 0.4872
+  }
+}

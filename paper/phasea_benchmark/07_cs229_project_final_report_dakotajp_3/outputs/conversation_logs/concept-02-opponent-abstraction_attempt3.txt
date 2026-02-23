@@ -1,0 +1,166 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-opponent-abstraction",
+  "voice": "The real secret to generalization lies in how we treat the competition. Instead of giving every opponent their own channel, we lump them all into a single 'opponent layer'. This makes the 6-player game look structurally identical to the 2-player game. Because the network only sees 'me' versus 'the field', a strategy learned against one opponent naturally scales to five without changing the model's architecture.",
+  "goal": "Explain the encoding trick that allows a model trained on 2 players to function in 3, 4, or 6 player games.",
+  "remarks": "Show a 2-player board representation with two distinct colors (Blue vs Red). Then, show a 6-player board with 5 different opponent colors. Animate the 5 opponent colors merging into a single 'Red' intensity in the third layer of the grid from the previous slide. Use a Cross-out animation over the individual identities of the opponents and a 'Check' mark over the unified 'Opponent Layer'.",
+  "formula": "S \\in \\mathbb{B}^{n \\times n \\times 3}",
+  "image_ref": "null"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+S \in \mathbb{B}^{n \times n \times 3}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class OpponentAbstraction(Scene):
+    def construct(self):
+        # Narration strings
+        voice_1 = (
+            "The real secret to generalization lies in how we treat the competition. "
+            "Instead of giving every opponent their own channel, we lump them all into "
+            "a single 'opponent layer'."
+        )
+        voice_2 = (
+            "This makes the 6-player game look structurally identical to the 2-player game. "
+            "Strategy learned against one opponent naturally scales to five."
+        )
+
+        # Formula as Text (MathTex/Tex are disallowed)
+        formula = Text("S in B^(n x n x 3)", font_size=24).to_edge(UP, buff=0.5)
+        self.add(formula)
+
+        # --- 2-PLAYER SETUP ---
+        # 3 Layers: Me (Blue), Opponent (Red), Board (Grey)
+        layer_2p_1 = Square(side_length=2, fill_opacity=0.8, color="#888888").shift(0.4 * DOWN + 0.4 * RIGHT)
+        layer_2p_2 = Square(side_length=2, fill_opacity=0.8, color="#CF5044")
+        layer_2p_3 = Square(side_length=2, fill_opacity=0.8, color="#236B8E").shift(0.4 * UP + 0.4 * LEFT)
+        
+        group_2p = VGroup(layer_2p_1, layer_2p_2, layer_2p_3).scale(0.8).shift(LEFT * 3)
+        lbl_2p = Text("2-Player Model", font_size=20).next_to(group_2p, DOWN)
+        
+        # --- 6-PLAYER SETUP ---
+        # Layers: 1 Me, 5 Opponents, 1 Board
+        layers_6p = VGroup()
+        # Board
+        layers_6p.add(Square(side_length=2, fill_opacity=0.8, color="#888888").shift(0.8 * DOWN + 0.8 * RIGHT))
+        # 5 Different Opponents (representing individual channels)
+        colors_6p = ["#9B59B6", "#FFC0CB", "#FFA500", "#FFFF00", "#83C167"]
+        for i, col in enumerate(colors_6p):
+            layers_6p.add(Square(side_length=2, fill_opacity=0.8, color=col).shift((i - 2) * 0.25 * UP + (i - 2) * 0.25 * LEFT))
+        # Me
+        layers_6p.add(Square(side_length=2, fill_opacity=0.8, color="#236B8E").shift(1.0 * UP + 1.0 * LEFT))
+        
+        group_6p = layers_6p.scale(0.8).shift(RIGHT * 3)
+        lbl_6p = Text("6-Player (Raw)", font_size=20).next_to(group_6p, DOWN)
+
+        # Narration container
+        narration_label = Text(voice_1, font_size=16).to_edge(DOWN, buff=0.5)
+
+        # Animation sequence
+        self.play(
+            FadeIn(group_2p),
+            Write(lbl_2p),
+            Write(narration_label),
+            run_time=2
+        )
+        self.wait(1)
+        
+        self.play(
+            FadeIn(group_6p),
+            Write(lbl_6p),
+            run_time=2
+        )
+        self.wait(1)
+
+        # --- ABSTRACTION ANIMATION ---
+        # 1. Cross out the individual 5 opponent layers
+        opponents_to_cross = group_6p[1:6]
+        cross_lines = VGroup()
+        for mob in opponents_to_cross:
+            l1 = Line(mob.get_corner(UL), mob.get_corner(DR), color="#FF0000", stroke_width=4)
+            l2 = Line(mob.get_corner(UR), mob.get_corner(DL), color="#FF0000", stroke_width=4)
+            cross_lines.add(l1, l2)
+
+        self.play(Create(cross_lines), run_time=1.5)
+        self.wait(0.5)
+
+        # 2. Merge them into a single RED layer
+        unified_red = Square(side_length=2, fill_opacity=0.9, color="#CF5044").scale(0.8).move_to(group_6p[3])
+        
+        # Checkmark manual construction
+        p1 = unified_red.get_center() + LEFT * 0.3
+        p2 = unified_red.get_center() + DOWN * 0.2
+        p3 = unified_red.get_center() + RIGHT * 0.4 + UP * 0.4
+        check_mark = VGroup(Line(p1, p2, color="#83C167"), Line(p2, p3, color="#83C167"))
+
+        self.play(
+            FadeOut(opponents_to_cross),
+            FadeOut(cross_lines),
+            FadeIn(unified_red),
+            Transform(narration_label, Text(voice_2, font_size=16).to_edge(DOWN, buff=0.5)),
+            lbl_6p.animate.become(Text("Abstracted Layer", font_size=20).next_to(group_6p, DOWN)),
+            run_time=2
+        )
+        
+        self.play(Create(check_mark), run_time=1)
+        self.wait(3)
+
+=== ERROR ===
+undefined identifiers detected: DL, DR, UL, UR

@@ -1,0 +1,26 @@
+{
+  "run_id": "phasea_20260219T013841Z",
+  "timestamp": "2026-02-19T01:38:41.589521+00:00",
+  "benchmark_name": "phasea_compile_reliability",
+  "benchmark_config": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/config/phasea_benchmark.json",
+  "model_id": "qwen2.5-coder-3b-instruct-mlx",
+  "prompt_version": "phasea_tiera_v1",
+  "gate_tier": "A",
+  "quality": "l",
+  "timeout_seconds": 90,
+  "papers_count": 10,
+  "papers": [
+    "8647_AutoML_Agent_A_Multi_Agen.pdf",
+    "BaxterBartlett_CS229_TermProject_Report.pdf",
+    "CS229_2024_Final_Project_Amin_Zareian_RL_Optimization_Tool.pdf",
+    "CS229_Fin.pdf",
+    "CS229_Final_Report.pdf",
+    "CS229__Project_Final_Report__3_.pdf",
+    "CS229__Project_Final_Report___dakotajp-3.pdf",
+    "CS_229_Final_Report.pdf",
+    "Final_Project_Final.pdf",
+    "Predicting_NBA_Team_Success_by_Player_Personnel.pdf"
+  ],
+  "git_commit": "06a9148f13a9a48ea675155de47ac322571f20d2",
+  "notes": "Phase A benchmark freeze for compile reliability"
+}

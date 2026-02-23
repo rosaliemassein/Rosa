@@ -1,0 +1,154 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-state-space-explosion",
+  "voice": "The main challenge for standard Q-learning is the state space explosion. Since each pixel can be red or blue, a small five-by-five grid has over thirty-three million possible configurations. As the matrix size grows linearly, the number of states we need to track in our Q-table grows exponentially, making the training time skyrocket.",
+  "goal": "Explain why standard Q-tables fail as matrix dimensions increase.",
+  "remarks": "Create an Axes where the x-axis is 'Matrix Size' (2 to 6) and the y-axis is 'Possible States' (log scale). Plot the function 2^(x^2). Start with a small table graphic for a 2x2 grid (16 rows). As the grid size increases to 5x5, animate the table rows multiplying and scrolling at high speed, eventually turning into a solid blur of color to represent the 2^25 states, while the graph curve shoots off the top of the screen.",
+  "formula": "\\text{Total States} = 2^{(N \\times N)}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{Total States} = 2^{(N \times N)}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class StateSpaceExplosion(Scene):
+    def construct(self):
+        # 1. Formula Header
+        formula = MathTex(r"\text{Total States} = 2^{(N \times N)}")
+        formula.to_edge(UP, buff=0.5)
+        self.add(formula)
+
+        # 2. Axes Setup (mimicking Reference Example 3)
+        # N: 2 to 6. Y-axis represents log2(States) = N^2.
+        # This makes the exponential growth visible on a manageable scale.
+        axes = Axes(
+            x_range=[2, 7, 1],
+            y_range=[0, 45, 10],
+            x_length=6,
+            y_length=4
+        ).shift(LEFT * 1.5 + DOWN * 0.5)
+        
+        # Plotting y = x^2 using 'x' as used in Reference Example 3
+        # This represents the log-scale growth of states.
+        graph = axes.plot(lambda x: x**2, color=YELLOW)
+        
+        x_label = MathTex("N").next_to(axes.x_axis, RIGHT)
+        y_label = MathTex(r"\log_2(S)").next_to(axes.y_axis, UP)
+        
+        self.add(axes, x_label, y_label)
+        self.play(Create(graph), run_time=2)
+
+        # 3. Initial 2x2 Grid and State Rows
+        grid_2x2 = VGroup(
+            Square(side_length=1.5, color=BLUE),
+            Line(LEFT * 0.75, RIGHT * 0.75, color=BLUE),
+            Line(UP * 0.75, DOWN * 0.75, color=BLUE)
+        ).shift(RIGHT * 3.5 + UP * 0.5)
+        
+        grid_lbl = MathTex(r"2 \times 2").next_to(grid_2x2, UP)
+        
+        # 16 states represented by distinct rows
+        rows = VGroup(*[
+            Line(LEFT * 0.5, RIGHT * 0.5, color=BLUE, stroke_width=1)
+            for _ in range(16)
+        ]).arrange(DOWN, buff=0.04).next_to(grid_2x2, DOWN, buff=0.5)
+        
+        self.add(grid_2x2, grid_lbl, rows)
+        self.wait(1)
+
+        # 4. Transition to 5x5 Grid
+        grid_5x5 = VGroup(Square(side_length=1.5, color=BLUE))
+        for i in range(1, 5):
+            d = -0.75 + i * 0.3
+            grid_5x5.add(Line(LEFT * 0.75, RIGHT * 0.75, color=BLUE).shift(UP * d))
+            grid_5x5.add(Line(UP * 0.75, DOWN * 0.75, color=BLUE).shift(RIGHT * d))
+        grid_5x5.move_to(grid_2x2)
+        
+        # Solid blur representing the overwhelming number of states (2^25)
+        blur = Rectangle(width=1.2, height=2, fill_opacity=0.8, color=BLUE)
+        blur.set_fill(BLUE, opacity=0.8)
+        blur.next_to(grid_2x2, DOWN, buff=0.5)
+        
+        new_lbl = MathTex(r"5 \times 5").next_to(grid_2x2, UP)
+        
+        # 5. State Space Explosion Animation
+        self.play(
+            Transform(grid_2x2, grid_5x5),
+            ReplacementTransform(rows, blur),
+            Transform(grid_lbl, new_lbl),
+            graph.animate.set_color(RED).scale(1.5, about_point=axes.c2p(2,4)),
+            run_time=2
+        )
+        
+        # Display the exponential result
+        res = MathTex(r"2^{25} \approx 3.3 \times 10^7", color=RED).next_to(blur, DOWN)
+        self.play(Write(res))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Axes, x; disallowed symbols/features in constrained subset: Axes

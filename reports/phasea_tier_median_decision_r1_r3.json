@@ -1,0 +1,8 @@
+{
+  "repeats_included": 3,
+  "tierb_median_compile_rate": 0.2892,
+  "tierc_median_compile_rate": 0.322,
+  "tierb_median_pass_at_1": 0.3333,
+  "tierc_median_pass_at_1": 0.3125,
+  "decision_keep_tierc": false
+}

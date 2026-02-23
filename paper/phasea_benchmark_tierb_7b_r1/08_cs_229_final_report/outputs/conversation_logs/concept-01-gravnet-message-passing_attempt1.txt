@@ -1,0 +1,174 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-gravnet-message-passing",
+  "voice": "The LDMX calorimeter has an irregular geometry, so we treat every hit as a node in a graph. GravNet works by creating a local neighborhood around each hit. The key is that the strength of the connection between hits isn't fixed; it's weighted by a potential that depends on their distance in a learned feature space. This allows the network to dynamically decide which energy deposits belong to the same particle shower, effectively 'feeling' the shape of the energy deposit as it develops through the detector.",
+  "goal": "Explain how GravNet uses distance-weighted graph connections to process irregular calorimeter data.",
+  "remarks": "Create a 3D scatter plot of dots representing ECal cells in an irregular hexagonal-like grid. Highlight one central dot. Draw arrows from the central dot to its neighbors. Animate the arrows' opacity and thickness scaling with the function exp(-d^2), where d is the distance. As the 'learned features' update, show the dots moving slightly and the connections shifting dynamically to emphasize that the graph structure is not fixed by physical geometry but by learned relationships.",
+  "formula": "V_{jk} = \\exp(-d_{jk}^2)",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+V_{jk} = \exp(-d_{jk}^2)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class GravNetMessagePassing(Scene):
+    def construct(self):
+        # Display the formula
+        formula = MathTex(r"V_{jk} = \exp(-d_{jk}^2)").to_corner(UL)
+        self.add(formula)
+
+        # Create dots for the irregular geometry
+        central_dot = Dot(point=ORIGIN, color=GREEN, radius=0.15)
+        
+        # Initial positions for neighbors
+        neighbor_positions = [
+            [2, 1, 0], [-1.5, 1.5, 0], [0.5, -2, 0],
+            [2.2, -1.2, 0], [-1.8, -0.5, 0], [-0.5, 2.2, 0],
+            [1.2, 0.2, 0], [-1.2, -1.8, 0]
+        ]
+        
+        neighbors = VGroup(*[
+            Dot(point=np.array(pos), color=BLUE, radius=0.1) 
+            for pos in neighbor_positions
+        ])
+        
+        # Helper function to create arrows with style based on distance
+        def get_weighted_arrows(center_dot, neighbor_group):
+            new_arrows = VGroup()
+            c_pos = center_dot.get_center()
+            for dot in neighbor_group:
+                n_pos = dot.get_center()
+                dist_sq = np.sum((c_pos - n_pos)**2)
+                # Weight formula: exp(-d^2)
+                weight = np.exp(-dist_sq / 2.0) # Adjusted scale for visual clarity
+                
+                # Thickness and opacity scale with weight
+                thickness = 1 + 10 * weight
+                opac = 0.1 + 0.9 * weight
+                
+                arr = Arrow(
+                    start=c_pos,
+                    end=n_pos,
+                    buff=0.1,
+                    color=BLUE,
+                    stroke_width=thickness,
+                    max_tip_length_to_length_ratio=0.2
+                ).set_opacity(opac)
+                new_arrows.add(arr)
+            return new_arrows
+
+        # Initial Arrows
+        arrows = get_weighted_arrows(central_dot, neighbors)
+
+        # Animation 1: Create the graph
+        self.play(Create(central_dot))
+        self.play(Create(neighbors), run_time=1)
+        self.play(Create(arrows), run_time=1.5)
+        self.wait(1)
+
+        # Updated positions to show "learned feature space" shifting
+        new_positions = [
+            [0.8, 0.4, 0],    # Closer
+            [-2.5, 2.5, 0],   # Further
+            [0.3, -0.7, 0],   # Closer
+            [3.5, -2.5, 0],   # Further
+            [-0.7, -0.2, 0],  # Closer
+            [-2.0, 3.2, 0],   # Further
+            [0.6, 0.1, 0],    # Closer
+            [-0.5, -0.9, 0]   # Closer
+        ]
+
+        # Target neighbor group for transformation
+        target_neighbors = VGroup(*[
+            neighbors[i].copy().move_to(np.array(new_positions[i]))
+            for i in range(len(neighbors))
+        ])
+        
+        # Target arrows based on new positions
+        target_arrows = get_weighted_arrows(central_dot, target_neighbors)
+
+        # Animation 2: Dynamic graph structure update
+        self.play(
+            Transform(neighbors, target_neighbors),
+            Transform(arrows, target_arrows),
+            run_time=3,
+            rate_func=slow_into
+        )
+        self.wait(2)
+
+        # Final Fade Out
+        self.play(
+            FadeOut(arrows),
+            FadeOut(neighbors),
+            FadeOut(central_dot),
+            FadeOut(formula)
+        )
+        self.wait(1)
+
+=== ERROR ===
+undefined identifiers detected: slow_into

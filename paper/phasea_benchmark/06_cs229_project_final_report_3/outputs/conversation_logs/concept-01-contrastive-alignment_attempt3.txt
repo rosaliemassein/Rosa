@@ -1,0 +1,147 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-contrastive-alignment",
+  "voice": "To figure out where a photo was taken, we first need to align visual features with geographic concepts. We use a CLIP model to create a shared mathematical space for images and text. During training, we feed the model a street view image alongside a synthetic caption like 'A Street View photo in France.' The goal is to maximize the cosine similarity between the image embedding and its correct country label while pushing it away from all others. This contrastive approach teaches the model that architectural styles, vegetation, and road signs are all linked to specific country names.",
+  "goal": "Understand how contrastive learning aligns images with country-specific text descriptions in a shared embedding space.",
+  "remarks": "Create two neural network blocks labeled 'Image Encoder' and 'Text Encoder'. Show a Street View image entering the Image Encoder and the text 'A Street View photo in France' entering the Text Encoder. Represent the output as two vectors (arrows) in a 2D coordinate system. Animate the two vectors rotating to point in the same direction. Then, show a 'wrong' text label like 'A Street View photo in Japan' and show its vector being pushed away from the image vector. Use a ValueTracker to show the similarity score increasing as they align.",
+  "formula": "\\mathcal{L}_{CLIP} = 0.5 \\cdot (\\mathcal{L}_{Text} + \\mathcal{L}_{Images})",
+  "image_ref": "img-7.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathcal{L}_{CLIP} = 0.5 \cdot (\mathcal{L}_{Text} + \mathcal{L}_{Images})
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptAlignment(Scene):
+    def construct(self):
+        # 1. Encoders (Avoid Rectangle and Axes which were flagged as disallowed/undefined)
+        # Using Square stretched to create rectangle shapes
+        img_enc = Square(color=RED).scale(0.5).stretch_to_fit_width(2.5).shift(UP * 2.5 + LEFT * 3)
+        txt_enc = Square(color=BLUE).scale(0.5).stretch_to_fit_width(2.5).shift(UP * 2.5 + RIGHT * 3)
+        
+        img_label = Text("Image Encoder", font_size=20).move_to(img_enc.get_center())
+        txt_label = Text("Text Encoder", font_size=20).move_to(txt_enc.get_center())
+        
+        self.play(
+            Create(img_enc), 
+            Create(txt_enc), 
+            Write(img_label), 
+            Write(txt_label)
+        )
+
+        # 2. Shared Space (Manual construction using Line)
+        x_ax = Line(LEFT * 2, RIGHT * 2, color=WHITE).shift(DOWN * 1)
+        y_ax = Line(DOWN * 2, UP * 1, color=WHITE).shift(DOWN * 1)
+        origin = x_ax.get_center()
+        space_label = Text("Shared Embedding Space", font_size=20).next_to(y_ax, UP)
+        
+        self.play(Create(x_ax), Create(y_ax), Write(space_label))
+
+        # 3. Inputs (Animating the entry of image and text)
+        input_img = Square(side_length=0.8, color=GREEN, fill_opacity=0.3).next_to(img_enc, LEFT, buff=2)
+        input_txt = Text("A Street View photo in France", font_size=18, color=BLUE).next_to(txt_enc, RIGHT, buff=2)
+        
+        self.play(
+            input_img.animate.next_to(img_enc, LEFT, buff=0.5),
+            input_txt.animate.next_to(txt_enc, RIGHT, buff=0.5)
+        )
+        self.wait(0.5)
+
+        # 4. Vectors (Using Arrow instead of Vector)
+        v_img = Arrow(origin, origin + RIGHT * 1.2 + UP * 1.2, buff=0, color=RED)
+        v_txt = Arrow(origin, origin + LEFT * 1.0 + UP * 0.4, buff=0, color=BLUE)
+        
+        self.play(Create(v_img), Create(v_txt))
+
+        # 5. Similarity Score (Using Text and animate.become to avoid ValueTracker/DecimalNumber issues)
+        score_text = Text("Similarity: 0.15", font_size=24).to_edge(DOWN, buff=0.5)
+        self.add(score_text)
+        self.wait(1)
+
+        # 6. Alignment Animation (Positive Pair)
+        v_txt_aligned = Arrow(origin, origin + RIGHT * 1.3 + UP * 1.3, buff=0, color=BLUE)
+        self.play(
+            Transform(v_txt, v_txt_aligned),
+            score_text.animate.become(Text("Similarity: 0.98", font_size=24).to_edge(DOWN, buff=0.5)),
+            run_time=2
+        )
+        self.wait(1)
+
+        # 7. Contrastive Step (Negative Pair)
+        wrong_txt = Text("A Street View photo in Japan", font_size=18, color=BLUE).move_to(input_txt.get_center())
+        self.play(Transform(input_txt, wrong_txt))
+        
+        # Push vector away
+        v_txt_pushed = Arrow(origin, origin + LEFT * 1.5 + DOWN * 0.3, buff=0, color=BLUE)
+        self.play(
+            Transform(v_txt, v_txt_pushed),
+            score_text.animate.become(Text("Similarity: 0.05", font_size=24).to_edge(DOWN, buff=0.5)),
+            run_time=2
+        )
+        self.wait(1)
+
+        # 8. Formula (Using Tex as MathTex was flagged)
+        formula = Tex(r"$\mathcal{L}_{CLIP} = 0.5 \cdot (\mathcal{L}_{Text} + \mathcal{L}_{Images})$", font_size=36)
+        formula.to_edge(UP, buff=0.5)
+        self.play(Write(formula))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Tex; disallowed symbols/features in constrained subset: Tex

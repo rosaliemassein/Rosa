@@ -1,0 +1,37 @@
+{
+  "title": "Machine Learning for Clustering in the LDMX Electromagnetic Calorimeter",
+  "slides": [
+    {
+      "id": "concept-01-gravnet-message-passing",
+      "voice": "The LDMX calorimeter has an irregular geometry, so we treat every hit as a node in a graph. GravNet works by creating a local neighborhood around each hit. The key is that the strength of the connection between hits isn't fixed; it's weighted by a potential that depends on their distance in a learned feature space. This allows the network to dynamically decide which energy deposits belong to the same particle shower, effectively 'feeling' the shape of the energy deposit as it develops through the detector.",
+      "goal": "Explain how GravNet uses distance-weighted graph connections to process irregular calorimeter data.",
+      "remarks": "Create a 3D scatter plot of dots representing ECal cells in an irregular hexagonal-like grid. Highlight one central dot. Draw arrows from the central dot to its neighbors. Animate the arrows' opacity and thickness scaling with the function exp(-d^2), where d is the distance. As the 'learned features' update, show the dots moving slightly and the connections shifting dynamically to emphasize that the graph structure is not fixed by physical geometry but by learned relationships.",
+      "formula": "V_{jk} = \\exp(-d_{jk}^2)",
+      "image_ref": "img-0.jpeg"
+    },
+    {
+      "id": "concept-02-object-condensation",
+      "voice": "To actually group these hits into particles, we use a technique called object condensation. Each hit predicts a confidence value, beta, which we treat like a physical charge. A high beta means the hit is likely the center, or 'condensation point,' of a particle. We then use this charge to create an attractive potential. Imagine these condensation points acting like gravity, pulling in all the hits that belong to that specific particle while pushing away the noise.",
+      "goal": "Visualize the mechanism of beta-charge and the potential functions used for clustering.",
+      "remarks": "Show a 2D plane of dots. Each dot grows in size and changes color from purple to bright yellow based on a simulated beta value. For dots with high beta, draw a concentric 'gravity well' (a gradient circle) using a Surface or a mesh. Show neighboring low-beta dots being physically pulled toward the center of these wells using an animation where they slide along the gradient lines. Use a MathTex label for the charge calculation q = arctanh(beta).",
+      "formula": "q_i = \\text{arctanh}(\\beta_i) + q_{min}",
+      "image_ref": null
+    },
+    {
+      "id": "concept-03-learned-clustering-space",
+      "voice": "The real power of this model is that it doesn't cluster hits in the physical x-y-z space of the detector. Instead, it maps every hit into a completely new, multi-dimensional 'learned coordinate' space. In this space, the complex, overlapping energy deposits from two different electrons are unwarped and pulled apart into distinct, easily separable blobs. This transformation is what allows us to tell the difference between one high-energy electron and two lower-energy ones that are physically close together.",
+      "goal": "Demonstrate the transformation from physical detector coordinates to the learned clustering space.",
+      "remarks": "Create a split-screen view. On the left, show a 'Physical Space' NumberPlane with two overlapping clusters of hits. On the right, show a 'Learned Space' NumberPlane. Use a Transform animation to move the dots from the left plane to the right plane. In the physical space, the clusters should overlap heavily. In the learned space, the dots should magically rearrange into two distinct, separated circular distributions. Draw a dashed circle around each cluster in the learned space to indicate successful classification.",
+      "formula": "L_V = \\frac{1}{N} \\sum q_j \\sum (\\mathbb{1} \\check{V}_k + (1-\\mathbb{1}) \\hat{V}_k)",
+      "image_ref": "img-14.jpeg"
+    },
+    {
+      "id": "concept-04-efficiency-vs-overlap",
+      "voice": "Standard clustering algorithms usually struggle when two particles hit the detector very close to each other\u2014their efficiency drops to zero as the distance closes. But look at the ML approach. Even when the electrons are nearly on top of each other, the clustering efficiency stays remarkably flat. Because the network learns the underlying patterns of the showers rather than just looking at hit density, it can resolve individual clusters that would look like a single merged mess to traditional methods.",
+      "goal": "Compare the ML model's performance on overlapping clusters against standard algorithms.",
+      "remarks": "Create an Axes showing 'Efficiency' vs 'Distance between particles'. Plot a blue curve for the ML model (mostly flat at 0.9) and a red dashed curve for the 'Standard Algorithm' (starts high but drops sharply toward 0 at small x-values). Use a ValueTracker to move a vertical line across the x-axis. As the line moves to the left (closer distance), show a small animation overlay of two particle shower icons merging into one, while the ML curve stays high and the standard curve collapses.",
+      "formula": null,
+      "image_ref": "img-3.jpeg"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_postlora_r1/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 10,
+  "compiled_attempts": 0,
+  "compile_rate": 0.0,
+  "slides_evaluated_for_pass1": 8,
+  "pass_at_1": 0.0,
+  "bucket_counts": {
+    "gate_fail": 6,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 4,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 10,
+    "uses_axes_or_numberplane": 2
+  },
+  "gate_reason_tag_counts": {
+    "disallowed_tier_symbol": 4,
+    "undefined_symbol": 6
+  },
+  "top_error_signatures": [
+    [
+      "compile_failed",
+      4
+    ],
+    [
+      "undefined identifiers detected: Brace, VMobject | disallowed symbols/features in constrained subset: Brace",
+      1
+    ],
+    [
+      "undefined identifiers detected: VMobject",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, BLUE_B, BLUE_C | disallowed symbols/features in constrained subset: Axes",
+      1
+    ],
+    [
+      "undefined identifiers detected: Brace | disallowed symbols/features in constrained subset: Brace",
+      1
+    ],
+    [
+      "undefined identifiers detected: t",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, BLUE_B | disallowed symbols/features in constrained subset: Axes",
+      1
+    ]
+  ]
+}

@@ -1,0 +1,153 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-retrieval-augmented-planning",
+  "voice": "To find the best path, we use Retrieval-Augmented Planning, or RAP. Instead of the Agent Manager generating a single guess, it queries external knowledge\u2014like arXiv papers or web searches\u2014to understand current state-of-the-art methods for your specific task. This allows the system to generate multiple diverse plans in parallel, exploring different strategies like trying a Transformer versus a standard CNN based on real-world evidence.",
+  "goal": "Explain how external knowledge retrieval informs the generation of multiple parallel plans.",
+  "remarks": "Place a central 'Agent Manager' icon. To its left, create a 'Knowledge Base' icon (a cloud). Animate arrows pulling 'Knowledge' into the Manager. Then, show the Manager branching out into three distinct paths (Plan A, Plan B, Plan C) using TransformMatchingShapes. Each plan path should have a different icon representing a different ML strategy.",
+  "formula": "\\mathbf{P} = \\mathcal{A}_{mgr}(\\mathrm{RAP}(R))",
+  "image_ref": "img-2.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathbf{P} = \mathcal{A}_{mgr}(\mathrm{RAP}(R))
+
+
+=== ASSISTANT ===
+from manim import *
+
+class Concept02RetrievalAugmentedPlanning(Scene):
+    def construct(self):
+        # 1. Setup Formula
+        formula = MathTex(r"\mathbf{P} = \mathcal{A}_{mgr}(\mathrm{RAP}(R))").to_edge(UP, buff=0.5)
+        self.play(Write(formula))
+
+        # 2. Agent Manager (Central Icon)
+        manager_box = RoundedRectangle(corner_radius=0.1, height=1.2, width=2.2, color=BLUE, fill_opacity=0.2)
+        manager_label = Text("Agent Manager", font_size=20)
+        manager = VGroup(manager_box, manager_label).center()
+
+        # 3. Knowledge Base (Cloud-like Icon)
+        c1 = Circle(radius=0.4, color=WHITE, fill_opacity=0.3).shift(LEFT * 0.2)
+        c2 = Circle(radius=0.4, color=WHITE, fill_opacity=0.3).shift(RIGHT * 0.2)
+        c3 = Circle(radius=0.4, color=WHITE, fill_opacity=0.3).shift(UP * 0.2)
+        kb_icon = VGroup(c1, c2, c3)
+        kb_label = Text("Knowledge Base", font_size=18).next_to(kb_icon, DOWN, buff=0.1)
+        knowledge_base = VGroup(kb_icon, kb_label).scale(0.8).to_edge(LEFT, buff=1.2)
+
+        # 4. Display Initial Components
+        self.play(FadeIn(knowledge_base), FadeIn(manager))
+
+        # 5. Animate Knowledge Flow (Arrows pulling into Manager)
+        arrow_path = Arrow(knowledge_base.get_right(), manager.get_left(), color=YELLOW, buff=0.1)
+        self.play(GrowArrow(arrow_path))
+        
+        # Manual particle animation instead of MoveAlongPath
+        for _ in range(3):
+            dot = Dot(color=YELLOW, radius=0.06).move_to(arrow_path.get_start())
+            self.play(dot.animate.move_to(arrow_path.get_end()), run_time=0.5, rate_func=linear)
+            self.remove(dot)
+
+        # 6. Branching into Parallel Plans
+        # Plan A
+        plan_a_box = RoundedRectangle(height=0.8, width=2, color=GREEN)
+        plan_a_text = Text("Plan A", font_size=18).shift(UP * 0.1)
+        plan_a_strat = Text("Transformer", font_size=12, color=GRAY).shift(DOWN * 0.2)
+        plan_a = VGroup(plan_a_box, plan_a_text, plan_a_strat).move_to(RIGHT * 4 + UP * 1.5)
+
+        # Plan B
+        plan_b_box = RoundedRectangle(height=0.8, width=2, color=ORANGE)
+        plan_b_text = Text("Plan B", font_size=18).shift(UP * 0.1)
+        plan_b_strat = Text("CNN", font_size=12, color=GRAY).shift(DOWN * 0.2)
+        plan_b = VGroup(plan_b_box, plan_b_text, plan_b_strat).move_to(RIGHT * 4)
+
+        # Plan C
+        plan_c_box = RoundedRectangle(height=0.8, width=2, color=PURPLE)
+        plan_c_text = Text("Plan C", font_size=18).shift(UP * 0.1)
+        plan_c_strat = Text("Standard", font_size=12, color=GRAY).shift(DOWN * 0.2)
+        plan_c = VGroup(plan_c_box, plan_c_text, plan_c_strat).move_to(RIGHT * 4 + DOWN * 1.5)
+
+        plans = [plan_a, plan_b, plan_c]
+        arrows_to_plans = VGroup(*[
+            Arrow(manager.get_right(), p.get_left(), buff=0.1, color=WHITE) 
+            for p in plans
+        ])
+
+        # ReplacementTransform is a safer alternative to TransformMatchingShapes
+        self.play(
+            LaggedStart(
+                *[Create(arrow) for arrow in arrows_to_plans],
+                *[ReplacementTransform(manager.copy(), plan) for plan in plans],
+                lag_ratio=0.2
+            )
+        )
+
+        # 7. Add specific strategy icons
+        t_icon = MathTex(r"\mathcal{T}", color=GREEN).scale(0.8).next_to(plan_a, RIGHT)
+        c_icon = MathTex(r"\mathcal{C}", color=ORANGE).scale(0.8).next_to(plan_b, RIGHT)
+        s_icon = MathTex(r"\mathcal{S}", color=PURPLE).scale(0.8).next_to(plan_c, RIGHT)
+
+        self.play(Write(t_icon), Write(c_icon), Write(s_icon))
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: linear

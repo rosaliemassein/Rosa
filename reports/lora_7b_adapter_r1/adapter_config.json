@@ -1,0 +1,40 @@
+{
+    "adapter_path": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/lora_7b_adapter_r1",
+    "batch_size": 1,
+    "config": null,
+    "data": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/lora_7b_prep/mlx_data",
+    "fine_tune_type": "lora",
+    "grad_accumulation_steps": 16,
+    "grad_checkpoint": true,
+    "iters": 5,
+    "learning_rate": 0.0001,
+    "lora_parameters": {
+        "rank": 8,
+        "dropout": 0.0,
+        "scale": 20.0
+    },
+    "lr_schedule": null,
+    "mask_prompt": false,
+    "max_seq_length": 64,
+    "model": "/Users/rosaliemassein/.lmstudio/models/lmstudio-community/Qwen2.5-Coder-7B-Instruct-MLX-4bit",
+    "num_layers": 1,
+    "optimizer": "adam",
+    "optimizer_config": {
+        "adam": {},
+        "adamw": {},
+        "muon": {},
+        "sgd": {},
+        "adafactor": {}
+    },
+    "project_name": null,
+    "report_to": null,
+    "resume_adapter_file": null,
+    "save_every": 5,
+    "seed": 0,
+    "steps_per_eval": 5,
+    "steps_per_report": 10,
+    "test": false,
+    "test_batches": 500,
+    "train": true,
+    "val_batches": 1
+}

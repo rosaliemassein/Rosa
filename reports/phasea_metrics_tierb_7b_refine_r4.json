@@ -1,0 +1,77 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/03_cs229_2024_final_project_amin_zareian_rl_optimization_tool/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/05_cs229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_refine_r4/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 39,
+  "compiled_attempts": 16,
+  "compile_rate": 0.4103,
+  "slides_evaluated_for_pass1": 25,
+  "pass_at_1": 0.56,
+  "bucket_counts": {
+    "gate_fail": 19,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 27,
+    "uses_axes_or_numberplane": 5
+  },
+  "gate_reason_tag_counts": {
+    "undefined_symbol": 18,
+    "disallowed_tier_symbol": 5,
+    "syntax_error": 1
+  },
+  "top_error_signatures": [
+    [
+      "undefined identifiers detected: VMobject",
+      6
+    ],
+    [
+      "error: Error code: 400 - {'error': 'The model has crashed without additional information. (Exit code: null)'}",
+      4
+    ],
+    [
+      "undefined identifiers detected: smooth",
+      2
+    ],
+    [
+      "undefined identifiers detected: Axes, BLUE_A, GrowFromEdge | disallowed symbols/features in constrained subset: Axes",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, BOTTOM | disallowed symbols/features in constrained subset: Axes",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, BLUE_B, BLUE_D | disallowed symbols/features in constrained subset: Axes",
+      1
+    ],
+    [
+      "undefined identifiers detected: VMobject, progress",
+      1
+    ],
+    [
+      "undefined identifiers detected: DecimalNumber, NumberPlane | disallowed symbols/features in constrained subset: NumberPlane",
+      1
+    ],
+    [
+      "syntax error: invalid syntax (line 100)",
+      1
+    ],
+    [
+      "undefined identifiers detected: BLUE_B",
+      1
+    ]
+  ]
+}

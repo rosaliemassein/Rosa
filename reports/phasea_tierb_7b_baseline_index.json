@@ -1,0 +1,13 @@
+{
+  "model": "qwen2.5-coder-7b-instruct-mlx",
+  "repeats": [
+    1,
+    2,
+    3
+  ],
+  "metrics_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r1.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r2.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r3.json"
+  ]
+}

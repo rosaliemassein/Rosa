@@ -1,0 +1,176 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-object-condensation",
+  "voice": "To actually group these hits into particles, we use a technique called object condensation. Each hit predicts a confidence value, beta, which we treat like a physical charge. A high beta means the hit is likely the center, or 'condensation point,' of a particle. We then use this charge to create an attractive potential. Imagine these condensation points acting like gravity, pulling in all the hits that belong to that specific particle while pushing away the noise.",
+  "goal": "Visualize the mechanism of beta-charge and the potential functions used for clustering.",
+  "remarks": "Show a 2D plane of dots. Each dot grows in size and changes color from purple to bright yellow based on a simulated beta value. For dots with high beta, draw a concentric 'gravity well' (a gradient circle) using a Surface or a mesh. Show neighboring low-beta dots being physically pulled toward the center of these wells using an animation where they slide along the gradient lines. Use a MathTex label for the charge calculation q = arctanh(beta).",
+  "formula": "q_i = \\text{arctanh}(\\beta_i) + q_{min}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+q_i = \text{arctanh}(\beta_i) + q_{min}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ObjectCondensation(Scene):
+    def construct(self):
+        # 1. Formula Display
+        # q_i = arctanh(beta_i) + q_min
+        formula = MathTex(r"q_i = \text{arctanh}(\beta_i) + q_{min}")
+        formula.to_edge(UP)
+        self.play(Write(formula))
+
+        # 2. Setup 2D Plane of Dots
+        np.random.seed(123)
+        dots = VGroup()
+        num_dots = 40
+        
+        # Define positions and simulated beta values
+        positions = [
+            np.array([np.random.uniform(-6, 6), np.random.uniform(-3, 2), 0])
+            for _ in range(num_dots)
+        ]
+        betas = [np.random.uniform(0.1, 0.99) for _ in range(num_dots)]
+        
+        # Force a few "condensation points" with very high beta
+        betas[0], betas[1], betas[2] = 0.98, 0.95, 0.92
+        
+        for i in range(num_dots):
+            # Start dots as small and purple
+            d = Dot(point=positions[i], color=PURPLE, radius=0.06)
+            d.beta = betas[i]
+            dots.add(d)
+            
+        self.play(FadeIn(dots, lag_ratio=0.05))
+        self.wait(0.5)
+        
+        # 3. Mechanism: Beta values grow, changing dot size and color
+        # We manually map beta to colors to avoid potential interpolate_color issues
+        growth_anims = []
+        condensation_points = []
+        for d in dots:
+            if d.beta > 0.9:
+                target_color = YELLOW
+                condensation_points.append(d)
+            elif d.beta > 0.5:
+                target_color = PINK
+            else:
+                target_color = PURPLE_A
+            
+            # Animate growth and color transition
+            growth_anims.append(
+                d.animate.scale(1 + d.beta * 2).set_color(target_color)
+            )
+            
+        self.play(*growth_anims, run_time=2)
+        self.wait(0.5)
+        
+        # 4. Create Gravity Wells (Concentric Circles)
+        wells = VGroup()
+        for cp in condensation_points:
+            well_group = VGroup()
+            # Create a set of concentric circles to represent a potential well
+            for r in [0.4, 0.8, 1.2, 1.6]:
+                # Decreasing opacity for radial gradient effect
+                op = max(0, 1.0 - r/1.8)
+                c = Circle(radius=r, color=YELLOW, stroke_width=2).set_stroke(opacity=op)
+                c.move_to(cp.get_center())
+                well_group.add(c)
+            wells.add(well_group)
+            
+        self.play(Create(wells, lag_ratio=0.2), run_time=2)
+        
+        # Show specific charge label for a condensation point
+        q_label = MathTex(r"q_i \approx 2.5").scale(0.7)
+        q_label.next_to(condensation_points[0], UP, buff=0.1)
+        self.play(Write(q_label))
+        self.wait(0.5)
+
+        # 5. Clustering: Pull low-beta dots toward condensation points
+        # Using .animate.move_to as a robust alternative to MoveAlongPath
+        pull_anims = []
+        for d in dots:
+            if d not in condensation_points:
+                # Identify the closest condensation point
+                closest_cp = condensation_points[0]
+                min_dist = np.linalg.norm(d.get_center() - closest_cp.get_center())
+                for cp in condensation_points:
+                    dist = np.linalg.norm(d.get_center() - cp.get_center())
+                    if dist < min_dist:
+                        min_dist = dist
+                        closest_cp = cp
+                
+                # Pull dots that are within range
+                if min_dist < 5.0:
+                    pull_anims.append(d.animate.move_to(closest_cp.get_center()))
+                    
+        # Use a smooth rate function for the attraction movement
+        self.play(*pull_anims, run_time=3, rate_func=smooth)
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: PINK, PURPLE_A, smooth

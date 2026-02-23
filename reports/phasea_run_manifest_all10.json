@@ -1,0 +1,26 @@
+{
+  "run_id": "phasea_20260219T015017Z",
+  "timestamp": "2026-02-19T01:50:17.759375+00:00",
+  "benchmark_name": "phasea_compile_reliability",
+  "benchmark_config": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/config/phasea_benchmark.json",
+  "model_id": "qwen2.5-coder-3b-instruct-mlx",
+  "prompt_version": "phasea_tiera_v2",
+  "gate_tier": "A",
+  "quality": "l",
+  "timeout_seconds": 90,
+  "papers_count": 10,
+  "papers": [
+    "01_8647_automl_agent_a_multi_agen",
+    "02_baxterbartlett_cs229_termproject_report",
+    "03_cs229_2024_final_project_amin_zareian_rl_optimization_tool",
+    "04_cs229_fin",
+    "05_cs229_final_report",
+    "06_cs229_project_final_report_3",
+    "07_cs229_project_final_report_dakotajp_3",
+    "08_cs_229_final_report",
+    "09_final_project_final",
+    "10_predicting_nba_team_success_by_player_personnel"
+  ],
+  "git_commit": "06a9148f13a9a48ea675155de47ac322571f20d2",
+  "notes": "run-all-10 one-paper-per-folder"
+}

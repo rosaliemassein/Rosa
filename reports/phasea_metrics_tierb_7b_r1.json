@@ -1,0 +1,76 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/03_cs229_2024_final_project_amin_zareian_rl_optimization_tool/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/05_cs229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r1/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 57,
+  "compiled_attempts": 19,
+  "compile_rate": 0.3333,
+  "slides_evaluated_for_pass1": 30,
+  "pass_at_1": 0.3,
+  "bucket_counts": {
+    "gate_fail": 30,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 7,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 49,
+    "uses_axes_or_numberplane": 11
+  },
+  "gate_reason_tag_counts": {
+    "undefined_symbol": 30,
+    "disallowed_tier_symbol": 13
+  },
+  "top_error_signatures": [
+    [
+      "compile_failed",
+      7
+    ],
+    [
+      "undefined identifiers detected: VMobject",
+      6
+    ],
+    [
+      "undefined identifiers detected: Axes | disallowed symbols/features in constrained subset: Axes",
+      4
+    ],
+    [
+      "undefined identifiers detected: t",
+      3
+    ],
+    [
+      "undefined identifiers detected: BLUE_B",
+      1
+    ],
+    [
+      "undefined identifiers detected: ArcBetweenPoints",
+      1
+    ],
+    [
+      "undefined identifiers detected: BLUE_E, GREEN_B, NumberPlane, d, m, t | disallowed symbols/features in constrained subset: NumberPlane",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, MoveAlongPath, always_redraw, interpolate_color, linear, m | disallowed symbols/features in constrained subset: Axes, always_redraw",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, x | disallowed symbols/features in constrained subset: Axes",
+      1
+    ],
+    [
+      "undefined identifiers detected: Axes, t, x | disallowed symbols/features in constrained subset: Axes",
+      1
+    ]
+  ]
+}

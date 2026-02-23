@@ -1,0 +1,185 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+- Do NOT use: VMobject, UpdateFromAlphaFunc, custom rate functions (`smooth`, `there_and_back`, `linear`) unless explicitly defined/imported.
+- Do NOT emit undeclared identifiers; common failure is using `t` without definition.
+- Prefer deterministic primitives: VGroup, Circle/Square/Line/Arrow, and Transform/FadeIn/FadeOut.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-logistic-regression-features",
+  "voice": "To predict which zones will be dominant tomorrow, we use a logistic regression model for every single zone. Instead of looking at raw spikes, we look at the 'memory' of the zone. We calculate two main features: the average temperature gap from the setpoint over the last 24 hours, and the average over the last 30 days. This allows the model to distinguish between a temporary door being left open and a zone that is fundamentally struggling with its cooling load.",
+  "goal": "Visualize the mathematical inputs and the logistic mapping used for prediction.",
+  "remarks": "Display a NumberPlane. On the right, show a sigmoid curve. Create two sliding bars on the left labeled '1-Day T-CSP' and '30-Day T-CSP'. As the bars slide up and down, animate a dot moving along the sigmoid curve. Use TransformMatchingTex to show how the feature vector X scales the weights in the logistic formula to move the probability P(y=1) between 0 and 1.",
+  "formula": "P(y=1) = \\frac{1}{1 + e^{-(\\beta_0 + \\beta_1 X_{1d} + \\beta_{30} X_{30d})}}",
+  "image_ref": "img-10.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+P(y=1) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 X_{1d} + \beta_{30} X_{30d})}}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class LogisticRegressionFeatures(Scene):
+    def construct(self):
+        # 1. Coordinate System for Sigmoid (Right side)
+        axes = Axes(
+            x_range=[-6, 6, 2],
+            y_range=[0, 1.2, 0.5],
+            x_length=6,
+            y_length=4,
+            axis_config={"include_tip": True}
+        ).to_edge(RIGHT, buff=0.5)
+        
+        sigmoid_curve = axes.plot(lambda x: 1 / (1 + np.exp(-x)), color=YELLOW)
+        sigmoid_label = MathTex(r"P(y=1) = \sigma(z)", color=YELLOW, font_size=30).next_to(axes, UP)
+        
+        self.play(Create(axes), Create(sigmoid_curve), Write(sigmoid_label))
+        self.wait(0.5)
+
+        # 2. Sliding Bars and Trackers (Left side)
+        # Using ValueTrackers to drive the bar heights and dot position
+        x1_tracker = ValueTracker(0.2)
+        x30_tracker = ValueTracker(0.3)
+        
+        bar_bg_1 = Rectangle(width=0.6, height=3, stroke_color=WHITE).shift(LEFT * 4.5 + DOWN * 0.5)
+        bar_bg_30 = Rectangle(width=0.6, height=3, stroke_color=WHITE).shift(LEFT * 2.5 + DOWN * 0.5)
+        
+        label_1 = MathTex("X_{1d}", font_size=28).next_to(bar_bg_1, DOWN)
+        label_30 = MathTex("X_{30d}", font_size=28).next_to(bar_bg_30, DOWN)
+        title_1 = Text("1-Day T-CSP", font_size=16).next_to(bar_bg_1, UP)
+        title_30 = Text("30-Day T-CSP", font_size=16).next_to(bar_bg_30, UP)
+        
+        # Redraw bars based on tracker values (mapped 0-1 to height 0-3)
+        bar_1 = always_redraw(lambda: Rectangle(
+            width=0.6, 
+            height=max(0.01, x1_tracker.get_value() * 3), 
+            fill_color=BLUE, 
+            fill_opacity=0.7,
+            stroke_width=0
+        ).move_to(bar_bg_1.get_bottom(), aligned_edge=DOWN))
+        
+        bar_30 = always_redraw(lambda: Rectangle(
+            width=0.6, 
+            height=max(0.01, x30_tracker.get_value() * 3), 
+            fill_color=GREEN, 
+            fill_opacity=0.7,
+            stroke_width=0
+        ).move_to(bar_bg_30.get_bottom(), aligned_edge=DOWN))
+        
+        self.play(
+            Create(bar_bg_1), Create(bar_bg_30),
+            Write(label_1), Write(label_30),
+            Write(title_1), Write(title_30),
+            FadeIn(bar_1), FadeIn(bar_30)
+        )
+
+        # 3. Dynamic Dot on Sigmoid
+        # Map tracker sum to x-range of axes [-6, 6]
+        def get_current_z():
+            # Linear map: (0,0)-> -6, (1,1)-> 6
+            return (x1_tracker.get_value() + x30_tracker.get_value() - 1) * 6
+
+        dot = always_redraw(lambda: Dot(color=RED).move_to(
+            axes.c2p(get_current_z(), 1 / (1 + np.exp(-get_current_z())))
+        ))
+        
+        self.play(Create(dot))
+
+        # 4. Mathematical Formula Evolution
+        formula_base = MathTex(r"P(y=1) = \frac{1}{1 + e^{-z}}").scale(0.8).to_edge(UP, buff=0.5).shift(LEFT * 0.5)
+        formula_z = MathTex(r"z = \beta_0 + \beta_1 X_{1d} + \beta_{30} X_{30d}").scale(0.8).next_to(formula_base, DOWN)
+        
+        self.play(Write(formula_base))
+        self.play(Write(formula_z))
+        self.wait(1)
+
+        # 5. Animate sliding bars and dot movement
+        self.play(x1_tracker.animate.set_value(0.8), x30_tracker.animate.set_value(0.6), run_time=2)
+        self.wait(0.5)
+        self.play(x1_tracker.animate.set_value(0.1), x30_tracker.animate.set_value(0.2), run_time=2)
+        self.wait(0.5)
+
+        # 6. Feature Vector and Final Transform
+        feature_vector = MathTex(r"\mathbf{X} = \begin{bmatrix} X_{1d} \\ X_{30d} \end{bmatrix}").scale(0.8).shift(LEFT * 3.5 + UP * 2)
+        self.play(Write(feature_vector))
+        self.play(Indicate(feature_vector))
+        
+        full_formula = MathTex(
+            r"P(y=1) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 X_{1d} + \beta_{30} X_{30d})}}"
+        ).scale(0.75).move_to(formula_base.get_center())
+        
+        self.play(
+            ReplacementTransform(VGroup(formula_base, formula_z), full_formula),
+            FadeOut(feature_vector)
+        )
+        
+        # Final visual move
+        self.play(x1_tracker.animate.set_value(0.9), x30_tracker.animate.set_value(0.9), run_time=2)
+        self.wait(2)<ctrl63>
+
+=== ERROR ===
+syntax error: invalid syntax (line 100)

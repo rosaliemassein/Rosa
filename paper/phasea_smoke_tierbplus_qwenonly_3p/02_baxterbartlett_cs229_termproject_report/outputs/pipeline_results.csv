@@ -1,0 +1,4 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-01-inverse-mapping,1,slides/concept-01-inverse-mapping.py,concept-01-inverse-mapping_v2.mp4,True,1,,,success,conversation_logs/concept-01-inverse-mapping_attempt1.txt,1,,,,,
+concept-02-quantifying-stability,1,slides/concept-02-quantifying-stability.py,concept-02-quantifying-stability_v3.mp4,True,2,,,success,conversation_logs/concept-02-quantifying-stability_attempt1.txt,1,,,,,
+concept-03-locally-weighted-regression,1,slides/concept-03-locally-weighted-regression.py,,False,3,,,compile_failed,conversation_logs/concept-03-locally-weighted-regression_attempt1.txt,-1,gate_fail,undefined identifiers detected: Sector,undefined_symbol,,Sector

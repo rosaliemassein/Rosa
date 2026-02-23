@@ -1,0 +1,20 @@
+{
+  "baseline_7b_metrics_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r1.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r2.json",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_r3.json"
+  ],
+  "refine_validation_file": "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/reports/phasea_metrics_tierb_7b_refine_r4.json",
+  "baseline_7b_median_compile_rate": 0.3333,
+  "baseline_7b_median_pass_at_1": 0.3846,
+  "baseline_7b_low_level_failure_share": 0.5786,
+  "refine_r4_compile_rate": 0.4103,
+  "refine_r4_pass_at_1": 0.56,
+  "thresholds": {
+    "median_compile_rate_min": 0.4,
+    "median_pass_at_1_min": 0.35,
+    "low_level_failure_share_max": 0.5
+  },
+  "dpo_ready_now": false,
+  "require_local_lora_prep": true
+}

@@ -24,10 +24,78 @@ RULES:
 3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
 4. MathTex uses RAW strings with double backslashes: MathTex(r"\\frac{a}{b}"), MathTex(r"\\int_0^1").
 5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, B+, C, or 3D-LITE) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+- BarChart/complex chart helpers -> Axes + Rectangle bars + Text labels
+- BLUE_A/BLUE_B/BLUE_C (or other *_A..*_E variants) -> BLUE (or RED/GREEN/YELLOW/WHITE/BLACK)
 
 STYLE:
-- Use Axes, NumberPlane, ValueTracker, MathTex, arrows, shapes.
-- Animate dynamically: plots, moving dots, equation steps, diagrams."""
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks."""
+
+LMSTUDIO_TIER_A_ADDENDUM = """
+ACTIVE GATE TIER: A (strict core subset)
+- Prefer: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Avoid: Tex/MathTex, Axes/NumberPlane, trackers, 3D/camera APIs
+"""
+
+LMSTUDIO_TIER_B_ADDENDUM = """
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+- Do NOT use: VMobject, UpdateFromAlphaFunc, custom rate functions (`smooth`, `there_and_back`, `linear`) unless explicitly defined/imported.
+- Do NOT emit undeclared identifiers; common failure is using `t` without definition.
+- Prefer deterministic primitives: VGroup, Circle/Square/Line/Arrow, and Transform/FadeIn/FadeOut.
+"""
+
+LMSTUDIO_TIER_C_ADDENDUM = """
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+"""
+
+LMSTUDIO_TIER_BPLUS_ADDENDUM = """
+ACTIVE GATE TIER: B+ (advanced 2D, no 3D)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+- Avoid BarChart and uncommon color variants (BLUE_A/BLUE_C, etc.); use Axes + Rectangle and base colors.
+"""
+
+LMSTUDIO_TIER_3DLITE_ADDENDUM = """
+ACTIVE GATE TIER: 3D-LITE (narrow 3D subset)
+- Allowed additions: ThreeDScene, ThreeDAxes, set_camera_orientation
+- Keep disallowed: move_camera, begin_ambient_camera_rotation, stop_ambient_camera_rotation, Surface
+- Prefer one static 3D viewpoint and short, deterministic animations.
+- For colors, stick to base constants (BLUE, RED, GREEN, YELLOW, WHITE, BLACK).
+"""
 
 
 LMSTUDIO_INPUT = """Generate Manim code for this concept animation.
@@ -56,7 +124,15 @@ Here is the full slide data in JSON format:
 ```
 {formula_section}
 IMPORTANT — AVOID THESE MISTAKES from a previous failed attempt:
-{avoidance_notes}"""
+{avoidance_notes}
+
+COMPILE-FIRST RETRY POLICY:
+- Prioritize valid, simple code over ambitious visuals.
+- If a symbol is uncertain, replace it with a known symbol from the active tier.
+- Ensure all names are defined before use.
+- If error mentions disallowed or undefined symbol, replace with an active-tier alternative immediately.
+- If error mentions `VMobject`, `Axes`, `ValueTracker`, `smooth`, `there_and_back`, `BarChart`, `BLUE_A`, `BLUE_C`, or undefined `t`, remove them and rewrite with basic Tier-safe primitives.
+- Output ONLY Python code."""
 
 
 LMSTUDIO_COMPILE_ERROR = """Your code FAILED to compile. Here is the full error log:

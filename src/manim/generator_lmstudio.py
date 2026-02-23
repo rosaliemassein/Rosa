@@ -27,6 +27,11 @@ from src.manim.prompts_lmstudio import (
     MANIM_TUTOR_SYSTEM,
     MANIM_TUTOR_FIRST_FIX,
     MANIM_TUTOR_SUBSEQUENT_FIX,
+    LMSTUDIO_TIER_A_ADDENDUM,
+    LMSTUDIO_TIER_B_ADDENDUM,
+    LMSTUDIO_TIER_BPLUS_ADDENDUM,
+    LMSTUDIO_TIER_C_ADDENDUM,
+    LMSTUDIO_TIER_3DLITE_ADDENDUM,
     VERTICAL_ADDENDUM_LMSTUDIO,
     VERTICAL_ADDENDUM_TUTOR,
 )
@@ -77,6 +82,8 @@ class ManimGeneratorLMStudio:
         # LMStudio local client
         self.client = AsyncOpenAI(base_url=BASE_URL, api_key="lm-studio")
         self.vertical = vertical
+        self.gate_tier = os.getenv("MANIM_GATE_TIER", "A").strip().upper()
+        self.disable_gemini_fallback = os.getenv("LMSTUDIO_DISABLE_GEMINI_FALLBACK", "0").strip() == "1"
         
         # Google Gemini setup for fallback/tutor
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -84,6 +91,17 @@ class ManimGeneratorLMStudio:
             self.gemini_client = genai.Client(api_key=self.gemini_api_key)
         else:
             self.gemini_client = None
+
+    def _tier_addendum(self) -> str:
+        if self.gate_tier in {"3DLITE", "3D-LITE"}:
+            return LMSTUDIO_TIER_3DLITE_ADDENDUM
+        if self.gate_tier in {"B+", "BPLUS"}:
+            return LMSTUDIO_TIER_BPLUS_ADDENDUM
+        if self.gate_tier == "C":
+            return LMSTUDIO_TIER_C_ADDENDUM
+        if self.gate_tier == "B":
+            return LMSTUDIO_TIER_B_ADDENDUM
+        return LMSTUDIO_TIER_A_ADDENDUM
         
     def log_outcome(
         self,
@@ -136,6 +154,7 @@ class ManimGeneratorLMStudio:
         )
         
         system = LMSTUDIO_SYSTEM
+        system += self._tier_addendum()
         if self.vertical:
             system += VERTICAL_ADDENDUM_LMSTUDIO
         
@@ -168,6 +187,7 @@ class ManimGeneratorLMStudio:
         )
         
         system = LMSTUDIO_SYSTEM
+        system += self._tier_addendum()
         if self.vertical:
             system += VERTICAL_ADDENDUM_LMSTUDIO
         
@@ -240,6 +260,26 @@ class ManimGeneratorLMStudio:
             is_tutor_mode = True
             
         if not is_tutor_mode:
+            # Qwen-only mode: retry using LMStudio directly, no Gemini fallback.
+            if self.disable_gemini_fallback or not self.gemini_client:
+                retry_prompt = LMSTUDIO_COMPILE_ERROR.format(error=error_msg[:2000])
+                fresh_messages = [
+                    messages[0],  # Keep the tier-aware system prompt
+                    {"role": "user", "content": retry_prompt},
+                ]
+                print(f"    ⏳ Retrying with LMStudio only (Gemini fallback disabled)...")
+                t0 = time.time()
+                response = await self.client.chat.completions.create(
+                    model=MODEL,
+                    messages=fresh_messages,
+                )
+                elapsed = time.time() - t0
+                print(f"    ✓ LMStudio responded ({elapsed:.1f}s)")
+                raw_code = response.choices[0].message.content
+                manim_code = self._parse_manim_code(raw_code, slide_id)
+                fresh_messages.append({"role": "assistant", "content": raw_code})
+                return manim_code, fresh_messages
+
             # --- FALLBACK START: Switch to Gemini Tutor ---
             # We need the original prompt (idea) and the failed code.
             
@@ -417,16 +457,19 @@ class ManimGeneratorLMStudio:
     def _extract_code(self, raw_output: str) -> str:
         """Extract Python code from LLM output, removing markdown fences."""
         code = raw_output.strip()
-        
-        # Remove ```python or ``` wrappers
-        if code.startswith("```python"):
-            code = code[9:]
-        elif code.startswith("```"):
-            code = code[3:]
-        
-        if code.endswith("```"):
-            code = code[:-3]
-        
+
+        # Remove any markdown fence lines globally (not only outer wrappers).
+        cleaned_lines = []
+        for line in code.splitlines():
+            if line.strip().startswith("```"):
+                continue
+            cleaned_lines.append(line)
+        code = "\n".join(cleaned_lines).strip()
+
+        # Handle common accidental leading language marker.
+        if code.lower().startswith("python\n"):
+            code = code[len("python\n") :]
+
         return code.strip()
     
     def _extract_scene_name(self, code: str, fallback_id: str) -> str:

@@ -1,0 +1,219 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-reward-dynamics",
+  "voice": "In reinforcement learning, the agent learns by flipping pixels and observing the immediate change in border length. If a flip creates more red-blue boundaries, the agent receives a positive reward proportional to that increase. If it reduces the boundary, it's penalized. This turns a spatial arrangement problem into a sequence of value-driven decisions.",
+  "goal": "Visualize the incremental reward system used to train the RL agent.",
+  "remarks": "Show a 3x3 grid. Focus on the center pixel. Highlight its 4 neighbors. Animate the center pixel flipping from Red to Blue. Use green highlights for new borders created and red 'X' marks for borders lost. Display a floating '+2' or '-2' text next to the pixel based on the net change in border length. Link this to a BarChart showing the cumulative reward growing over time.",
+  "formula": "R_t = Border_{t} - Border_{t-1}",
+  "image_ref": "img-3.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+R_t = Border_{t} - Border_{t-1}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class RewardDynamics(Scene):
+    def construct(self):
+        # 1. Setup Header and Formula
+        title = Text("Reward Dynamics: Border Length", font_size=36).to_edge(UP)
+        formula = MathTex(r"R_t = \mathrm{Border}_{t} - \mathrm{Border}_{t-1}", font_size=32).next_to(title, DOWN)
+        self.add(title, formula)
+
+        # 2. Create a 3x3 grid manually for maximum compatibility
+        grid = VGroup()
+        for i in range(9):
+            sq = Square(side_length=1)
+            sq.move_to([i % 3 - 1, -(i // 3) + 1, 0])
+            grid.add(sq)
+        
+        grid.scale(1.2).shift(LEFT * 3)
+
+        # Set initial colors to demonstrate a +2 reward
+        # To get +2: 1 boundary initially, 3 boundaries after flip
+        # Initial: Center RED, Top RED, Left RED, Right RED, Bottom BLUE
+        grid[1].set_fill(RED, opacity=0.8)   # Top
+        grid[3].set_fill(RED, opacity=0.8)   # Left
+        grid[5].set_fill(RED, opacity=0.8)   # Right
+        grid[7].set_fill(BLUE, opacity=0.8)  # Bottom
+        grid[4].set_fill(RED, opacity=0.8)   # Center
+        
+        # Set stroke and fill for all squares
+        for i in range(9):
+            if i in [0, 2, 6, 8]:
+                grid[i].set_fill(GRAY, opacity=0.2)
+                grid[i].set_stroke(GRAY, opacity=0.5)
+            else:
+                grid[i].set_stroke(WHITE, width=2)
+                if i != 4 and i != 7: # If not center or bottom neighbor
+                    grid[i].set_fill(RED, opacity=0.8)
+
+        self.play(Create(grid))
+        self.wait(0.5)
+
+        # 3. Focus on center pixel and neighbors
+        center = grid[4]
+        neighbors = VGroup(grid[1], grid[3], grid[5], grid[7])
+        
+        focus_rect = SurroundingRectangle(VGroup(center, neighbors), color=YELLOW, buff=0.1)
+        self.play(Create(focus_rect))
+        self.wait(0.5)
+
+        # 4. Highlight the lost border (Initial state: Red-Blue boundary at the bottom)
+        lost_border_line = Line(center.get_corner(DL), center.get_corner(DR), color=RED, stroke_width=8)
+        self.play(Create(lost_border_line))
+        self.wait(0.5)
+
+        # 5. Flip center pixel: Red -> Blue
+        self.play(
+            center.animate.set_fill(BLUE),
+            focus_rect.animate.set_color(WHITE),
+            run_time=1
+        )
+
+        # 6. Create highlights for new borders and a manual cross for the lost one
+        nb_top = Line(center.get_corner(UL), center.get_corner(UR), color=GREEN, stroke_width=8)
+        nb_left = Line(center.get_corner(UL), center.get_corner(DL), color=GREEN, stroke_width=8)
+        nb_right = Line(center.get_corner(UR), center.get_corner(DR), color=GREEN, stroke_width=8)
+        
+        cp = lost_border_line.get_center()
+        l1 = Line(cp + UL*0.2, cp + DR*0.2, color=RED, stroke_width=4)
+        l2 = Line(cp + UR*0.2, cp + DL*0.2, color=RED, stroke_width=4)
+        manual_cross = VGroup(l1, l2)
+
+        self.play(
+            Create(nb_top),
+            Create(nb_left),
+            Create(nb_right),
+            Create(manual_cross),
+            FadeOut(lost_border_line, run_time=0.5)
+        )
+
+        # 7. Display floating reward text
+        reward_text = Text("+2", color=GREEN, font_size=48).next_to(center, RIGHT, buff=0.7)
+        self.play(Write(reward_text), reward_text.animate.shift(UP * 0.5))
+
+        # 8. Manual BarChart construction using Axes and Rectangles
+        axes = Axes(
+            x_range=[0, 3, 1], 
+            y_range=[0, 4, 1], 
+            x_length=3, 
+            y_length=3,
+            axis_config={"include_tip": False}
+        ).to_edge(RIGHT, buff=1)
+        
+        y_axis = axes.get_y_axis()
+        unit_height = y_axis.number_to_point(1)[1] - y_axis.number_to_point(0)[1]
+        
+        # Bar 1: Height 1
+        bar1 = Rectangle(
+            width=0.6, 
+            height=unit_height, 
+            fill_opacity=0.8, 
+            color=BLUE,
+            stroke_width=1
+        ).move_to(axes.c2p(1, 0.5))
+        
+        # Bar 2: Height 3
+        bar2 = Rectangle(
+            width=0.6, 
+            height=unit_height * 3, 
+            fill_opacity=0.8, 
+            color=GREEN,
+            stroke_width=1
+        ).move_to(axes.c2p(2, 1.5))
+        
+        chart_label = Text("Total Borders", font_size=24).next_to(axes, UP)
+        label_t_minus_1 = Text("t-1", font_size=18).next_to(bar1, DOWN, buff=0.1)
+        label_t = Text("t", font_size=18).next_to(bar2, DOWN, buff=0.1)
+        
+        self.play(Create(axes), Write(chart_label))
+        self.play(FadeIn(bar1), Write(label_t_minus_1))
+        self.play(FadeIn(bar2), Write(label_t))
+        
+        self.wait(2)
+
+        # Cleanup
+        self.play(
+            FadeOut(grid),
+            FadeOut(focus_rect),
+            FadeOut(nb_top),
+            FadeOut(nb_left),
+            FadeOut(nb_right),
+            FadeOut(manual_cross),
+            FadeOut(reward_text),
+            FadeOut(axes),
+            FadeOut(bar1),
+            FadeOut(bar2),
+            FadeOut(chart_label),
+            FadeOut(label_t_minus_1),
+            FadeOut(label_t),
+            FadeOut(title),
+            FadeOut(formula)
+        )
+        self.wait(1)
+
+=== ERROR ===
+undefined identifiers detected: Axes; disallowed symbols/features in constrained subset: Axes

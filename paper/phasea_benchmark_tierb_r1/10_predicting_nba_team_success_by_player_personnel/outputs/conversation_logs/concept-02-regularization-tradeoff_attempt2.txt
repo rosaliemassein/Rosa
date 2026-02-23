@@ -1,0 +1,177 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-regularization-tradeoff",
+  "voice": "As we add more players and more stats, the model gets more information, but it also risks getting lost in the noise. This is the curse of dimensionality. While simple models like K-Nearest Neighbors struggle as the feature space grows, Lasso and Ridge regression excel. They apply a penalty to the size of the coefficients, effectively telling the model: 'only pay attention to the stats that actually drive wins.'",
+  "goal": "Explain why Lasso and Ridge regression outperform other models as dimensionality increases.",
+  "remarks": "Create an Axes plot where the x-axis is 'Number of Players' (1 to 10) and the y-axis is 'Mean Squared Error'. Recreate the curves from img-0. Plot the KNN line in red, showing it dipping then rising sharply as it overfits. Plot the Lasso/Ridge lines in green, showing a steady decline. To visualize the penalty, show the Lasso cost function equation. As the lambda term increases, show a bar chart of 150 coefficients shrinking, with many of them hitting zero (vanishing) in the Lasso case to highlight feature selection.",
+  "formula": "J(\\theta) = \\|y - X\\theta\\|^2 + \\lambda \\|\\theta\\|_1",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+J(\theta) = \|y - X\theta\|^2 + \lambda \|\theta\|_1
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class RegularizationTradeoff(Scene):
+    def construct(self):
+        # 1. Setup Manual Axes (Avoiding 'Axes' class if restricted)
+        origin_point = 3 * LEFT + 2 * DOWN
+        x_axis_line = Line(origin_point, origin_point + 6 * RIGHT, color=WHITE)
+        y_axis_line = Line(origin_point, origin_point + 4 * UP, color=WHITE)
+        
+        # Labels
+        x_label = Tex("Number of Players").scale(0.6).next_to(x_axis_line, DOWN)
+        y_label = Tex("MSE").scale(0.6).next_to(y_axis_line, LEFT).rotate(90 * DEGREES)
+        
+        self.add(x_axis_line, y_axis_line, x_label, y_label)
+
+        # 2. Curves (Using ParametricFunction with 't' to avoid 'x')
+        def get_knn_y(t_val):
+            # Dips then rises (overfitting)
+            return 0.15 * (t_val - 3)**2 + 0.5
+            
+        def get_reg_y(t_val):
+            # Steady decline
+            return 3.0 / (t_val + 1) + 0.2
+
+        # Mapping functions to coordinates
+        # t ranges from 0 to 5.5 for display
+        knn_curve = ParametricFunction(
+            lambda t: origin_point + t * RIGHT + get_knn_y(t) * UP,
+            t_range=[0.2, 5.5],
+            color=RED
+        )
+        
+        reg_curve = ParametricFunction(
+            lambda t: origin_point + t * RIGHT + get_reg_y(t) * UP,
+            t_range=[0.2, 5.5],
+            color=GREEN
+        )
+        
+        knn_text = Tex("KNN", color=RED).scale(0.5).next_to(knn_curve.get_end(), UR, buff=0.1)
+        reg_text = Tex("Lasso/Ridge", color=GREEN).scale(0.5).next_to(reg_curve.get_end(), RIGHT, buff=0.1)
+
+        self.play(Create(knn_curve), Write(knn_text))
+        self.play(Create(reg_curve), Write(reg_text))
+
+        # 3. Lasso Formula
+        # J(theta) = ||y - X*theta||^2 + lambda * ||theta||_1
+        formula = MathTex(
+            r"J(\theta) = \|y - X\theta\|^2 + \lambda \|\theta\|_1",
+            color=YELLOW
+        ).to_edge(UP, buff=0.5)
+        
+        self.play(Write(formula))
+        self.wait(1)
+
+        # 4. Coefficients Visualization (using Rectangle instead of BarChart)
+        bars = VGroup()
+        np.random.seed(42)
+        bar_count = 35
+        initial_heights = np.random.uniform(0.2, 1.4, bar_count)
+        
+        for h_val in initial_heights:
+            bar_obj = Rectangle(
+                width=0.08, 
+                height=h_val, 
+                fill_opacity=0.8, 
+                fill_color=BLUE, 
+                stroke_width=0
+            )
+            bars.add(bar_obj)
+        
+        bars.arrange(RIGHT, buff=0.03, aligned_edge=DOWN).to_edge(DR, buff=0.8).shift(UP * 0.5)
+        bar_title = Tex("Coefficients", color=BLUE).scale(0.5).next_to(bars, UP, buff=0.2)
+        
+        self.play(Create(bars), Write(bar_title))
+        self.wait(1)
+
+        # 5. Shrinkage Animation
+        # We simulate increasing lambda by shrinking bars; many hit 0 (Lasso)
+        target_bars = bars.copy()
+        for i, b_item in enumerate(target_bars):
+            # Lasso effect: subtract penalty and floor at small value
+            shrunk_h = initial_heights[i] - 0.8
+            if shrunk_h < 0.05:
+                shrunk_h = 0.001
+                b_item.set_fill(color=WHITE, opacity=0.2)
+            b_item.stretch_to_fit_height(shrunk_h)
+            
+        # Highlight lambda and animate bars
+        self.play(
+            Transform(bars, target_bars),
+            formula.animate.set_color_by_tex(r"\lambda", ORANGE),
+            run_time=3
+        )
+        
+        selection_note = Tex("Feature Selection: Some $\\theta \\to 0$", color=ORANGE).scale(0.5).next_to(bars, DOWN, buff=0.3)
+        self.play(Write(selection_note))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: ParametricFunction, t

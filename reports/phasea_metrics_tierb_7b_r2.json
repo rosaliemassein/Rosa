@@ -1,0 +1,77 @@
+{
+  "csv_files": [
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/01_8647_automl_agent_a_multi_agen/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/02_baxterbartlett_cs229_termproject_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/03_cs229_2024_final_project_amin_zareian_rl_optimization_tool/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/04_cs229_fin/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/05_cs229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/06_cs229_project_final_report_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/07_cs229_project_final_report_dakotajp_3/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/08_cs_229_final_report/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/09_final_project_final/outputs/pipeline_results.csv",
+    "/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierb_7b_r2/10_predicting_nba_team_success_by_player_personnel/outputs/pipeline_results.csv"
+  ],
+  "total_attempts": 53,
+  "compiled_attempts": 20,
+  "compile_rate": 0.3774,
+  "slides_evaluated_for_pass1": 33,
+  "pass_at_1": 0.5455,
+  "bucket_counts": {
+    "gate_fail": 30,
+    "syntax": 0,
+    "undefined_name": 0,
+    "manim_error": 0,
+    "timeout": 0
+  },
+  "feature_counts": {
+    "uses_mathtex": 44,
+    "uses_axes_or_numberplane": 5
+  },
+  "gate_reason_tag_counts": {
+    "syntax_error": 1,
+    "undefined_symbol": 29,
+    "disallowed_tier_symbol": 6
+  },
+  "top_error_signatures": [
+    [
+      "undefined identifiers detected: VMobject",
+      8
+    ],
+    [
+      "undefined identifiers detected: smooth",
+      3
+    ],
+    [
+      "undefined identifiers detected: ArcBetweenPoints",
+      2
+    ],
+    [
+      "undefined identifiers detected: t",
+      2
+    ],
+    [
+      "error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+      2
+    ],
+    [
+      "undefined identifiers detected: Axes, ValueTracker | disallowed symbols/features in constrained subset: Axes, ValueTracker",
+      2
+    ],
+    [
+      "syntax error: unterminated string literal (detected at line 147) (line 147)",
+      1
+    ],
+    [
+      "undefined identifiers detected: BLUE_B",
+      1
+    ],
+    [
+      "undefined identifiers detected: Brace, VMobject | disallowed symbols/features in constrained subset: Brace",
+      1
+    ],
+    [
+      "undefined identifiers detected: np",
+      1
+    ]
+  ]
+}

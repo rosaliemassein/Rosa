@@ -1,0 +1,164 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-genetic-win-rate-selection",
+  "voice": "Standard training minimizes mathematical error, but that doesn't always lead to more wins. To bridge this gap, we use a genetic algorithm. We create 'child' models from the current 'parent' and have them compete in actual games. We only keep the descendant that achieves the highest win rate. This creates a direct 'evolutionary gradient' for victory, ensuring that the model isn't just getting better at math, but better at the game itself.",
+  "goal": "Understand why genetic selection is used alongside DQL to optimize for win rates.",
+  "remarks": "Draw a central 'Parent' node. Animate three 'Child' nodes branching out from it. Below each child, create a BarChart representing 'Win Rate'. Animate the bars growing to different heights. Highlight the child with the highest bar in gold. Use a 'FadeOut' on the parent and other children, then move the gold child to the center to become the new 'Parent'. Repeat the cycle quickly to show evolution.",
+  "formula": "P_{t+1} = \\arg\\max_{c \\in \\text{Children}(P_t)} \\text{WinRate}(c)",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+P_{t+1} = \arg\max_{c \in \text{Children}(P_t)} \text{WinRate}(c)
+
+
+=== ASSISTANT ===
+from manim import *
+
+class GeneticWinRateSelection(Scene):
+    def construct(self):
+        # Formula using Text instead of MathTex
+        formula = Text("P(t+1) = arg max WinRate(c)", font_size=24)
+        formula.to_edge(UP)
+        self.add(formula)
+
+        # Initial Parent node
+        parent_dot = Dot(color=WHITE)
+        parent_label = Text("Parent", font_size=20).next_to(parent_dot, UP)
+        parent_group = VGroup(parent_dot, parent_label).move_to(ORIGIN)
+        
+        self.play(FadeIn(parent_group))
+        self.wait(0.5)
+
+        # Perform the evolution cycle twice
+        for cycle in range(2):
+            # 1. Branching out Child nodes
+            child_targets = [LEFT * 3 + DOWN * 1.5, DOWN * 1.5, RIGHT * 3 + DOWN * 1.5]
+            children = VGroup()
+            lines = VGroup()
+            
+            for i in range(3):
+                c_dot = Dot(color=BLUE)
+                c_label = Text("Child " + str(i+1), font_size=18).next_to(c_dot, UP)
+                child = VGroup(c_dot, c_label).move_to(child_targets[i])
+                children.add(child)
+                lines.add(Line(parent_group[0].get_center(), c_dot.get_center(), color=WHITE))
+
+            self.play(
+                parent_group.animate.shift(UP * 2),
+                Create(lines),
+                FadeIn(children)
+            )
+
+            # 2. Bar charts using Square (stretched) as Rectangle is disallowed
+            # Cycle 0: Child 2 (index 1) wins. Cycle 1: Child 1 (index 0) wins.
+            heights = [1.2, 2.8, 1.0] if cycle == 0 else [3.0, 1.5, 0.9]
+            winner_idx = 1 if cycle == 0 else 0
+            
+            bars = VGroup()
+            bar_labels = VGroup()
+            for i, h in enumerate(heights):
+                # Creating a bar using Square and stretching it
+                bar = Square(side_length=1.0, fill_opacity=0.8, fill_color=BLUE, stroke_color=WHITE)
+                bar.stretch_to_fit_height(h)
+                bar.stretch_to_fit_width(0.6)
+                # Position bar bottom-aligned below the child dot
+                bar.move_to(children[i][0].get_center() + DOWN * (h/2 + 0.5))
+                
+                val = str(int((h/3.5)*100)) + "%"
+                lbl = Text(val, font_size=14).next_to(bar, DOWN, buff=0.1)
+                
+                bars.add(bar)
+                bar_labels.add(lbl)
+
+            self.play(
+                FadeIn(bars),
+                FadeIn(bar_labels)
+            )
+            self.wait(0.5)
+
+            # 3. Highlight winner in YELLOW
+            self.play(
+                bars[winner_idx].animate.set_color(YELLOW),
+                children[winner_idx].animate.set_color(YELLOW)
+            )
+            self.wait(1)
+
+            # 4. Evolution Step: Winner becomes new Parent
+            # Save winner geometry
+            new_parent_dot = children[winner_idx][0].copy()
+            new_parent_label = Text("Parent", font_size=20).next_to(new_parent_dot, UP)
+            
+            # Group everything else for removal
+            to_remove = VGroup(
+                parent_group, lines, bars, bar_labels,
+                *[children[i] for i in range(3) if i != winner_idx],
+                children[winner_idx][1] # Old label "Child X"
+            )
+
+            self.play(
+                FadeOut(to_remove),
+                new_parent_dot.animate.move_to(ORIGIN),
+                new_parent_label.animate.move_to(UP * 0.4)
+            )
+            
+            # Update parent reference for next cycle
+            parent_group = VGroup(new_parent_dot, new_parent_label)
+            parent_group.move_to(ORIGIN)
+            self.wait(0.5)
+
+        self.wait(1)

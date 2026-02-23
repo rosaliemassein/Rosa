@@ -1,0 +1,184 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-state-space-explosion",
+  "voice": "The main challenge for standard Q-learning is the state space explosion. Since each pixel can be red or blue, a small five-by-five grid has over thirty-three million possible configurations. As the matrix size grows linearly, the number of states we need to track in our Q-table grows exponentially, making the training time skyrocket.",
+  "goal": "Explain why standard Q-tables fail as matrix dimensions increase.",
+  "remarks": "Create an Axes where the x-axis is 'Matrix Size' (2 to 6) and the y-axis is 'Possible States' (log scale). Plot the function 2^(x^2). Start with a small table graphic for a 2x2 grid (16 rows). As the grid size increases to 5x5, animate the table rows multiplying and scrolling at high speed, eventually turning into a solid blur of color to represent the 2^25 states, while the graph curve shoots off the top of the screen.",
+  "formula": "\\text{Total States} = 2^{(N \\times N)}",
+  "image_ref": "img-4.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\text{Total States} = 2^{(N \times N)}
+
+
+=== ASSISTANT ===
+from manim import *
+import math
+
+class StateSpaceExplosion(Scene):
+    def construct(self):
+        # 1. Setup Manual Axes (to avoid 'Axes' disallowed identifier)
+        # Horizontal line for Matrix Size (N)
+        x_axis = Line(LEFT * 0.5 + DOWN * 3, RIGHT * 5.5 + DOWN * 3, color=BLUE)
+        y_axis = Line(LEFT * 0.5 + DOWN * 3, LEFT * 0.5 + UP * 3, color=BLUE)
+        
+        # Axis Labels
+        x_label = Text("Matrix Size (N)", font_size=24).next_to(x_axis, DOWN)
+        y_label = Text("Possible States (log scale)", font_size=24).rotate(90 * DEGREES).next_to(y_axis, LEFT)
+        
+        # Ticks and Numbers for X-axis (2 to 6)
+        x_ticks = VGroup()
+        for i in range(2, 7):
+            pos = LEFT * 0.5 + DOWN * 3 + RIGHT * (i - 1.5) * 1.25
+            tick = Line(pos + DOWN * 0.1, pos + UP * 0.1)
+            num = Text(str(i), font_size=20).next_to(tick, DOWN)
+            x_ticks.add(tick, num)
+            
+        # Ticks for Y-axis (10^0 to 10^12)
+        y_ticks = VGroup()
+        for i in range(0, 13, 3):
+            pos = LEFT * 0.5 + DOWN * 3 + UP * (i / 12.0) * 6
+            tick = Line(pos + LEFT * 0.1, pos + RIGHT * 0.1)
+            num = MathTex(f"10^{{{i}}}", font_size=24).next_to(tick, LEFT)
+            y_ticks.add(tick, num)
+
+        # 2. Formula
+        formula = MathTex(r"\text{Total States} = 2^{(N \times N)}").to_corner(UP + RIGHT).shift(LEFT * 0.5)
+
+        # 3. Create Graph (VMobject)
+        # Map N=[2,6] to x_coords and States=[1, 10^12] to y_coords
+        graph = VMobject(color=YELLOW)
+        points = []
+        for n_val in [v * 0.1 for v in range(20, 61)]:
+            log_states = (n_val**2) * math.log10(2)
+            # Normalize to screen coordinates
+            x_coord = -0.5 + (n_val - 1.5) * 1.25
+            y_coord = -3 + (log_states / 12.0) * 6
+            points.append([x_coord, y_coord, 0])
+        graph.set_points_as_corners(points)
+
+        # 4. Table Representation (Left Side)
+        table_box = Rectangle(height=5, width=2.5, color=WHITE).to_edge(LEFT, buff=0.8)
+        table_header = Text("Q-Table Rows", font_size=24).next_to(table_box, UP)
+        
+        # Initial rows for N=2 (16 states)
+        row_group = VGroup(*[
+            Line(table_box.get_left() + UP * (2.5 - i*5/16), 
+                 table_box.get_right() + UP * (2.5 - i*5/16), 
+                 stroke_width=1)
+            for i in range(17)
+        ])
+        
+        # Blur fill for later
+        blur_rect = Rectangle(
+            height=5, width=2.5, fill_color=BLUE, fill_opacity=0, stroke_width=0
+        ).move_to(table_box)
+
+        # 5. Animations
+        self.add(x_axis, y_axis, x_label, y_label, x_ticks, y_ticks, formula, table_box, table_header, row_group)
+        self.play(Create(graph), run_time=4, rate_func=lambda t: t)
+
+        # Scrolling and multiplying effect
+        # We simulate the explosion by adding more lines and moving them
+        def update_table_rows(mobj, alpha):
+            # As alpha goes 0 to 1, row density increases
+            num_rows = int(16 + alpha * 150)
+            offset = (alpha * 10) % 1.0 # Scrolling offset
+            new_rows = VGroup()
+            spacing = 5.0 / num_rows
+            for i in range(num_rows + 1):
+                y_pos = 2.5 - (i * spacing) - (offset * spacing)
+                if -2.5 <= y_pos <= 2.5:
+                    line = Line(
+                        table_box.get_left() + UP * y_pos, 
+                        table_box.get_right() + UP * y_pos, 
+                        stroke_width=0.5, stroke_opacity=0.7
+                    )
+                    new_rows.add(line)
+            mobj.become(new_rows)
+            
+            # Increase blur as it grows
+            if alpha > 0.5:
+                blur_rect.set_fill(opacity=(alpha - 0.5) * 2)
+
+        self.add(blur_rect)
+        self.play(
+            UpdateFromAlphaFunc(row_group, update_table_rows),
+            run_time=5,
+            rate_func=lambda t: t
+        )
+
+        # 6. Conclusion: Graph shoots off and solid blur
+        self.play(
+            graph.animate.shift(UP * 10),
+            blur_rect.animate.set_fill(opacity=1).scale(1.1),
+            table_box.animate.scale(1.1),
+            FadeOut(row_group),
+            run_time=1.5
+        )
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: UpdateFromAlphaFunc, VMobject, t

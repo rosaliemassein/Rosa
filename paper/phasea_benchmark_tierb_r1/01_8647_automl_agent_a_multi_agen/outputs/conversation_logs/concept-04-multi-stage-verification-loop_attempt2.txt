@@ -1,0 +1,151 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-multi-stage-verification-loop",
+  "voice": "Finally, we ensure reliability through a three-stage verification gate. First, 'Request Verification' ensures the user's instructions are clear. Then, 'Execution Verification' filters the most promising plans from the pseudo-results. Finally, 'Implementation Verification' checks the actual compiled code. If a solution fails any gate, the feedback is fed back to the Agent Manager, which revises the plans and restarts the loop\u2014ensuring only deployment-ready models reach the finish line.",
+  "goal": "Understand the iterative feedback loop and the three distinct verification stages.",
+  "remarks": "Draw three vertical lines acting as 'Gates' labeled ReqVer, ExecVer, and ImpVer. Animate a 'Plan' object (a small square) moving through them. If it hits a gate and 'fails' (turns red), draw a CurvedArrow looping it back to the 'Planning' stage at the beginning. When it 'passes' (turns green), it moves to the next gate until it reaches a 'Deployment' icon.",
+  "formula": "\\mathcal{M}^{\\star} = \\mathcal{A}_{o}(I^{\\star}) \\text{ s.t. } \\mathrm{ImpVer}(\\mathcal{M}^{\\star}) = \\text{Pass}",
+  "image_ref": "img-2.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathcal{M}^{\star} = \mathcal{A}_{o}(I^{\star}) \text{ s.t. } \mathrm{ImpVer}(\mathcal{M}^{\star}) = \text{Pass}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class MultiStageVerificationLoop(Scene):
+    def construct(self):
+        # 1. Setup Formula and Title
+        formula = MathTex(
+            r"\mathcal{M}^{\star} = \mathcal{A}_{o}(I^{\star}) \text{ s.t. } \mathrm{ImpVer}(\mathcal{M}^{\star}) = \text{Pass}"
+        ).to_edge(UP)
+        self.add(formula)
+
+        # 2. Create Planning and Deployment zones
+        planning_label = Text("Planning", font_size=24).shift(LEFT * 5.5 + UP * 0.5)
+        deployment_label = Text("Deployment", font_size=24, color=GOLD).shift(RIGHT * 5.5 + UP * 0.5)
+        deployment_icon = Star(color=GOLD, fill_opacity=1).scale(0.3).next_to(deployment_label, DOWN)
+        
+        # 3. Create three vertical lines for the gates
+        gate_positions = [-2.5, 0, 2.5]
+        gate_names = ["ReqVer", "ExecVer", "ImpVer"]
+        gate_lines = VGroup()
+        gate_labels = VGroup()
+
+        for pos, name in zip(gate_positions, gate_names):
+            line = Line(UP * 1.5, DOWN * 1.5).move_to(RIGHT * pos)
+            label = Text(name, font_size=20).next_to(line, UP)
+            gate_lines.add(line)
+            gate_labels.add(label)
+
+        self.add(planning_label, deployment_label, deployment_icon, gate_lines, gate_labels)
+
+        # 4. Create the 'Plan' object (a small square)
+        plan = Square(side_length=0.4, color=WHITE, fill_opacity=0.5).move_to(LEFT * 5.5)
+        self.play(FadeIn(plan))
+
+        # 5. Animation logic to show the loop
+        
+        # Step 1: Pass first gate
+        self.play(plan.animate.move_to(RIGHT * gate_positions[0]))
+        self.play(plan.animate.set_color(GREEN))
+        self.wait(0.2)
+
+        # Step 2: Fail second gate
+        self.play(plan.animate.move_to(RIGHT * gate_positions[1]))
+        self.play(plan.animate.set_color(RED))
+        
+        # Create a curved loop-back arrow using ArcBetweenPoints
+        # This is more compatible across Manim versions than CurvedArrow
+        start_pt = plan.get_bottom()
+        end_pt = planning_label.get_bottom() + DOWN * 0.2
+        fail_arrow = ArcBetweenPoints(start_pt, end_pt, angle=PI/2, color=RED).add_tip()
+        
+        self.play(Create(fail_arrow))
+        # Loop back to start
+        self.play(
+            plan.animate.move_to(LEFT * 5.5).set_color(WHITE),
+            run_time=1.5
+        )
+        self.play(FadeOut(fail_arrow))
+        self.wait(0.5)
+
+        # Step 3: Success run through all gates
+        for pos in gate_positions:
+            self.play(plan.animate.move_to(RIGHT * pos).set_color(GREEN), run_time=0.7)
+        
+        # Step 4: Reach Deployment
+        self.play(plan.animate.move_to(deployment_icon.get_center()))
+        self.play(
+            Indicate(deployment_icon, color=YELLOW, scale_factor=1.5),
+            plan.animate.scale(0).set_opacity(0)
+        )
+        
+        # Highlight completion
+        self.play(formula.animate.set_color(YELLOW))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: ArcBetweenPoints

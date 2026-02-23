@@ -1,0 +1,155 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-dominant-zone-mechanism",
+  "voice": "In large commercial buildings, cooling isn't uniform. A phenomenon exists where a tiny fraction of rooms, called dominant zones, actually drive the energy load for the entire building. When one of these zones struggles to stay cool, it sends a cooling request to the central Air Handler. In response, the handler drops the supply air temperature for everyone. This effectively overcools the majority of the building just to satisfy the high demand of a few special rooms.",
+  "goal": "Understand the physical relationship between individual zone requests and building-wide HVAC behavior.",
+  "remarks": "Create a central rectangle representing an 'AHU' and five smaller rectangles surrounding it as 'Zones'. Animate a heat gradient (orange) growing in two zones while others remain green. Show dashed arrows moving from the orange zones to the AHU labeled 'Cooling Request'. As arrows hit the AHU, change its color from light blue to deep blue. Then, show deep blue 'Supply Air' arrows flowing back to ALL zones. The green zones should then turn a 'chilled' white-blue color to signify overcooling.",
+  "formula": null,
+  "image_ref": "img-12.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+
+class DominantZoneMechanism(Scene):
+    def construct(self):
+        # Explicit hex color definitions to ensure compatibility across Manim versions
+        # BLUE_C equivalent
+        C_NORMAL_BLUE = "#58C4DD"
+        # BLUE_E equivalent
+        C_DEEP_BLUE = "#236B8E"
+        # BLUE_A equivalent
+        C_LIGHT_BLUE = "#C7E9F1"
+        
+        # 1. Setup the Central AHU and surrounding Zones
+        # AHU is at the top
+        ahu = Rectangle(color=C_NORMAL_BLUE, width=2.5, height=1.2, fill_opacity=0.8)
+        ahu_label = Text("AHU", font_size=24).move_to(ahu)
+        ahu_group = VGroup(ahu, ahu_label).to_edge(UP, buff=1)
+
+        # Five smaller rectangles for Zones at the bottom
+        # Each zone is a VGroup of a Rectangle and its label
+        zones = VGroup(*[
+            VGroup(
+                Rectangle(color=GREEN, width=1.5, height=1, fill_opacity=0.4),
+                Text(f"Zone {i+1}", font_size=16).shift(DOWN * 0.7)
+            ) for i in range(5)
+        ])
+        zones.arrange(RIGHT, buff=0.5).to_edge(DOWN, buff=1.5)
+
+        self.add(ahu_group, zones)
+
+        # 2. Animate heat gradient (orange) growing in two zones (indices 1 and 3)
+        dominant_indices = [1, 3]
+        heat_animations = [
+            zones[i][0].animate.set_color(ORANGE).set_fill(ORANGE, opacity=0.8)
+            for i in dominant_indices
+        ]
+        
+        self.play(*heat_animations, run_time=2)
+
+        # 3. Show dashed arrows moving from the orange zones to the AHU labeled 'Cooling Request'
+        request_arrows = VGroup(*[
+            DashedLine(
+                zones[i].get_top(), 
+                ahu.get_bottom(), 
+                color=ORANGE, 
+                dash_length=0.1
+            ).add_tip()
+            for i in dominant_indices
+        ])
+        request_label = Text("Cooling Request", font_size=20, color=ORANGE).next_to(request_arrows, RIGHT, buff=0.5)
+
+        self.play(Create(request_arrows), Write(request_label), run_time=2)
+        self.wait(0.5)
+
+        # 4. As arrows hit AHU, change color from normal blue to deep blue
+        self.play(
+            ahu.animate.set_color(C_DEEP_BLUE).set_fill(C_DEEP_BLUE, opacity=1),
+            FadeOut(request_label),
+            run_time=1
+        )
+
+        # 5. Show deep blue 'Supply Air' arrows flowing back to ALL zones
+        supply_arrows = VGroup(*[
+            Arrow(
+                ahu.get_bottom(), 
+                zones[i].get_top(), 
+                color=C_DEEP_BLUE, 
+                buff=0.1, 
+                stroke_width=4
+            )
+            for i in range(5)
+        ])
+        supply_label = Text("Supply Air", font_size=20, color=C_DEEP_BLUE).next_to(supply_arrows, LEFT, buff=0.5)
+
+        self.play(Create(supply_arrows), Write(supply_label), run_time=2)
+
+        # 6. The non-dominant green zones should then turn a 'chilled' white-blue color to signify overcooling
+        overcool_animations = [
+            zones[i][0].animate.set_color(C_LIGHT_BLUE).set_fill(C_LIGHT_BLUE, opacity=0.4)
+            for i in range(5) if i not in dominant_indices
+        ]
+        
+        self.play(*overcool_animations, run_time=1.5)
+        self.wait(2)

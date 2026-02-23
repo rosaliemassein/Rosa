@@ -1,0 +1,37 @@
+{
+  "title": "AutoML-Agent: A Multi-Agent LLM Framework for Full-Pipeline AutoML",
+  "slides": [
+    {
+      "id": "concept-01-multi-agent-orchestration",
+      "voice": "Imagine an AI project as a construction site. Instead of one person trying to build the whole house, AutoML-Agent uses a team of specialized workers. We have an Agent Manager acting as the conductor, delegating tasks to experts in data parsing, preprocessing, model design, and final code generation. This modular approach allows the system to handle the massive complexity of an end-to-end machine learning pipeline without getting overwhelmed.",
+      "goal": "Understand the roles and hierarchy of the specialized agents within the AutoML-Agent framework.",
+      "remarks": "Create a central node labeled 'Agent Manager'. Draw four arrows pointing outwards to sub-nodes: 'Prompt Agent', 'Data Agent', 'Model Agent', and 'Operation Agent'. Color code each node differently. Animate a 'User Instruction' pulse traveling from the user to the Manager, then small 'Task' pulses flowing from the Manager to each specialized agent. Use Manim's Create and GrowFromCenter methods to build this hierarchy.",
+      "formula": "\\mathcal{A}_{mgr} \\to \\{\\mathcal{A}_p, \\mathcal{A}_d, \\mathcal{A}_m, \\mathcal{A}_o\\}",
+      "image_ref": "img-1.jpeg"
+    },
+    {
+      "id": "concept-02-retrieval-augmented-planning",
+      "voice": "Standard AI planning often relies on a single, fixed path. But here, we use Retrieval-Augmented Planning, or RAP. The system queries external knowledge like arXiv papers or technical documentation to broaden its horizons. Instead of one plan, it generates multiple parallel scenarios. This ensures that even if one path fails, or a newer architecture is available in the literature, the agent can find the most optimal route for your specific dataset.",
+      "goal": "Explain how external knowledge retrieval enables the exploration of diverse, optimal planning paths.",
+      "remarks": "Animate a search bar at the top of the screen. A keyword like 'Image Classification' is typed, and documents (rectangles with text lines) fly in from the 'cloud'. These documents transform into multiple diverging paths labeled 'Plan A', 'Plan B', and 'Plan C'. Use a Tree structure where the root is the 'Parsed Requirement' and branches represent different plans. Highlight the most 'successful' looking branch with a glowing animation.",
+      "formula": "\\mathbf{P} = \\mathcal{A}_{mgr}(\\mathrm{RAP}(R))",
+      "image_ref": "img-2.jpeg"
+    },
+    {
+      "id": "concept-03-pseudo-execution-efficiency",
+      "voice": "Searching for the best model usually requires training dozens of candidates, which is incredibly slow. To speed things up, AutoML-Agent performs 'training-free search.' The Data and Model agents use their inherent knowledge to simulate or 'pseudo-execute' the plan. They estimate outcomes like accuracy and inference speed without actually writing or running code yet. This allows the system to narrow down thousands of possibilities to the best few in seconds.",
+      "goal": "Visualize the efficiency of predicting performance metrics through LLM knowledge instead of actual training.",
+      "remarks": "Show a 'Traditional AutoML' side with a slow-spinning loading wheel and a bar chart barely growing. On the 'AutoML-Agent' side, show a 'Brain' icon (LLM) flashing quickly, instantly generating a table of results including 'Accuracy: 95%' and 'Latency: 10ms'. Use TransformMatchingShapes to turn a list of 'Candidate Models' into a 'Ranked Leaderboard' instantly.",
+      "formula": "O_{i}^{m} = \\mathcal{A}_{m}(\\mathbf{s}_{i}^{m})",
+      "image_ref": "img-1.jpeg"
+    },
+    {
+      "id": "concept-04-multi-stage-verification-loop",
+      "voice": "Even the best plans can have errors. To ensure reliability, the system uses a triple-check loop. First, it verifies if your request is clear. Second, it checks if the simulated plans actually meet your goals. Finally, once the code is written, it verifies the execution results. If a check fails at any stage, the Agent Manager triggers a revision, looping back to fix the plan until it's deployment-ready.",
+      "goal": "Explain the self-correcting feedback mechanism that ensures high success rates across different tasks.",
+      "remarks": "Create a horizontal pipeline with three 'Gates' labeled ReqVer, ExecVer, and ImpVer. Animate a 'Solution' object moving through them. At the 'ExecVer' gate, show the object turning red (Fail) and a curved 'Feedback Arrow' carrying a message back to the 'Planning' stage. The solution then transforms into a 'Revised' version and passes through all gates, turning green at each step. Use Indicate or Flash when a gate is passed.",
+      "formula": "\\text{If } \\mathrm{Ver}(\\mathbf{O}) = \\text{fail} \\implies S \\gets \\text{REVISE}",
+      "image_ref": "img-2.jpeg"
+    }
+  ]
+}

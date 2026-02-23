@@ -1,0 +1,5 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-02-cosine-similarity-matrix,0,,,False,0,,,error: Server disconnected without sending a response.,,,,,,,
+concept-03-iterative-clustering,1,slides/concept-03-iterative-clustering.py,,False,3,,,compile_failed,conversation_logs/concept-03-iterative-clustering_attempt1.txt,-1,gate_fail,undefined identifiers detected: rate_functions,undefined_symbol,,rate_functions
+concept-03-iterative-clustering,2,slides/concept-03-iterative-clustering_v2.py,,False,3,,,compile_failed,conversation_logs/concept-03-iterative-clustering_attempt2.txt,-1,gate_fail,undefined identifiers detected: rate_functions,undefined_symbol,,rate_functions
+concept-03-iterative-clustering,3,slides/concept-03-iterative-clustering_v3.py,,False,3,,,compile_failed,conversation_logs/concept-03-iterative-clustering_attempt3.txt,-1,gate_fail,undefined identifiers detected: t,undefined_symbol,,t

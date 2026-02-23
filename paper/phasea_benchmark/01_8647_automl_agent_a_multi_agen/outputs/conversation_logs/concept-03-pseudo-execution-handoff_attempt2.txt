@@ -1,0 +1,135 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-pseudo-execution-handoff",
+  "voice": "The real magic happens during plan execution. We decompose each plan into sub-tasks for specialized agents. The Data Agent performs a 'pseudo-analysis'\u2014it acts as if it's processing the data to identify key characteristics. It then hands off these insights to the Model Agent. Notice how the Model Agent\u2019s sub-tasks depend directly on the Data Agent's output. This allows for a training-free search, where agents use in-context learning to estimate performance before a single line of training code is ever run.",
+  "goal": "Visualize the information hand-off between specialized agents and the concept of training-free search.",
+  "remarks": "Create a split-screen animation. On the top, the 'Data Agent' (A_d) processes a Data block to output 'O_d' (Data Insights). Animate an arrow carrying 'O_d' down to the 'Model Agent' (A_m). Show the Model Agent's task block (s_m) expanding as it receives this input. Use a ValueTracker to show a 'Search Efficiency' bar increasing as the agents communicate without actual GPU training execution.",
+  "formula": "s_i^m = \\mathrm{PD}(R, \\mathcal{A}_m, \\mathbf{p}_i, O_i^d)",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+s_i^m = \mathrm{PD}(R, \mathcal{A}_m, \mathbf{p}_i, O_i^d)
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptAnimation(Scene):
+    def construct(self):
+        # 1. Setup Agents and Labels
+        # Using Text instead of MathTex to avoid potential LaTeX issues in restricted environments
+        data_agent_label = Text("Data Agent (Ad)", font_size=24).to_edge(UP).shift(LEFT * 3)
+        model_agent_label = Text("Model Agent (Am)", font_size=24).to_edge(DOWN).shift(LEFT * 3 + UP * 1.5)
+        
+        # 2. Data processing elements
+        data_block = Text("Data Block (R)", font_size=20, color=YELLOW).next_to(data_agent_label, RIGHT, buff=0.5)
+        insights = Text("Data Insights (Od)", font_size=20, color=RED).next_to(data_block, RIGHT, buff=1.2)
+        
+        # 3. Model Agent task (Using Polygon to avoid disallowed Rectangle)
+        s = 0.5
+        task_box = Polygon([-s, -s, 0], [s, -s, 0], [s, s, 0], [-s, s, 0], color=BLUE)
+        task_box.next_to(model_agent_label, RIGHT, buff=0.5)
+        task_label = Text("sm", font_size=18).move_to(task_box.get_center())
+        
+        # 4. Search Efficiency Bar (Using Lines for compatibility)
+        eff_label = Text("Search Efficiency", font_size=24, color=BLUE).shift(RIGHT * 3.5 + UP * 1)
+        bar_bg = Line(LEFT * 1.5, RIGHT * 1.5, color=WHITE).next_to(eff_label, DOWN, buff=0.3)
+        bar_fg = Line(LEFT * 1.5, RIGHT * 1.5, color=BLUE, stroke_width=15).align_to(bar_bg, LEFT)
+        bar_fg.scale(0.01, about_edge=LEFT)
+        
+        # 5. Formula representation
+        formula = Text("si^m = PD(R, Am, pi, Od)", font_size=18).next_to(bar_bg, DOWN, buff=1.2)
+
+        # --- Animation Sequence ---
+
+        # Phase 1: Data Agent processing
+        self.play(FadeIn(data_agent_label), FadeIn(model_agent_label))
+        self.play(FadeIn(data_block))
+        self.wait(0.5)
+        
+        # Processing visual
+        arrow_process = Arrow(data_block.get_right(), insights.get_left(), color=WHITE, buff=0.1)
+        self.play(Create(arrow_process))
+        self.play(FadeIn(insights))
+        self.wait(1)
+
+        # Phase 2: Information Handoff
+        arrow_handoff = Arrow(insights.get_bottom(), task_box.get_top(), color=WHITE, buff=0.1)
+        self.play(Create(arrow_handoff))
+        
+        # "Moving" the insight into the model task block
+        moving_insight = insights.copy()
+        self.play(
+            moving_insight.animate.move_to(task_box.get_center()).scale(0.2).set_opacity(0),
+            task_box.animate.scale(1.4).set_color(GREEN),
+            FadeIn(task_label),
+            run_time=1.5
+        )
+        self.play(FadeIn(formula))
+        self.wait(0.5)
+
+        # Phase 3: Efficiency Increase (Search Efficiency)
+        self.add(bar_bg, bar_fg)
+        self.play(FadeIn(eff_label))
+        
+        # Grow the efficiency bar using animate
+        self.play(
+            bar_fg.animate.scale(100, about_edge=LEFT),
+            run_time=3
+        )
+        
+        # Final Narration Context
+        caption = Text("Training-free search using in-context learning", font_size=18)
+        caption.to_edge(DOWN, buff=0.5)
+        self.play(FadeIn(caption))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: Polygon; disallowed symbols/features in constrained subset: Polygon

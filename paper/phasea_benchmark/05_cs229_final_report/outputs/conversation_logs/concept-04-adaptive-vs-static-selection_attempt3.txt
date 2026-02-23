@@ -1,0 +1,187 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-adaptive-vs-static-selection",
+  "voice": "Traditional industry standards use static 'rules of thumb' that never change. But dominance is dynamic. Our machine learning approach is adaptive; it can recognize when a zone stops being a problem due to cooler weather or shifts in occupancy. While the static benchmark stays stuck, the logistic model constantly updates its list, flagging more zones during heatwaves and fewer when the building is under less stress, ensuring high performance without wasting energy.",
+  "goal": "Demonstrate the superiority of adaptive ML over static ASHRAE guidelines.",
+  "remarks": "Create a split-screen animation. On the left, 'Static Benchmark'; on the right, 'Logistic Model'. Show a timeline moving across the bottom (May to September). On the left, the highlighted zones in a floorplan remain frozen. On the right, animate the highlighted zones flickering on and off and changing in count as the timeline progresses. Overlay a line graph showing 'Missed Requests' (Recall error) where the ML line stays significantly lower than the Static line.",
+  "formula": null,
+  "image_ref": "img-9.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class ConceptAnimation(Scene):
+    def construct(self):
+        # 1. Setup Layout
+        # Titles
+        static_title = Text("Static Benchmark", font_size=24).shift(LEFT * 3.5 + UP * 3.5)
+        ml_title = Text("Logistic Model", font_size=24).shift(RIGHT * 3.5 + UP * 3.5)
+        self.add(static_title, ml_title)
+
+        # Floorplan representations using Square instead of Rectangle
+        def create_grid(center_pos):
+            grid = VGroup()
+            for i in range(3):
+                for j in range(3):
+                    cell = Square(side_length=0.7)
+                    cell.move_to(center_pos + RIGHT * j * 0.8 + DOWN * i * 0.8)
+                    grid.add(cell)
+            return grid.center().move_to(center_pos)
+
+        left_grid = create_grid(LEFT * 3.5 + UP * 1)
+        right_grid = create_grid(RIGHT * 3.5 + UP * 1)
+        self.add(left_grid, right_grid)
+
+        # Static highlights (Frozen)
+        static_highlights = VGroup(
+            left_grid[0].copy().set_fill(RED, opacity=0.6),
+            left_grid[4].copy().set_fill(RED, opacity=0.6),
+            left_grid[8].copy().set_fill(RED, opacity=0.6)
+        )
+        self.add(static_highlights)
+
+        # 2. Timeline
+        timeline_line = Line(LEFT * 5, RIGHT * 5).shift(DOWN * 3.5)
+        months = ["May", "Jun", "Jul", "Aug", "Sep"]
+        month_labels = VGroup()
+        for i in range(5):
+            lbl = Text(months[i], font_size=20)
+            lbl.move_to(timeline_line.point_from_proportion(i / 4) + DOWN * 0.4)
+            month_labels.add(lbl)
+        
+        # Timeline indicator
+        indicator = Dot(color=YELLOW).move_to(timeline_line.get_start())
+        self.add(timeline_line, month_labels, indicator)
+
+        # 3. Graph (Constructed manually with Line)
+        graph_origin = DOWN * 2.5 + LEFT * 2
+        x_axis = Line(graph_origin, graph_origin + RIGHT * 4)
+        y_axis = Line(graph_origin, graph_origin + UP * 1.5)
+        graph_label = Text("Missed Requests", font_size=18).next_to(y_axis, UP)
+        self.add(x_axis, y_axis, graph_label)
+
+        # 4. State variables and updaters
+        # Using a Mobject to store time since ValueTracker was flagged
+        time_obj = DecimalNumber(0).shift(UP * 10) # Off-screen
+        
+        adaptive_highlights = VGroup()
+        def update_highlights(m):
+            t = time_obj.get_value()
+            m.submobjects.clear()
+            # Deterministic pseudo-random selection based on time
+            seed = int(t * 50)
+            indices = [(seed + i*i) % 9 for i in range(3 + int(2 * np.sin(t * 5)))]
+            for idx in set(indices):
+                highlight = right_grid[idx].copy().set_fill(BLUE, opacity=0.7)
+                m.add(highlight)
+        
+        adaptive_highlights.add_updater(update_highlights)
+        self.add(adaptive_highlights)
+
+        # Move indicator based on time_obj
+        def update_indicator(m):
+            val = time_obj.get_value() / 5.0 # normalized 0 to 1
+            m.move_to(timeline_line.point_from_proportion(clip(val, 0, 1)))
+        indicator.add_updater(update_indicator)
+
+        # Error lines
+        static_error_line = VMobject(color=RED)
+        ml_error_line = VMobject(color=BLUE)
+        
+        def update_static_line(m):
+            t_curr = time_obj.get_value()
+            points = []
+            for step in np.linspace(0, t_curr, 20):
+                x = graph_origin[0] + (step / 5.0) * 4
+                y = graph_origin[1] + 1.1 + 0.05 * np.sin(step * 10)
+                points.append([x, y, 0])
+            if len(points) > 1:
+                m.set_points_as_corners(points)
+
+        def update_ml_line(m):
+            t_curr = time_obj.get_value()
+            points = []
+            for step in np.linspace(0, t_curr, 20):
+                x = graph_origin[0] + (step / 5.0) * 4
+                y = graph_origin[1] + 0.3 + 0.1 * np.cos(step * 8)
+                points.append([x, y, 0])
+            if len(points) > 1:
+                m.set_points_as_corners(points)
+
+        static_error_line.add_updater(update_static_line)
+        ml_error_line.add_updater(update_ml_line)
+        self.add(static_error_line, ml_error_line)
+
+        # Legend labels
+        static_tag = Text("Static", color=RED, font_size=14).next_to(y_axis, RIGHT).shift(UP * 1.1)
+        ml_tag = Text("ML", color=BLUE, font_size=14).next_to(y_axis, RIGHT).shift(UP * 0.3)
+        self.add(static_tag, ml_tag)
+
+        # 5. Animation Execution
+        # Progress the time from 0 to 5 (months range)
+        self.play(
+            time_obj.animate.set_value(5),
+            run_time=12,
+            rate_func=linear
+        )
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: DecimalNumber, VMobject, clip, linear

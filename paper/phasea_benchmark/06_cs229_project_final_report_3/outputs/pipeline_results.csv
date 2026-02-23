@@ -1,0 +1,3 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-02-zero-shot-classification,1,slides/concept-02-zero-shot-classification.py,,False,3,,,compile_failed,conversation_logs/concept-02-zero-shot-classification_attempt1.txt,-1,gate_fail,"undefined identifiers detected: BLUE_D, BLUE_E, Matrix",undefined_symbol,uses_axes_or_numberplane|uses_mathtex,BLUE_D|BLUE_E|Matrix
+concept-02-zero-shot-classification,2,slides/concept-02-zero-shot-classification_v2.py,concept-02-zero-shot-classification_v4.mp4,True,2,,,success,conversation_logs/concept-02-zero-shot-classification_attempt2.txt,1,,,,uses_axes_or_numberplane|uses_mathtex,

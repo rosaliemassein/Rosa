@@ -1,0 +1,196 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, B+, C, or 3D-LITE) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+- Do NOT use: VMobject, UpdateFromAlphaFunc, custom rate functions (`smooth`, `there_and_back`, `linear`) unless explicitly defined/imported.
+- Do NOT emit undeclared identifiers; common failure is using `t` without definition.
+- Prefer deterministic primitives: VGroup, Circle/Square/Line/Arrow, and Transform/FadeIn/FadeOut.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-01-feature-matrix",
+  "voice": "To predict a team's success, we can't just look at their total points. Instead, we represent each team as a high-dimensional matrix. We take the top ten players\u2014ranked by minutes played\u2014and for each one, we track fifteen distinct performance metrics. This creates a feature vector where the identity of the team is boiled down to the individual fingerprints of its rotation players.",
+  "goal": "Visualize how team data is structured into a player-by-stat feature matrix for machine learning.",
+  "remarks": "Create a 10x15 grid of squares representing a 'Team Matrix'. On the left side, show a silhouette of 15 basketball players. Animate a 'minutes played' filter passing over them, highlighting the top 10. These 10 players then slide into the rows of the grid. Next, labels for 'PTS', 'REB', 'AST', up to 'PIE' appear above the columns. Fill the grid cells with varying intensities of color to represent normalized data values. Finally, collapse this 2D grid into a single long horizontal vector of 150 elements to show how it enters the model.",
+  "formula": "n = m \\times p",
+  "image_ref": "img-0.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+n = m \times p
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class FeatureMatrixScene(Scene):
+    def construct(self):
+        # 1. Formula Display
+        formula = MathTex("n = m \\times p").to_edge(UP, buff=0.5)
+        self.add(formula)
+
+        # 2. Create silhouettes of 15 players
+        # Each player is a simple circle (head) and rounded rectangle (body)
+        def create_player():
+            head = Circle(radius=0.12, color=GRAY, fill_opacity=1)
+            body = RoundedRectangle(corner_radius=0.1, height=0.4, width=0.3, color=GRAY, fill_opacity=1).next_to(head, DOWN, buff=0.05)
+            return VGroup(head, body)
+
+        players = VGroup(*[create_player() for _ in range(15)])
+        players.arrange(DOWN, buff=0.1).to_edge(LEFT, buff=0.7)
+        
+        self.play(Create(players), run_time=1.5)
+        self.wait(0.5)
+
+        # 3. Animate 'minutes played' filter
+        # Highlighting top 10 players
+        filter_rect = Rectangle(width=0.6, height=0.6, color=YELLOW).move_to(players[0])
+        self.play(Create(filter_rect))
+        
+        # Scan through the players
+        for i in range(1, 10):
+            self.play(filter_rect.animate.move_to(players[i]), run_time=0.1)
+        
+        top_10 = players[:10]
+        others = players[10:]
+        
+        self.play(
+            top_10.animate.set_color(WHITE),
+            others.animate.set_opacity(0.2),
+            filter_rect.animate.scale(1.1).set_stroke(width=5)
+        )
+        self.play(FadeOut(filter_rect))
+
+        # 4. Create the 10x15 Feature Matrix
+        # 10 rows (players), 15 columns (stats)
+        rows = 10
+        cols = 15
+        grid = VGroup()
+        for r in range(rows):
+            row_group = VGroup()
+            for c in range(cols):
+                square = Square(side_length=0.35, stroke_width=1, stroke_color=WHITE)
+                row_group.add(square)
+            row_group.arrange(RIGHT, buff=0.05)
+            grid.add(row_group)
+        grid.arrange(DOWN, buff=0.05).shift(RIGHT * 2)
+
+        # 5. Transition players into the rows of the grid
+        self.play(
+            ReplacementTransform(top_10.copy(), grid),
+            run_time=2
+        )
+
+        # 6. Add labels for performance metrics
+        stat_labels_list = ["PTS", "REB", "AST", "STL", "BLK", "TOV", "PF", "FG%", "3P%", "FT%", "+/-", "PIE", "MIN", "ORB", "DRB"]
+        labels = VGroup(*[
+            Text(stat, font_size=10).next_to(grid[0][i], UP, buff=0.2).rotate(45 * DEGREES)
+            for i, stat in enumerate(stat_labels_list)
+        ])
+        self.play(Write(labels))
+
+        # 7. Fill grid cells with data (varying blue intensities)
+        fill_animations = []
+        for row in grid:
+            for cell in row:
+                val = np.random.rand()
+                fill_animations.append(cell.animate.set_fill(BLUE, opacity=val))
+        
+        self.play(*fill_animations, run_time=2)
+        self.wait(1)
+
+        # 8. Collapse 2D grid into a single horizontal vector (150 elements)
+        vector = VGroup(*[
+            Square(side_length=0.08, fill_color=BLUE, fill_opacity=np.random.rand(), stroke_width=0.1)
+            for _ in range(150)
+        ]).arrange(RIGHT, buff=0.01).to_edge(DOWN, buff=1.5)
+
+        vector_label = Text("Input Vector (n=150)", font_size=20).next_to(vector, UP)
+
+        self.play(
+            FadeOut(labels),
+            FadeOut(players),
+            FadeOut(formula),
+            ReplacementTransform(grid, vector),
+            Write(vector_label),
+            run_time=3
+        )
+
+        self.wait(2)
+
+=== ERROR ===
+Traceback (most recent call last):
+  File "/Users/rosaliemassein/opt/anaconda3/bin/manim", line 5, in <module>
+    from manim.__main__ import main
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/__init__.py", line 23, in <module>
+    from .animation.composition import *
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/animation/composition.py", line 16, in <module>
+    from manim.scene.scene import Scene
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/scene/scene.py", line 41, in <module>
+    from ..camera.camera import Camera
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/manim/camera/camera.py", line 15, in <module>
+    import cairo
+  File "/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/cairo/__init__.py", line 1, in <module>
+    from ._cairo import *  # noqa: F401,F403
+ImportError: dlopen(/Users/rosaliemassein/opt/anaconda3/lib/python3.9/site-packages/cairo/_cairo.cpython-39-darwin.so, 0x0002): symbol not found in flat namespace '_cairo_append_path'
+

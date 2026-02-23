@@ -1,0 +1,5 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-01-spatial-grid-encoding,1,slides/concept-01-spatial-grid-encoding.py,,False,3,,,compile_failed,conversation_logs/concept-01-spatial-grid-encoding_attempt1.txt,-1,gate_fail,"undefined identifiers detected: BOTTOM, ITALIC, there_and_back",undefined_symbol,uses_mathtex,BOTTOM|ITALIC|there_and_back
+concept-01-spatial-grid-encoding,2,slides/concept-01-spatial-grid-encoding_v2.py,concept-01-spatial-grid-encoding_v4.mp4,True,2,,,success,conversation_logs/concept-01-spatial-grid-encoding_attempt2.txt,1,,,,uses_mathtex,
+concept-04-genetic-win-rate-selection,1,slides/concept-04-genetic-win-rate-selection.py,,False,3,,,compile_failed,conversation_logs/concept-04-genetic-win-rate-selection_attempt1.txt,-1,gate_fail,undefined identifiers detected: BLUE_C,undefined_symbol,uses_mathtex,BLUE_C
+concept-04-genetic-win-rate-selection,0,,,False,0,,,error: Server disconnected without sending a response.,,,,,,,

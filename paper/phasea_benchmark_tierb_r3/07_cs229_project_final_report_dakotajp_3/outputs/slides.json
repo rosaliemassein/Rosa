@@ -1,0 +1,37 @@
+{
+  "title": "Generalization of DQL Strategies in Multi-Player Chinese Checkers",
+  "slides": [
+    {
+      "id": "concept-01-spatial-grid-encoding",
+      "voice": "To teach a neural network Chinese Checkers, we have to transform the hexagonal board into a language it understands: grids. We encode the game state into a three-layered stack. The first layer marks the current player's pieces, the second marks the target destination, and the third marks all opponent pieces. By embedding this hex-geometry into a square coordinate system, a standard convolutional network can 'see' the spatial relationships between pegs and their goals.",
+      "goal": "Understand how the hexagonal board is represented as a multi-layered square grid for CNN processing.",
+      "remarks": "Create a hexagonal grid of circles representing a Chinese Checkers board. Animate it tilting into a 3D perspective and then morphing into a square grid of cells. Split this square grid into three separate, semi-transparent layers floating vertically. Layer 1: Highlight 'Self' pieces in blue. Layer 2: Highlight 'Target' zone in green. Layer 3: Highlight 'Opponent' pieces in red. Use TransformMatchingShapes to show the transition from the board to the grid layers. Label the dimensions with MathTex 'n \\times n \\times 3'.",
+      "formula": "n = 4 \\times \\text{board radius} + 1",
+      "image_ref": "img-0.jpeg"
+    },
+    {
+      "id": "concept-02-opponent-abstraction",
+      "voice": "The real secret to generalization lies in how we treat the competition. Instead of giving every opponent their own channel, we lump them all into a single 'opponent layer'. This makes the 6-player game look structurally identical to the 2-player game. Because the network only sees 'me' versus 'the field', a strategy learned against one opponent naturally scales to five without changing the model's architecture.",
+      "goal": "Explain the encoding trick that allows a model trained on 2 players to function in 3, 4, or 6 player games.",
+      "remarks": "Show a 2-player board representation with two distinct colors (Blue vs Red). Then, show a 6-player board with 5 different opponent colors. Animate the 5 opponent colors merging into a single 'Red' intensity in the third layer of the grid from the previous slide. Use a Cross-out animation over the individual identities of the opponents and a 'Check' mark over the unified 'Opponent Layer'.",
+      "formula": "S \\in \\mathbb{B}^{n \\times n \\times 3}",
+      "image_ref": "null"
+    },
+    {
+      "id": "concept-03-dual-reward-shaping",
+      "voice": "Winning a game is a sparse event, so we use two continuous metrics to guide the agent. First, we reward the squared number of pieces that have successfully reached the target. Second, we calculate the 'centroid'\u2014the center of mass of all our pieces\u2014and reward the agent for decreasing the distance between this centroid and the goal. This provides a constant 'gravity' pulling the entire team forward, rather than just moving one piece at a time.",
+      "goal": "Visualize the two-part reward function: piece count and centroid distance.",
+      "remarks": "Create a board with a cluster of blue pegs. Calculate their average position and mark it with a 'Dot' labeled 'Centroid'. Draw a dashed line from the Centroid to the Target Zone. Animate the pegs moving forward; as they move, update the line length and show a 'Reward' counter increasing. When a peg enters the target zone, show a 'Squared Bonus' pop-up (e.g., 1^2, 2^2, 3^2) to emphasize the non-linear reward for finishing.",
+      "formula": "R = w_1(\\text{pegs}_{in})^2 + w_2(\\text{dist}(\\text{centroid, target}))^{-1}",
+      "image_ref": "null"
+    },
+    {
+      "id": "concept-04-genetic-win-rate-selection",
+      "voice": "Standard training minimizes mathematical error, but that doesn't always lead to more wins. To bridge this gap, we use a genetic algorithm. We create 'child' models from the current 'parent' and have them compete in actual games. We only keep the descendant that achieves the highest win rate. This creates a direct 'evolutionary gradient' for victory, ensuring that the model isn't just getting better at math, but better at the game itself.",
+      "goal": "Understand why genetic selection is used alongside DQL to optimize for win rates.",
+      "remarks": "Draw a central 'Parent' node. Animate three 'Child' nodes branching out from it. Below each child, create a BarChart representing 'Win Rate'. Animate the bars growing to different heights. Highlight the child with the highest bar in gold. Use a 'FadeOut' on the parent and other children, then move the gold child to the center to become the new 'Parent'. Repeat the cycle quickly to show evolution.",
+      "formula": "P_{t+1} = \\arg\\max_{c \\in \\text{Children}(P_t)} \\text{WinRate}(c)",
+      "image_ref": "img-1.jpeg"
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-kmeans-spatial-quantization",
+  "voice": "Predicting exact latitude and longitude is incredibly difficult because coordinates are continuous and high-variance. To solve this, we simplify the problem using spatial clustering. Within each country, we group our training coordinates into K clusters. Instead of asking the model to guess any point on the map, we ask it to classify which 'region' or cluster the image belongs to. This turns a complex regression problem into a more manageable classification task.",
+  "goal": "Understand how K-means clustering discretizes a continuous geographic space into predictable regions.",
+  "remarks": "Draw an outline of a country (e.g., Australia) on a NumberPlane. Populate it with many small gray dots representing data points. Animate several 'Centroid' crosses (mu_j) appearing at random locations. Use an animation to show points changing color based on the nearest centroid (Voronoi-like behavior). Then, show the centroids moving to the center of their respective colored groups as the K-means algorithm converges. Highlight the final cluster centers as the discrete 'targets' for the next stage.",
+  "formula": "\\mu_{j}:=\\frac{\\sum_{i=1}^{n}\\mathbf{1}\\{c^{(i)}=j\\}x^{(i)}}{\\sum_{i=1}^{n}\\mathbf{1}\\{c^{(i)}=j\\}}",
+  "image_ref": "img-1.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mu_{j}:=\frac{\sum_{i=1}^{n}\mathbf{1}\{c^{(i)}=j\}x^{(i)}}{\sum_{i=1}^{n}\mathbf{1}\{c^{(i)}=j\}}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class Concept03KMeansSpatialQuantization(Scene):
+    def construct(self):
+        # 1. Manual Coordinate System (Replacing Axes/NumberPlane)
+        x_axis = Line(LEFT * 6, RIGHT * 6, color=WHITE, stroke_opacity=0.3)
+        y_axis = Line(UP * 3.5, DOWN * 3.5, color=WHITE, stroke_opacity=0.3)
+        self.add(x_axis, y_axis)
+
+        # 2. Simplified Country Outline using Lines (Replacing Polygon/VMobject)
+        aus_pts = [
+            [-3, 1, 0], [-1.5, 1.2, 0], [0, 0.5, 0], [1.5, 1.5, 0], 
+            [3.5, 0, 0], [3, -1.5, 0], [1, -2.5, 0], [-2, -2.5, 0], 
+            [-3.5, -1, 0], [-3, 1, 0]
+        ]
+        australia = VGroup()
+        for i in range(len(aus_pts) - 1):
+            australia.add(Line(aus_pts[i], aus_pts[i+1], color=BLUE))
+        
+        # 3. Formula (Replacing MathTex)
+        formula_text = Text("Centroid Update Rule: mu_j = average(x_i in cluster j)", font_size=24)
+        formula_text.to_edge(UP, buff=0.5)
+        
+        self.play(Create(australia), Write(formula_text))
+
+        # 4. Generate Training Points (Replacing NumberPlane region methods)
+        np.random.seed(42)
+        dots = VGroup()
+        for _ in range(60):
+            # Random points roughly within the Australia box
+            px = np.random.uniform(-3, 3)
+            py = np.random.uniform(-2, 1)
+            dots.add(Dot(point=[px, py, 0], radius=0.06, color=GRAY))
+        
+        self.play(FadeIn(dots))
+
+        # 5. Centroid Crosses (Manual replacement for Indicate/AnimationGroup)
+        # Colors: RED, GREEN, YELLOW, WHITE
+        colors = [RED, GREEN, YELLOW, WHITE]
+        centroid_positions = [[-2, 0, 0], [0.5, -1.5, 0], [2, 0.5, 0], [-1, -2, 0]]
+        centroids = VGroup()
+        
+        for i in range(4):
+            p = np.array(centroid_positions[i])
+            # A cross is two lines
+            l1 = Line(p + [-0.2, -0.2, 0], p + [0.2, 0.2, 0], color=colors[i], stroke_width=6)
+            l2 = Line(p + [-0.2, 0.2, 0], p + [0.2, -0.2, 0], color=colors[i], stroke_width=6)
+            centroids.add(VGroup(l1, l2))
+
+        # Manual animation sequence (Replacing AnimationGroup)
+        for c in centroids:
+            self.play(Create(c), run_time=0.4)
+
+        self.wait(1)
+
+        # 6. Assign dots to nearest centroid
+        assignments = []
+        for d in dots:
+            d_pos = d.get_center()
+            dists = [np.linalg.norm(d_pos - c.get_center()) for c in centroids]
+            assignments.append(np.argmin(dists))
+
+        # Change dot colors
+        color_anims = []
+        for i, d in enumerate(dots):
+            color_anims.append(d.animate.set_color(colors[assignments[i]]))
+        
+        self.play(*color_anims, run_time=1.5)
+        self.wait(1)
+
+        # 7. Move centroids to group means (The 'Convergence')
+        move_anims = []
+        for i in range(len(centroids)):
+            cluster_points = [
+                dots[j].get_center() 
+                for j, cluster_idx in enumerate(assignments) if cluster_idx == i
+            ]
+            if cluster_points:
+                new_pos = np.mean(cluster_points, axis=0)
+                move_anims.append(centroids[i].animate.move_to(new_pos))
+        
+        self.play(*move_anims, run_time=2)
+
+        # 8. Highlight final clusters (Replacing Indicate)
+        highlight_anims = []
+        for c in centroids:
+            highlight_anims.append(c.animate.scale(1.5))
+        self.play(*highlight_anims, run_time=0.5)
+        
+        highlight_back_anims = []
+        for c in centroids:
+            highlight_back_anims.append(c.animate.scale(1/1.5))
+        self.play(*highlight_back_anims, run_time=0.5)
+
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: GRAY

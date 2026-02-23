@@ -1,0 +1,178 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+- VMobject/custom mobject internals -> VGroup + basic shapes
+- Axes/NumberPlane (if disallowed in active tier) -> Line + Dot + Text approximation
+- there_and_back/smooth/linear/rate_functions -> omit rate_func and use simple run_time
+- If using loop indices (i, j, t), define them explicitly before use
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+- Do NOT use: VMobject, UpdateFromAlphaFunc, custom rate functions (`smooth`, `there_and_back`, `linear`) unless explicitly defined/imported.
+- Do NOT emit undeclared identifiers; common failure is using `t` without definition.
+- Prefer deterministic primitives: VGroup, Circle/Square/Line/Arrow, and Transform/FadeIn/FadeOut.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-quantifying-stability",
+  "voice": "To train a model, we need to turn qualitative behavior into hard numbers. The author defines 'Stability' as a ratio: how often the motor stays at its most common speed versus how often it deviates. Meanwhile, 'Steady State Error' is calculated specifically from the final twenty percent of the run to ensure the motor has actually settled.",
+  "goal": "Explain the specific mathematical definitions of the input features used for the regression models.",
+  "remarks": "Show a velocity plot where the motor is fluctuating around 30 RPM. Highlight the last 20% of the x-axis with a different background color (e.g., light blue). Show a 'Histogram' appearing on the side, where the 'bin' at 30 RPM is significantly taller than the others. Animate a fraction bar where the numerator is the 'count of most common speed' and the denominator is 'other counts' to define the Stability feature.",
+  "formula": "Stability = \\frac{\\text{counts at mode}}{\\text{counts not at mode}}",
+  "image_ref": null
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+Stability = \frac{\text{counts at mode}}{\text{counts not at mode}}
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class StabilityExplanation(Scene):
+    def construct(self):
+        # 1. Manual Coordinate System for Velocity Plot (Replacing Axes)
+        # Using Line instead of Axes to comply with constraints
+        graph_origin = LEFT * 4 + DOWN * 1.5
+        horiz_axis = Line(graph_origin, graph_origin + RIGHT * 5, color=WHITE)
+        vert_axis = Line(graph_origin, graph_origin + UP * 4, color=WHITE)
+        
+        horiz_label = Text("Time", font_size=20).next_to(horiz_axis, DOWN)
+        vert_label = Text("Velocity (RPM)", font_size=20).rotate(90 * DEGREES).next_to(vert_axis, LEFT)
+        
+        self.play(Create(horiz_axis), Create(vert_axis))
+        self.play(Write(horiz_label), Write(vert_label))
+
+        # 2. Velocity Plot (Fluctuating around 30 RPM)
+        # Generate points manually to avoid 'x' variable issues in lambda
+        t_vals = np.linspace(0, 5, 100)
+        curve_points = []
+        for t_step in t_vals:
+            # Base height 2.5 (representing ~30 RPM) + fluctuations
+            y_fluctuation = 2.5 + 0.3 * np.sin(t_step * 5) + 0.2 * np.cos(t_step * 11)
+            curve_points.append(graph_origin + RIGHT * t_step + UP * y_fluctuation)
+        
+        velocity_curve = VMobject(color=YELLOW)
+        velocity_curve.set_points_as_corners(curve_points)
+        
+        plot_title = Text("Motor Behavior", font_size=24).next_to(vert_axis, UP)
+        self.play(Create(velocity_curve), Write(plot_title))
+        self.wait(0.5)
+
+        # 3. Highlight last 20% of the x-axis
+        # The axis is 5 units wide, so 20% is 1 unit.
+        highlight_rect = Rectangle(
+            width=1.0, 
+            height=3.8, 
+            fill_color=BLUE, 
+            fill_opacity=0.3, 
+            stroke_width=0
+        ).move_to(graph_origin + RIGHT * 4.5 + UP * 1.9)
+        
+        highlight_text = Text("Final 20%", font_size=18, color=BLUE).next_to(highlight_rect, UP)
+        self.play(FadeIn(highlight_rect), Write(highlight_text))
+        self.wait()
+
+        # 4. Histogram on the side
+        hist_origin = RIGHT * 2.5 + DOWN * 1.5
+        hist_h_line = Line(hist_origin, hist_origin + RIGHT * 4, color=WHITE)
+        
+        # Defining bar heights: the middle one is the mode (tallest)
+        bar_heights = [0.7, 1.2, 3.2, 1.5, 0.8] 
+        bars = VGroup()
+        for i, h in enumerate(bar_heights):
+            bar = Rectangle(
+                width=0.5, 
+                height=h,
+                fill_color=YELLOW if i == 2 else BLUE,
+                fill_opacity=0.7
+            ).move_to(hist_origin + RIGHT * (0.6 + i * 0.7) + UP * (h / 2))
+            bars.add(bar)
+        
+        hist_title = Text("Histogram", font_size=24).next_to(bars, UP)
+        mode_label = Text("30 RPM", font_size=16).next_to(bars[2], DOWN)
+        
+        self.play(Create(hist_h_line))
+        self.play(Create(bars), Write(hist_title), FadeIn(mode_label))
+        self.wait()
+
+        # 5. Stability Formula
+        stability_formula = MathTex(
+            r"\text{Stability} = \frac{\text{counts at mode}}{\text{counts not at mode}}",
+            font_size=32
+        ).to_edge(DOWN, buff=0.5)
+        
+        # Background for formula visibility
+        formula_bg = SurroundingRectangle(stability_formula, color=BLACK, fill_opacity=0.8, stroke_width=0)
+        
+        self.play(FadeIn(formula_bg), Write(stability_formula))
+        
+        # Simple animation highlighting parts of the fraction
+        num_box = SurroundingRectangle(bars[2], color=YELLOW)
+        den_bars = VGroup(*[bars[j] for j in [0, 1, 3, 4]])
+        den_box = SurroundingRectangle(den_bars, color=BLUE)
+        
+        self.play(Create(num_box))
+        self.wait(0.5)
+        self.play(ReplacementTransform(num_box, den_box))
+        self.wait(0.5)
+        self.play(FadeOut(den_box))
+        
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: VMobject

@@ -1,0 +1,4 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-01-feature-matrix,1,slides/concept-01-feature-matrix.py,concept-01-feature-matrix.mp4,True,0,,,success,conversation_logs/concept-01-feature-matrix_attempt1.txt,1,,,,,
+concept-02-regularization-tradeoff,0,,,False,0,,,error: Error code: 400 - {'error': 'The model has crashed without additional information. (Exit code: null)'},,,,,,,
+concept-03-player-depth-importance,1,slides/concept-03-player-depth-importance.py,concept-03-player-depth-importance.mp4,True,0,,,success,conversation_logs/concept-03-player-depth-importance_attempt1.txt,1,,,,uses_mathtex,

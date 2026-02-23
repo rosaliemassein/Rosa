@@ -1,0 +1,5 @@
+slide_id,attempt,manim_file,video_file,compiled,compile_retries,feedback_score,feedback_text,status,conversation_log,reward,error_bucket,gate_errors,gate_reason_tags,detected_features,undefined_names
+concept-01-contrastive-alignment,1,slides/concept-01-contrastive-alignment.py,concept-01-contrastive-alignment_v3.mp4,True,2,,,success,conversation_logs/concept-01-contrastive-alignment_attempt1.txt,1,,,,uses_mathtex,
+concept-02-zero-shot-classification,0,,,False,0,,,"error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",,,,,,,
+concept-03-kmeans-spatial-quantization,1,slides/concept-03-kmeans-spatial-quantization.py,concept-03-kmeans-spatial-quantization_v3.mp4,True,2,,,success,conversation_logs/concept-03-kmeans-spatial-quantization_attempt1.txt,1,,,,uses_mathtex,
+concept-04-hierarchical-mlp-refinement,1,slides/concept-04-hierarchical-mlp-refinement.py,concept-04-hierarchical-mlp-refinement_v3.mp4,True,2,,,success,conversation_logs/concept-04-hierarchical-mlp-refinement_attempt1.txt,1,,,,uses_mathtex,

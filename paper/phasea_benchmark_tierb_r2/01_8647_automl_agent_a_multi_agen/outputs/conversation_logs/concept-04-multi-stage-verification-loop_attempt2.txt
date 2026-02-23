@@ -1,0 +1,168 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: B (expanded 2D subset)
+- Allowed additions: Rectangle, Polygon, RegularPolygon, Triangle, Star, Tex/MathTex
+- Allowed helpers: LaggedStart, ReplacementTransform, Succession, AnimationGroup, Indicate, Flash
+- Keep disallowed: Axes, NumberPlane, ValueTracker/always_redraw, all 3D/camera APIs
+- If uncertain, fallback to Tier-A core symbols.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-04-multi-stage-verification-loop",
+  "voice": "Finally, we ensure reliability through a three-stage verification gate. First, 'Request Verification' ensures the user's instructions are clear. Then, 'Execution Verification' filters the most promising plans from the pseudo-results. Finally, 'Implementation Verification' checks the actual compiled code. If a solution fails any gate, the feedback is fed back to the Agent Manager, which revises the plans and restarts the loop\u2014ensuring only deployment-ready models reach the finish line.",
+  "goal": "Understand the iterative feedback loop and the three distinct verification stages.",
+  "remarks": "Draw three vertical lines acting as 'Gates' labeled ReqVer, ExecVer, and ImpVer. Animate a 'Plan' object (a small square) moving through them. If it hits a gate and 'fails' (turns red), draw a CurvedArrow looping it back to the 'Planning' stage at the beginning. When it 'passes' (turns green), it moves to the next gate until it reaches a 'Deployment' icon.",
+  "formula": "\\mathcal{M}^{\\star} = \\mathcal{A}_{o}(I^{\\star}) \\text{ s.t. } \\mathrm{ImpVer}(\\mathcal{M}^{\\star}) = \\text{Pass}",
+  "image_ref": "img-2.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+\mathcal{M}^{\star} = \mathcal{A}_{o}(I^{\star}) \text{ s.t. } \mathrm{ImpVer}(\mathcal{M}^{\star}) = \text{Pass}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptVerificationLoop(Scene):
+    def construct(self):
+        # 1. Setup Gates and Labels
+        gate_x_positions = [-2.5, 0, 2.5]
+        gate_names = ["ReqVer", "ExecVer", "ImpVer"]
+        gates = VGroup()
+        gate_labels = VGroup()
+
+        for x, name in zip(gate_x_positions, gate_names):
+            line = Line(2 * UP, 2 * DOWN, color=GREY)
+            line.move_to(x * RIGHT)
+            label = Text(name, font_size=24).next_to(line, UP)
+            gates.add(line)
+            gate_labels.add(label)
+
+        # Start and end positions
+        planning_point = 5.5 * LEFT
+        deployment_point = 5.5 * RIGHT
+        
+        planning_label = Text("Planning", font_size=24).move_to(planning_point + 2.5 * UP)
+
+        # Deployment Icon
+        deploy_box = Square(side_length=1.0, color=BLUE, fill_opacity=0.3)
+        deploy_text = Text("Deploy", font_size=18).move_to(deploy_box)
+        deploy_icon = VGroup(deploy_box, deploy_text).move_to(deployment_point)
+        deploy_label = Text("Deployment", font_size=24).next_to(deploy_icon, UP)
+
+        self.add(gates, gate_labels, planning_label, deploy_icon, deploy_label)
+
+        # 2. The 'Plan' Object
+        plan_square = Square(side_length=0.5, color=WHITE, fill_opacity=1)
+        plan_inner_text = Text("Plan", font_size=16, color=BLACK)
+        plan = VGroup(plan_square, plan_inner_text).move_to(planning_point)
+
+        # 3. Animation Logic
+        self.play(FadeIn(plan))
+
+        # First pass: Gate 1
+        self.play(plan.animate.move_to(gate_x_positions[0] * RIGHT))
+        self.play(plan_square.animate.set_color(GREEN))
+        self.wait(0.2)
+
+        # Hit Gate 2 and Fail
+        self.play(plan.animate.move_to(gate_x_positions[1] * RIGHT))
+        self.play(plan_square.animate.set_color(RED))
+        
+        # Feedback Loop Arrow (Using Arrow with path_arc to avoid CurvedArrow identifier)
+        loop_arrow = Arrow(
+            start=gate_x_positions[1] * RIGHT + 0.5 * UP,
+            end=planning_point + 0.5 * UP,
+            path_arc=-1.2,
+            color=RED
+        )
+        self.play(Create(loop_arrow))
+        
+        # Loop back to Planning
+        self.play(
+            plan.animate.move_to(planning_point),
+            FadeOut(loop_arrow),
+            plan_square.animate.set_color(WHITE)
+        )
+        self.wait(0.5)
+
+        # Second run: Success through all gates
+        for pos in gate_x_positions:
+            self.play(plan.animate.move_to(pos * RIGHT))
+            self.play(plan_square.animate.set_color(GREEN))
+            self.wait(0.1)
+
+        # Final move to deployment
+        self.play(plan.animate.move_to(deployment_point))
+        self.play(FadeOut(plan))
+        
+        # Flash the deployment icon
+        circles = VGroup(*[Circle(radius=r, color=BLUE).move_to(deployment_point) for r in [0.6, 0.8, 1.0]])
+        self.play(FadeIn(circles, scale=1.5), FadeOut(circles), run_time=0.5)
+
+        # 4. Narrator Text and Formula
+        formula = MathTex(
+            r"\mathcal{M}^{\star} = \mathcal{A}_{o}(I^{\star}) \text{ s.t. } \mathrm{ImpVer}(\mathcal{M}^{\star}) = \text{Pass}"
+        ).scale(0.85).to_edge(DOWN, buff=0.8)
+
+        # Voiceover summary
+        narration = Text(
+            "Three-stage verification gate ensures deployment-ready reliability.",
+            font_size=20
+        ).next_to(formula, UP, buff=0.4)
+
+        self.play(Write(narration))
+        self.play(Write(formula))
+        self.wait(3)

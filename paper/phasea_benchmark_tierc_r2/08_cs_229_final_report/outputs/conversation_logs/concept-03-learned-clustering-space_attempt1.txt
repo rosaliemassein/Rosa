@@ -1,0 +1,185 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Follow the active gate tier policy (A, B, or C) and stay inside it.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+ACTIVE GATE TIER: C (advanced 2D subset)
+- Allowed additions: Axes, NumberPlane, ValueTracker, always_redraw, DecimalNumber, DashedLine
+- Keep disallowed: all 3D/camera APIs (ThreeDScene, ThreeDAxes, move_camera, set_camera_orientation)
+- Prefer simple, stable axes usage and short updater chains.
+
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-03-learned-clustering-space",
+  "voice": "The real power of this model is that it doesn't cluster hits in the physical x-y-z space of the detector. Instead, it maps every hit into a completely new, multi-dimensional 'learned coordinate' space. In this space, the complex, overlapping energy deposits from two different electrons are unwarped and pulled apart into distinct, easily separable blobs. This transformation is what allows us to tell the difference between one high-energy electron and two lower-energy ones that are physically close together.",
+  "goal": "Demonstrate the transformation from physical detector coordinates to the learned clustering space.",
+  "remarks": "Create a split-screen view. On the left, show a 'Physical Space' NumberPlane with two overlapping clusters of hits. On the right, show a 'Learned Space' NumberPlane. Use a Transform animation to move the dots from the left plane to the right plane. In the physical space, the clusters should overlap heavily. In the learned space, the dots should magically rearrange into two distinct, separated circular distributions. Draw a dashed circle around each cluster in the learned space to indicate successful classification.",
+  "formula": "L_V = \\frac{1}{N} \\sum q_j \\sum (\\mathbb{1} \\check{V}_k + (1-\\mathbb{1}) \\hat{V}_k)",
+  "image_ref": "img-14.jpeg"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+L_V = \frac{1}{N} \sum q_j \sum (\mathbb{1} \check{V}_k + (1-\mathbb{1}) \hat{V}_k)
+
+
+=== ASSISTANT ===
+from manim import *
+import numpy as np
+
+class LearnedClusteringSpaceAnimation(Scene):
+    def construct(self):
+        # 1. Setup Split Screen Planes
+        left_title = Text("Physical Space", font_size=24).to_edge(UP).shift(LEFT * 3.5)
+        right_title = Text("Learned Space", font_size=24).to_edge(UP).shift(RIGHT * 3.5)
+
+        left_plane = NumberPlane(
+            x_range=[-4, 4, 1],
+            y_range=[-4, 4, 1],
+            x_length=5.5,
+            y_length=5.5,
+            background_line_style={"stroke_opacity": 0.3}
+        ).shift(LEFT * 3.5)
+
+        right_plane = NumberPlane(
+            x_range=[-4, 4, 1],
+            y_range=[-4, 4, 1],
+            x_length=5.5,
+            y_length=5.5,
+            background_line_style={"stroke_opacity": 0.3}
+        ).shift(RIGHT * 3.5)
+
+        self.add(left_title, right_title, left_plane, right_plane)
+
+        # 2. Setup Dots (Overlapping in Physical Space)
+        np.random.seed(42)
+        
+        # Cluster A (Electron 1) - Centralized
+        dots_a = VGroup(*[
+            Dot(left_plane.c2p(np.random.normal(0.2, 0.5), np.random.normal(0.2, 0.5)), 
+                color=BLUE, radius=0.06) for _ in range(30)
+        ])
+        # Cluster B (Electron 2) - Heavily overlapping Cluster A
+        dots_b = VGroup(*[
+            Dot(left_plane.c2p(np.random.normal(-0.2, 0.5), np.random.normal(-0.2, 0.5)), 
+                color=RED, radius=0.06) for _ in range(30)
+        ])
+
+        self.play(FadeIn(dots_a), FadeIn(dots_b))
+        self.wait(1)
+
+        # 3. Create Targets in Learned Space (Separated Blobs)
+        # We move them relative to the right_plane
+        target_a = VGroup()
+        for i in range(len(dots_a)):
+            target_dot = dots_a[i].copy().move_to(
+                right_plane.c2p(np.random.normal(1.8, 0.4), np.random.normal(1.8, 0.4))
+            )
+            target_a.add(target_dot)
+
+        target_b = VGroup()
+        for i in range(len(dots_b)):
+            target_dot = dots_b[i].copy().move_to(
+                right_plane.c2p(np.random.normal(-1.8, 0.4), np.random.normal(-1.8, 0.4))
+            )
+            target_b.add(target_dot)
+
+        # 4. Formula at the bottom
+        formula = MathTex(
+            r"L_V = \frac{1}{N} \sum q_j \sum (\mathbb{1} \check{V}_k + (1-\mathbb{1}) \hat{V}_k)",
+            font_size=32
+        ).to_edge(DOWN, buff=0.4)
+
+        # 5. Animation sequence
+        self.play(Write(formula))
+        self.wait(0.5)
+
+        # Transformation of dots from physical to learned space
+        self.play(
+            Transform(dots_a, target_a),
+            Transform(dots_b, target_b),
+            run_time=3,
+            rate_func=smooth
+        )
+
+        # 6. Classification markers (Dashed Circles)
+        # Using DashedVMobject on a Circle
+        circle_a = DashedVMobject(Circle(radius=1.2, color=BLUE)).move_to(right_plane.c2p(1.8, 1.8))
+        circle_b = DashedVMobject(Circle(radius=1.2, color=RED)).move_to(right_plane.c2p(-1.8, -1.8))
+        
+        label_a = Text("Cluster 1", font_size=18, color=BLUE).next_to(circle_a, UP, buff=0.1)
+        label_b = Text("Cluster 2", font_size=18, color=RED).next_to(circle_b, DOWN, buff=0.1)
+
+        self.play(
+            Create(circle_a),
+            Create(circle_b),
+            Write(label_a),
+            Write(label_b)
+        )
+
+        # 7. Descriptive narration label
+        narration_label = Text(
+            "Unwarping energy deposits into distinct, separable blobs",
+            font_size=20,
+            slant="ITALIC"
+        ).next_to(formula, UP, buff=0.3)
+        
+        self.play(FadeIn(narration_label))
+        self.wait(3)
+
+        # Fade out everything
+        self.play(
+            *[FadeOut(mob) for mob in self.mobjects]
+        )
+        self.wait(1)
+
+=== ERROR ===
+undefined identifiers detected: DashedVMobject, smooth

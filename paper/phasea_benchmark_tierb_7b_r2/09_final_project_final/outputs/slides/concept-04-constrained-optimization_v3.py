@@ -1,0 +1,93 @@
+from manim import *
+
+class ConstrainedOptimization(Scene):
+    def construct(self):
+        # 1. Title and Objective Function
+        title = Text("Constrained Optimization", font_size=32).to_edge(UP, buff=0.3)
+        # Using the formula provided in the prompt
+        formula = MathTex(r"\max \sum_{i,j} s_{i,j} x_{i,j} - \sum_{k} P_k \delta_k", font_size=36)
+        formula.next_to(title, DOWN, buff=0.4)
+        self.add(title, formula)
+
+        # 2. Assignment Matrix (Constructed manually to ensure compatibility)
+        m00, m01, m02 = MathTex("1"), MathTex("0"), MathTex("0")
+        m10, m11, m12 = MathTex("0"), MathTex("1"), MathTex("0")
+        m20, m21, m22 = MathTex("0"), MathTex("0"), MathTex("1")
+        
+        row0 = VGroup(m00, m01, m02).arrange(RIGHT, buff=0.8)
+        row1 = VGroup(m10, m11, m12).arrange(RIGHT, buff=0.8)
+        row2 = VGroup(m20, m21, m22).arrange(RIGHT, buff=0.8)
+        grid = VGroup(row0, row1, row2).arrange(DOWN, buff=0.5)
+        
+        # Brackets for the matrix
+        lb = MathTex("[").scale(3.5).next_to(grid, LEFT, buff=0.2)
+        rb = MathTex("]").scale(3.5).next_to(grid, RIGHT, buff=0.2)
+        
+        assignment_matrix = VGroup(grid, lb, rb).scale(0.7).shift(LEFT * 3 + DOWN * 0.5)
+        assignment_label = Text("Assignment Matrix", font_size=20).next_to(assignment_matrix, UP)
+        self.add(assignment_matrix, assignment_label)
+
+        # 3. Score Bar
+        score_label = Text("Expertise Matching Score", font_size=20)
+        bar_bg = Rectangle(width=4, height=0.4, color=GRAY, fill_opacity=0.2)
+        # Initial state: high score represented by a green bar
+        bar_fill = Rectangle(width=3.6, height=0.4, color=GREEN, fill_opacity=0.8).align_to(bar_bg, LEFT)
+        score_val_text = Text("92", font_size=24).next_to(bar_bg, RIGHT)
+        
+        score_group = VGroup(score_label, bar_bg, bar_fill, score_val_text).arrange(DOWN, buff=0.2)
+        score_group.shift(RIGHT * 3 + UP * 0.2)
+        self.add(score_group)
+
+        # 4. Constraint Icons
+        # Institutional Conflict (Red X)
+        x_icon = VGroup(Line(UL, DR), Line(UR, DL)).set_color(RED).scale(0.2)
+        conflict_group = VGroup(x_icon, Text("Conflict", font_size=16)).arrange(DOWN, buff=0.1)
+        
+        # Gender Diversity (Geometric Scale)
+        scale_tri = Triangle().scale(0.15).set_fill(WHITE, opacity=1)
+        scale_line = Line(LEFT, RIGHT).scale(0.3).next_to(scale_tri, UP, buff=0)
+        diversity_group = VGroup(scale_line, scale_tri, Text("Diversity", font_size=16)).arrange(DOWN, buff=0.1)
+        
+        # Workload (Clock representation)
+        clock_circ = Circle(radius=0.2, color=WHITE)
+        clock_h = Line(ORIGIN, UP * 0.1, stroke_width=2)
+        clock_m = Line(ORIGIN, RIGHT * 0.08, stroke_width=2)
+        workload_group = VGroup(VGroup(clock_circ, clock_h, clock_m), Text("Workload", font_size=16)).arrange(DOWN, buff=0.1)
+
+        constraints = VGroup(conflict_group, diversity_group, workload_group).arrange(RIGHT, buff=0.6)
+        constraints.to_edge(DOWN, buff=0.6).shift(RIGHT * 3)
+        self.add(constraints)
+
+        self.wait(1)
+
+        # 5. Violation Animation
+        # As per remarks: when a cell violates a constraint, highlight row and drop score.
+        # Changing m01 from "0" to "1" in Red to show an invalid assignment
+        violation_one = MathTex("1", color=RED).move_to(m01)
+        row_rect = SurroundingRectangle(row0, color=RED, buff=0.1)
+        
+        # Score drops significantly due to the penalty term P_k in the objective function
+        penalty_bar_fill = Rectangle(width=0.8, height=0.4, color=RED, fill_opacity=0.8).align_to(bar_bg, LEFT)
+        penalty_score_text = Text("15", font_size=24, color=RED).next_to(bar_bg, RIGHT)
+
+        self.play(
+            Transform(m01, violation_one),
+            Create(row_rect),
+            conflict_group.animate.scale(1.2).set_color(RED),
+            Transform(bar_fill, penalty_bar_fill),
+            Transform(score_val_text, penalty_score_text),
+            run_time=2
+        )
+        self.wait(2)
+
+        # 6. Resolving: Move back to a valid state
+        valid_zero = MathTex("0").move_to(m01)
+        self.play(
+            Transform(m01, valid_zero),
+            FadeOut(row_rect),
+            conflict_group.animate.scale(1/1.2).set_color(WHITE),
+            Transform(bar_fill, Rectangle(width=3.7, height=0.4, color=GREEN, fill_opacity=0.8).align_to(bar_bg, LEFT)),
+            Transform(score_val_text, Text("95", font_size=24).next_to(bar_bg, RIGHT)),
+            run_time=1.5
+        )
+        self.wait(2)

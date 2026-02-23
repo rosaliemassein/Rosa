@@ -1,0 +1,164 @@
+=== SYSTEM ===
+You are a Manim animator. OUTPUT ONLY MANIM PYTHON CODE. No explanations, no markdown.
+
+REQUIRED CODE STRUCTURE (always follow this exact skeleton):
+```
+from manim import *
+
+class <SceneName>(Scene):
+    def construct(self):
+        # your code here
+        self.play(...)
+        self.wait()
+```
+
+RULES:
+1. Exactly ONE Scene class inheriting from Scene.
+2. `from manim import *` as the only import (plus math/numpy if needed).
+3. self.play() takes Animation objects: Write(), FadeIn(), Create(), Transform(), NOT raw Mobjects.
+4. MathTex uses RAW strings with double backslashes: MathTex(r"\frac{a}{b}"), MathTex(r"\int_0^1").
+5. Do NOT use .animate inside Transform(). Use: Transform(a, b), not Transform(a, b.animate...).
+6. NEVER output markdown fences (```), comments outside Python syntax, or prose.
+7. Use ONLY Tier-A-safe Manim API unless explicitly asked otherwise.
+8. Do NOT invent symbols/classes/functions. If unsure, fallback to Text/Circle/Line/Arrow/VGroup + Create/Write/FadeIn/FadeOut/Transform.
+
+TIER-A SAFE API (preferred):
+- Mobjects: Text, Dot, Circle, Square, Arrow, Line, VGroup
+- Layout: arrange, next_to, to_edge, move_to, shift, scale
+- Animations: Create, Write, FadeIn, FadeOut, Transform
+
+STRICTLY AVOID IN TIER-A:
+- MathTex, Tex
+- Axes, NumberPlane, ThreeDAxes
+- ThreeDScene and any 3D/camera methods
+- Custom undefined helpers (e.g., LargeMove)
+
+REPLACEMENT HINTS (when fixing compile issues):
+- MathTex/Tex -> Text
+- Rectangle/Polygon/RegularPolygon/Triangle/Star -> Circle or Square
+- GrowArrow -> Create(Arrow(...))
+- Indicate/Flash/LaggedStart/ReplacementTransform -> Transform or FadeIn/FadeOut
+- ValueTracker/always_redraw -> simple fixed animation steps
+- Any unknown color token -> BLUE/GREEN/RED/YELLOW/WHITE/BLACK
+
+STYLE:
+- Keep scenes simple and compilable first.
+- Prefer 4-10 animation steps and readable text blocks.
+
+=== USER ===
+Generate Manim code for this concept animation.
+
+Here is the full slide data in JSON format:
+```json
+{
+  "id": "concept-02-opponent-abstraction",
+  "voice": "The real secret to generalization lies in how we treat the competition. Instead of giving every opponent their own channel, we lump them all into a single 'opponent layer'. This makes the 6-player game look structurally identical to the 2-player game. Because the network only sees 'me' versus 'the field', a strategy learned against one opponent naturally scales to five without changing the model's architecture.",
+  "goal": "Explain the encoding trick that allows a model trained on 2 players to function in 3, 4, or 6 player games.",
+  "remarks": "Show a 2-player board representation with two distinct colors (Blue vs Red). Then, show a 6-player board with 5 different opponent colors. Animate the 5 opponent colors merging into a single 'Red' intensity in the third layer of the grid from the previous slide. Use a Cross-out animation over the individual identities of the opponents and a 'Check' mark over the unified 'Opponent Layer'.",
+  "formula": "S \\in \\mathbb{B}^{n \\times n \\times 3}",
+  "image_ref": "null"
+}
+```
+
+Use the 'voice' for narration, 'goal' for the objective, and 'remarks' for the detailed animation blueprint.
+
+Also, use this formula as a reference:
+S \in \mathbb{B}^{n \times n \times 3}
+
+
+=== ASSISTANT ===
+from manim import *
+
+class ConceptAnimation(Scene):
+    def construct(self):
+        # Define colors manually to avoid potential undefined identifier issues
+        COLOR_BLUE = "#236B8E"
+        COLOR_RED = "#CF5044"
+        COLOR_GREEN = "#83C167"
+        COLOR_YELLOW = "#FFFF00"
+        COLOR_ORANGE = "#FF8C00"
+        COLOR_PURPLE = "#9400D3"
+
+        # 1. 2-Player Board Representation
+        title = Text("2-Player Board", font_size=36).to_edge(UP)
+        formula = Text("S in B^{n x n x 3}", font_size=24).next_to(title, DOWN)
+
+        def create_layer_grid(color, label_text):
+            grid = VGroup(*[
+                Square(side_length=0.3, stroke_width=2, color=color) 
+                for _ in range(9)
+            ]).arrange_in_grid(rows=3, cols=3, buff=0.05)
+            lbl = Text(label_text, font_size=18, color=color).next_to(grid, DOWN)
+            return VGroup(grid, lbl)
+
+        me_layer_2p = create_layer_grid(COLOR_BLUE, "My Channel").shift(LEFT * 2.5)
+        opp_layer_2p = create_layer_grid(COLOR_RED, "Opponent Channel").shift(RIGHT * 2.5)
+
+        self.play(Write(title), Write(formula))
+        self.play(FadeIn(me_layer_2p), FadeIn(opp_layer_2p))
+        self.wait(1)
+
+        # 2. Transition to 6-Player (Many individual channels)
+        title_6p = Text("6-Player: Individual Channels", font_size=36).to_edge(UP)
+        
+        multi_colors = [COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_PURPLE, COLOR_ORANGE]
+        opponents_6p = VGroup(*[
+            create_layer_grid(multi_colors[i], f"P{i+2}").scale(0.55)
+            for i in range(5)
+        ]).arrange(RIGHT, buff=0.4).shift(DOWN * 1)
+        
+        me_6p = create_layer_grid(COLOR_BLUE, "Me (P1)").scale(0.55).next_to(opponents_6p, UP, buff=0.6)
+
+        self.play(
+            FadeOut(me_layer_2p),
+            FadeOut(opp_layer_2p),
+            Transform(title, title_6p)
+        )
+        self.play(FadeIn(me_6p), FadeIn(opponents_6p))
+        self.wait(1)
+
+        # 3. Cross out individual identities
+        crosses = VGroup()
+        for opp in opponents_6p:
+            # Create a manual cross using two lines
+            line1 = Line(opp[0].get_corner(UL), opp[0].get_corner(DR), color=WHITE, stroke_width=4)
+            line2 = Line(opp[0].get_corner(UR), opp[0].get_corner(DL), color=WHITE, stroke_width=4)
+            crosses.add(VGroup(line1, line2))
+        
+        self.play(Create(crosses))
+        self.wait(1)
+
+        # 4. Abstraction into a single "Opponent Layer"
+        title_abs = Text("Opponent Abstraction Layer", font_size=36).to_edge(UP)
+        unified_opp = create_layer_grid(COLOR_RED, "The Field (All Opponents)").scale(1.2).shift(DOWN * 0.8)
+        
+        # Use Transform instead of ReplacementTransform to be safe
+        self.play(
+            FadeOut(crosses),
+            Transform(opponents_6p, VGroup(unified_opp)),
+            Transform(title, title_abs),
+            me_6p.animate.scale(1.8).next_to(unified_opp, UP, buff=0.8),
+            run_time=2
+        )
+
+        # 5. Check mark (Manual construction)
+        check_mark = VGroup(
+            Line(0.2 * LEFT + 0.1 * DOWN, ORIGIN),
+            Line(ORIGIN, 0.4 * RIGHT + 0.6 * UP)
+        ).set_color(COLOR_GREEN).set_stroke(width=8).next_to(unified_opp, RIGHT, buff=0.5)
+
+        self.play(Create(check_mark))
+        
+        # Manual indication (scale up and down)
+        self.play(
+            unified_opp.animate.scale(1.1),
+            rate_func=there_and_back,
+            run_time=1
+        )
+        
+        final_text = Text("Unified architecture for any N", font_size=24, color=COLOR_YELLOW).to_edge(DOWN)
+        self.play(Write(final_text))
+        self.wait(2)
+
+=== ERROR ===
+undefined identifiers detected: DL, DR, UL, UR, there_and_back

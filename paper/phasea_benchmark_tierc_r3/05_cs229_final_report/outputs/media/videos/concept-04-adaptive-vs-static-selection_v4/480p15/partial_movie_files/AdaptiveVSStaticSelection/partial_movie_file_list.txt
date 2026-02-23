@@ -1,0 +1,3 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r3/05_cs229_final_report/outputs/media/videos/concept-04-adaptive-vs-static-selection_v4/480p15/partial_movie_files/AdaptiveVSStaticSelection/1584795214_2278683436_3398763931.mp4'
+file 'file:/Users/rosaliemassein/Documents/stanford/Winter 2026 /Reinforcement Learning/Project/code/cs234/paper/phasea_benchmark_tierc_r3/05_cs229_final_report/outputs/media/videos/concept-04-adaptive-vs-static-selection_v4/480p15/partial_movie_files/AdaptiveVSStaticSelection/4072820271_2844360058_4146928148.mp4'
